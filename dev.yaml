@@ -30,12 +30,12 @@ redis:
 
 kafka:
   address: "172.17.101.188:9092"
-  topIc: "report"
+  topIc: "runnergo"
 
 
 mongo:
-  dsn: "mongodb://kunpeng:kYjJpU8BYvb4EJ9x@172.17.101.255:27017/kunpeng?replicaSet=mgset-509843895"
-  database: "kunpeng"
+  dsn: "mongodb://runnergo_open:czYNsm6LmfZ0XU3E@172.17.101.255:27017/runnergo_open?replicaSet=mgset-509843895"
+  database: "runnergo_open"
   stressDebugTable: "stress_debug"
   sceneDebugTable: "scene_debug"
   apiDebugTable: "api_debug"
