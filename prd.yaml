@@ -1,0 +1,70 @@
+
+
+heartbeat:
+  port: 8002
+  region: "北京"
+  duration: 2
+  resources: 5
+  grpcHost: "kpcontroller.apipost.cn:443"
+
+
+http:
+  address: "0.0.0.0:8002"
+  port: 8002
+  readTimeout: 5000
+  writeTimeout: 5000
+  noDefaultUserAgentHeader: true
+  maxConnPerHost: 10000
+  MaxIdleConnDuration: 5000
+  NoDefaultUserAgentHeader: 30000
+
+reportRedis:
+  address: "r-2zeygktm7wb4nd5b46.redis.rds.aliyuncs.com:6379"
+  password: "8SqeCfrhrojJ9ylw"
+  db: 0
+
+redis:
+  address: "r-2zeyyzpdgra56jeqcz.redis.rds.aliyuncs.com:6379"
+  password: "8SqeCfrhrojJ9ylw"
+  db: 0
+
+kafka:
+  address: "alikafka-pre-cn-tl32yargx002-1-vpc.alikafka.aliyuncs.com:9092"
+  topIc: "report"
+
+
+mongo:
+  db: "runnergo"
+  user: "runnergo"
+  password: "qt0goKAHtwy4c0Gz"
+  stressDebugTable: "stress_debug"
+  sceneDebugTable: "scene_debug"
+  apiDebugTable: "api_debug"
+  debugTable: "debug_status"
+  autoTable: "auto_report"
+  address: "dds-2ze9902a2d29a7541.mongodb.rds.aliyuncs.com:3717"
+
+
+
+oss:
+  endpoint: "http://oss-cn-beijing.aliyuncs.com"
+  accessKeyID: "LTAI5tEAzFMCX559VD8mRDoZ"
+  accessKeySecret: "5IV7ZpVx95vBHZ3Y74jr9amaMtXpCQ"
+  bucket: "apipost"
+  split: "kunpeng/"
+  down: "/data/parameter"
+
+machine:
+  maxGoroutines: 80005
+  serverType: 1
+  netName: ""
+  diskName: ""
+
+
+log:
+  path: "/data/logs/RunnerGo/RunnerGo-engine-info.log"
+
+
+management:
+  address: "https://pre-manager.runnergo.cn/management/api/v1/plan/notify_stop_stress"
+  notifyRunFinish: "https://pre-manager.runnergo.cn/management/api/v1/auto_plan/notify_run_finish"

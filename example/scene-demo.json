@@ -1,0 +1,1114 @@
+{
+  "scene_id": 1415,
+  "uuid": "0570c324-2bf3-4c33-b92d-8d8d7ab00f66",
+  "report_id": "",
+  "team_id": 158,
+  "scene_name": "主流程",
+  "version": 0,
+  "debug": "",
+  "enable_plan_configuration": false,
+  "nodes": [{
+    "id": "8d59ebb6-1c6e-4cea-b4b9-0ba4c577966f",
+    "report_id": "",
+    "team_id": 0,
+    "is_check": false,
+    "uuid": "00000000-0000-0000-0000-000000000000",
+    "type": "api",
+    "pre_list": ["698fa61b-cf1f-4bc3-9f02-81b20b3d7a24"],
+    "next_list": ["d54072a4-5a70-4c84-8911-77cfa441b827"],
+    "tag": false,
+    "debug": "",
+    "mode": 0,
+    "request_threshold": 0,
+    "response_threshold": 0,
+    "error_threshold": 0,
+    "percent_age": 0,
+    "weight": 100,
+    "api": {
+      "target_id": 1410,
+      "uuid": "00000000-0000-0000-0000-000000000000",
+      "name": "注册",
+      "team_id": 158,
+      "target_type": "api",
+      "method": "GET",
+      "request": {
+        "url": "{{url}}/test",
+        "header": {
+          "parameter": []
+        },
+        "query": {
+          "parameter": []
+        },
+        "body": {
+          "mode": "none",
+          "raw": "",
+          "parameter": []
+        },
+        "auth": {
+          "type": "noauth",
+          "kv": {
+            "key": "",
+            "value": ""
+          },
+          "bearer": {
+            "key": ""
+          },
+          "basic": {
+            "username": "",
+            "password": ""
+          },
+          "digest": {
+            "username": "",
+            "password": "",
+            "realm": "",
+            "nonce": "",
+            "algorithm": "",
+            "qop": "",
+            "nc": "",
+            "cnonce": "",
+            "opaque": ""
+          },
+          "hawk": {
+            "authId": "",
+            "authKey": "",
+            "algorithm": "",
+            "user": "",
+            "nonce": "",
+            "extraData": "",
+            "app": "",
+            "delegation": "",
+            "timestamp": "",
+            "includePayloadHash": -1
+          },
+          "awsv4": {
+            "accessKey": "",
+            "secretKey": "",
+            "region": "",
+            "service": "",
+            "sessionToken": "",
+            "addAuthDataToQuery": -1
+          },
+          "ntlm": {
+            "username": "",
+            "password": "",
+            "domain": "",
+            "workstation": "",
+            "disableRetryRequest": 1
+          },
+          "edgegrid": {
+            "accessToken": "",
+            "clientToken": "",
+            "clientSecret": "",
+            "nonce": "",
+            "timestamp": "",
+            "baseURi": "",
+            "headersToSign": ""
+          },
+          "oauth1": {
+            "consumerKey": "",
+            "consumerSecret": "",
+            "signatureMethod": "",
+            "addEmptyParamsToSign": -1,
+            "includeBodyHash": -1,
+            "addParamsToHeader": -1,
+            "realm": "",
+            "version": "1.0",
+            "nonce": "",
+            "timestamp": "",
+            "verifier": "",
+            "callback": "",
+            "tokenSecret": "",
+            "token": ""
+          }
+        },
+        "cookie": null
+      },
+      "parameters": null,
+      "assert": [],
+      "timeout": 0,
+      "regex": [],
+      "debug": "",
+      "connection": 0,
+      "variable": null
+    },
+    "var": "",
+    "compare": "",
+    "val": "",
+    "name": "",
+    "wait_ms": 0
+  }, {
+    "id": "77556936-cb9a-4193-8d35-268842a75874",
+    "report_id": "",
+    "team_id": 0,
+    "is_check": false,
+    "uuid": "00000000-0000-0000-0000-000000000000",
+    "type": "api",
+    "pre_list": ["3075f3c0-0d4c-40a9-a316-0f6099a899e4"],
+    "next_list": ["f5be45c5-8d61-43ff-80c5-8b745194ea07"],
+    "tag": false,
+    "debug": "",
+    "mode": 0,
+    "request_threshold": 0,
+    "response_threshold": 0,
+    "error_threshold": 0,
+    "percent_age": 0,
+    "weight": 100,
+    "api": {
+      "target_id": 1405,
+      "uuid": "00000000-0000-0000-0000-000000000000",
+      "name": "登录接口",
+      "team_id": 158,
+      "target_type": "api",
+      "method": "POST",
+      "request": {
+        "url": "{{url}}/api/demo/login",
+        "header": {
+          "parameter": []
+        },
+        "query": {
+          "parameter": []
+        },
+        "body": {
+          "mode": "json",
+          "raw": "{\r\n\t\"mobile\": \"18289454846\",\r\n\t\"ver_code\": \"1234\"\r\n}",
+          "parameter": []
+        },
+        "auth": {
+          "type": "noauth",
+          "kv": {
+            "key": "",
+            "value": ""
+          },
+          "bearer": {
+            "key": ""
+          },
+          "basic": {
+            "username": "",
+            "password": ""
+          },
+          "digest": {
+            "username": "",
+            "password": "",
+            "realm": "",
+            "nonce": "",
+            "algorithm": "",
+            "qop": "",
+            "nc": "",
+            "cnonce": "",
+            "opaque": ""
+          },
+          "hawk": {
+            "authId": "",
+            "authKey": "",
+            "algorithm": "",
+            "user": "",
+            "nonce": "",
+            "extraData": "",
+            "app": "",
+            "delegation": "",
+            "timestamp": "",
+            "includePayloadHash": -1
+          },
+          "awsv4": {
+            "accessKey": "",
+            "secretKey": "",
+            "region": "",
+            "service": "",
+            "sessionToken": "",
+            "addAuthDataToQuery": -1
+          },
+          "ntlm": {
+            "username": "",
+            "password": "",
+            "domain": "",
+            "workstation": "",
+            "disableRetryRequest": 1
+          },
+          "edgegrid": {
+            "accessToken": "",
+            "clientToken": "",
+            "clientSecret": "",
+            "nonce": "",
+            "timestamp": "",
+            "baseURi": "",
+            "headersToSign": ""
+          },
+          "oauth1": {
+            "consumerKey": "",
+            "consumerSecret": "",
+            "signatureMethod": "",
+            "addEmptyParamsToSign": -1,
+            "includeBodyHash": -1,
+            "addParamsToHeader": -1,
+            "realm": "",
+            "version": "1.0",
+            "nonce": "",
+            "timestamp": "",
+            "verifier": "",
+            "callback": "",
+            "tokenSecret": "",
+            "token": ""
+          }
+        },
+        "cookie": null
+      },
+      "parameters": null,
+      "assert": [],
+      "timeout": 0,
+      "regex": [{
+        "var": "token",
+        "express": "\"token\":\"(.*?)\"},",
+        "val": ""
+      }],
+      "debug": "",
+      "connection": 0,
+      "variable": null
+    },
+    "var": "",
+    "compare": "",
+    "val": "",
+    "name": "",
+    "wait_ms": 0
+  }, {
+    "id": "3075f3c0-0d4c-40a9-a316-0f6099a899e4",
+    "report_id": "",
+    "team_id": 0,
+    "is_check": false,
+    "uuid": "00000000-0000-0000-0000-000000000000",
+    "type": "condition_controller",
+    "pre_list": ["78301820-fd41-4dfb-857a-0f424dff6510"],
+    "next_list": ["77556936-cb9a-4193-8d35-268842a75874"],
+    "tag": false,
+    "debug": "",
+    "mode": 0,
+    "request_threshold": 0,
+    "response_threshold": 0,
+    "error_threshold": 0,
+    "percent_age": 0,
+    "weight": 0,
+    "api": {
+      "target_id": 0,
+      "uuid": "00000000-0000-0000-0000-000000000000",
+      "name": "",
+      "team_id": 0,
+      "target_type": "",
+      "method": "",
+      "request": {
+        "url": "",
+        "header": null,
+        "query": null,
+        "body": null,
+        "auth": null,
+        "cookie": null
+      },
+      "parameters": null,
+      "assert": null,
+      "timeout": 0,
+      "regex": null,
+      "debug": "",
+      "connection": 0,
+      "variable": null
+    },
+    "var": "{{data}}",
+    "compare": "eq",
+    "val": "1",
+    "name": "",
+    "wait_ms": 0
+  }, {
+    "id": "698fa61b-cf1f-4bc3-9f02-81b20b3d7a24",
+    "report_id": "",
+    "team_id": 0,
+    "is_check": false,
+    "uuid": "00000000-0000-0000-0000-000000000000",
+    "type": "condition_controller",
+    "pre_list": ["78301820-fd41-4dfb-857a-0f424dff6510"],
+    "next_list": ["8d59ebb6-1c6e-4cea-b4b9-0ba4c577966f"],
+    "tag": false,
+    "debug": "",
+    "mode": 0,
+    "request_threshold": 0,
+    "response_threshold": 0,
+    "error_threshold": 0,
+    "percent_age": 0,
+    "weight": 0,
+    "api": {
+      "target_id": 0,
+      "uuid": "00000000-0000-0000-0000-000000000000",
+      "name": "",
+      "team_id": 0,
+      "target_type": "",
+      "method": "",
+      "request": {
+        "url": "",
+        "header": null,
+        "query": null,
+        "body": null,
+        "auth": null,
+        "cookie": null
+      },
+      "parameters": null,
+      "assert": null,
+      "timeout": 0,
+      "regex": null,
+      "debug": "",
+      "connection": 0,
+      "variable": null
+    },
+    "var": "{{data}}",
+    "compare": "eq",
+    "val": "2",
+    "name": "",
+    "wait_ms": 0
+  }, {
+    "id": "78301820-fd41-4dfb-857a-0f424dff6510",
+    "report_id": "",
+    "team_id": 0,
+    "is_check": false,
+    "uuid": "00000000-0000-0000-0000-000000000000",
+    "type": "api",
+    "pre_list": [],
+    "next_list": ["3075f3c0-0d4c-40a9-a316-0f6099a899e4", "698fa61b-cf1f-4bc3-9f02-81b20b3d7a24"],
+    "tag": false,
+    "debug": "",
+    "mode": 0,
+    "request_threshold": 0,
+    "response_threshold": 0,
+    "error_threshold": 0,
+    "percent_age": 0,
+    "weight": 100,
+    "api": {
+      "target_id": 1409,
+      "uuid": "00000000-0000-0000-0000-000000000000",
+      "name": "随机值",
+      "team_id": 158,
+      "target_type": "api",
+      "method": "POST",
+      "request": {
+        "url": "{{url}}/api/demo/random?type=2",
+        "header": {
+          "parameter": []
+        },
+        "query": {
+          "parameter": [{
+            "is_checked": 1,
+            "type": "Text",
+            "fileBase64": null,
+            "key": "type",
+            "value": "2",
+            "not_null": 1,
+            "description": "",
+            "field_type": "String"
+          }]
+        },
+        "body": {
+          "mode": "none",
+          "raw": "",
+          "parameter": []
+        },
+        "auth": {
+          "type": "noauth",
+          "kv": {
+            "key": "",
+            "value": ""
+          },
+          "bearer": {
+            "key": ""
+          },
+          "basic": {
+            "username": "",
+            "password": ""
+          },
+          "digest": {
+            "username": "",
+            "password": "",
+            "realm": "",
+            "nonce": "",
+            "algorithm": "",
+            "qop": "",
+            "nc": "",
+            "cnonce": "",
+            "opaque": ""
+          },
+          "hawk": {
+            "authId": "",
+            "authKey": "",
+            "algorithm": "",
+            "user": "",
+            "nonce": "",
+            "extraData": "",
+            "app": "",
+            "delegation": "",
+            "timestamp": "",
+            "includePayloadHash": -1
+          },
+          "awsv4": {
+            "accessKey": "",
+            "secretKey": "",
+            "region": "",
+            "service": "",
+            "sessionToken": "",
+            "addAuthDataToQuery": -1
+          },
+          "ntlm": {
+            "username": "",
+            "password": "",
+            "domain": "",
+            "workstation": "",
+            "disableRetryRequest": 1
+          },
+          "edgegrid": {
+            "accessToken": "",
+            "clientToken": "",
+            "clientSecret": "",
+            "nonce": "",
+            "timestamp": "",
+            "baseURi": "",
+            "headersToSign": ""
+          },
+          "oauth1": {
+            "consumerKey": "",
+            "consumerSecret": "",
+            "signatureMethod": "",
+            "addEmptyParamsToSign": -1,
+            "includeBodyHash": -1,
+            "addParamsToHeader": -1,
+            "realm": "",
+            "version": "1.0",
+            "nonce": "",
+            "timestamp": "",
+            "verifier": "",
+            "callback": "",
+            "tokenSecret": "",
+            "token": ""
+          }
+        },
+        "cookie": null
+      },
+      "parameters": null,
+      "assert": [],
+      "timeout": 0,
+      "regex": [{
+        "var": "data",
+        "express": "\"data\":(.*?),",
+        "val": ""
+      }],
+      "debug": "",
+      "connection": 0,
+      "variable": null
+    },
+    "var": "",
+    "compare": "",
+    "val": "",
+    "name": "",
+    "wait_ms": 0
+  }, {
+    "id": "60ea1686-ee64-4a12-a950-658398f4bca0",
+    "report_id": "",
+    "team_id": 0,
+    "is_check": false,
+    "uuid": "00000000-0000-0000-0000-000000000000",
+    "type": "api",
+    "pre_list": ["f5be45c5-8d61-43ff-80c5-8b745194ea07"],
+    "next_list": [],
+    "tag": false,
+    "debug": "",
+    "mode": 0,
+    "request_threshold": 0,
+    "response_threshold": 0,
+    "error_threshold": 0,
+    "percent_age": 0,
+    "weight": 100,
+    "api": {
+      "target_id": 1411,
+      "uuid": "00000000-0000-0000-0000-000000000000",
+      "name": "获取详情",
+      "team_id": 158,
+      "target_type": "api",
+      "method": "GET",
+      "request": {
+        "url": "{{url}}/api/demo/news_details?id=1",
+        "header": {
+          "parameter": [{
+            "is_checked": 1,
+            "type": "Text",
+            "fileBase64": null,
+            "key": "token",
+            "value": "{{token}}",
+            "not_null": 1,
+            "description": "",
+            "field_type": "String"
+          }]
+        },
+        "query": {
+          "parameter": [{
+            "is_checked": 1,
+            "type": "Text",
+            "fileBase64": null,
+            "key": "id",
+            "value": "1",
+            "not_null": 1,
+            "description": "",
+            "field_type": "String"
+          }]
+        },
+        "body": {
+          "mode": "none",
+          "raw": "",
+          "parameter": []
+        },
+        "auth": {
+          "type": "noauth",
+          "kv": {
+            "key": "",
+            "value": ""
+          },
+          "bearer": {
+            "key": ""
+          },
+          "basic": {
+            "username": "",
+            "password": ""
+          },
+          "digest": {
+            "username": "",
+            "password": "",
+            "realm": "",
+            "nonce": "",
+            "algorithm": "",
+            "qop": "",
+            "nc": "",
+            "cnonce": "",
+            "opaque": ""
+          },
+          "hawk": {
+            "authId": "",
+            "authKey": "",
+            "algorithm": "",
+            "user": "",
+            "nonce": "",
+            "extraData": "",
+            "app": "",
+            "delegation": "",
+            "timestamp": "",
+            "includePayloadHash": -1
+          },
+          "awsv4": {
+            "accessKey": "",
+            "secretKey": "",
+            "region": "",
+            "service": "",
+            "sessionToken": "",
+            "addAuthDataToQuery": -1
+          },
+          "ntlm": {
+            "username": "",
+            "password": "",
+            "domain": "",
+            "workstation": "",
+            "disableRetryRequest": 1
+          },
+          "edgegrid": {
+            "accessToken": "",
+            "clientToken": "",
+            "clientSecret": "",
+            "nonce": "",
+            "timestamp": "",
+            "baseURi": "",
+            "headersToSign": ""
+          },
+          "oauth1": {
+            "consumerKey": "",
+            "consumerSecret": "",
+            "signatureMethod": "",
+            "addEmptyParamsToSign": -1,
+            "includeBodyHash": -1,
+            "addParamsToHeader": -1,
+            "realm": "",
+            "version": "1.0",
+            "nonce": "",
+            "timestamp": "",
+            "verifier": "",
+            "callback": "",
+            "tokenSecret": "",
+            "token": ""
+          }
+        },
+        "cookie": null
+      },
+      "parameters": null,
+      "assert": [],
+      "timeout": 0,
+      "regex": [],
+      "debug": "",
+      "connection": 0,
+      "variable": null
+    },
+    "var": "",
+    "compare": "",
+    "val": "",
+    "name": "",
+    "wait_ms": 0
+  }, {
+    "id": "f5be45c5-8d61-43ff-80c5-8b745194ea07",
+    "report_id": "",
+    "team_id": 0,
+    "is_check": false,
+    "uuid": "00000000-0000-0000-0000-000000000000",
+    "type": "api",
+    "pre_list": ["77556936-cb9a-4193-8d35-268842a75874", "d54072a4-5a70-4c84-8911-77cfa441b827"],
+    "next_list": ["60ea1686-ee64-4a12-a950-658398f4bca0", "e1b5f3c5-00ab-4337-99eb-f92aed17645d"],
+    "tag": false,
+    "debug": "",
+    "mode": 0,
+    "request_threshold": 0,
+    "response_threshold": 0,
+    "error_threshold": 0,
+    "percent_age": 0,
+    "weight": 100,
+    "api": {
+      "target_id": 1407,
+      "uuid": "00000000-0000-0000-0000-000000000000",
+      "name": "新闻列表",
+      "team_id": 158,
+      "target_type": "api",
+      "method": "GET",
+      "request": {
+        "url": "{{url}}/api/demo/news_list?mobile=18289454846\u0026theme_news=国际新闻\u0026page=1\u0026page_size=15",
+        "header": {
+          "parameter": [{
+            "is_checked": 1,
+            "type": "Text",
+            "fileBase64": null,
+            "key": "token",
+            "value": "{{token}}",
+            "not_null": 1,
+            "description": "",
+            "field_type": "String"
+          }]
+        },
+        "query": {
+          "parameter": [{
+            "is_checked": 1,
+            "type": "Text",
+            "fileBase64": null,
+            "key": "mobile",
+            "value": "18289454846",
+            "not_null": 1,
+            "description": "",
+            "field_type": "String"
+          }, {
+            "is_checked": 1,
+            "type": "Text",
+            "fileBase64": null,
+            "key": "theme_news",
+            "value": "%E5%9B%BD%E9%99%85%E6%96%B0%E9%97%BB",
+            "not_null": 1,
+            "description": "",
+            "field_type": "String"
+          }, {
+            "is_checked": 1,
+            "type": "Text",
+            "fileBase64": null,
+            "key": "page",
+            "value": "1",
+            "not_null": 1,
+            "description": "",
+            "field_type": "String"
+          }, {
+            "is_checked": 1,
+            "type": "Text",
+            "fileBase64": null,
+            "key": "page_size",
+            "value": "15",
+            "not_null": 1,
+            "description": "",
+            "field_type": "String"
+          }]
+        },
+        "body": {
+          "mode": "none",
+          "raw": "",
+          "parameter": []
+        },
+        "auth": {
+          "type": "noauth",
+          "kv": {
+            "key": "",
+            "value": ""
+          },
+          "bearer": {
+            "key": ""
+          },
+          "basic": {
+            "username": "",
+            "password": ""
+          },
+          "digest": {
+            "username": "",
+            "password": "",
+            "realm": "",
+            "nonce": "",
+            "algorithm": "",
+            "qop": "",
+            "nc": "",
+            "cnonce": "",
+            "opaque": ""
+          },
+          "hawk": {
+            "authId": "",
+            "authKey": "",
+            "algorithm": "",
+            "user": "",
+            "nonce": "",
+            "extraData": "",
+            "app": "",
+            "delegation": "",
+            "timestamp": "",
+            "includePayloadHash": -1
+          },
+          "awsv4": {
+            "accessKey": "",
+            "secretKey": "",
+            "region": "",
+            "service": "",
+            "sessionToken": "",
+            "addAuthDataToQuery": -1
+          },
+          "ntlm": {
+            "username": "",
+            "password": "",
+            "domain": "",
+            "workstation": "",
+            "disableRetryRequest": 1
+          },
+          "edgegrid": {
+            "accessToken": "",
+            "clientToken": "",
+            "clientSecret": "",
+            "nonce": "",
+            "timestamp": "",
+            "baseURi": "",
+            "headersToSign": ""
+          },
+          "oauth1": {
+            "consumerKey": "",
+            "consumerSecret": "",
+            "signatureMethod": "",
+            "addEmptyParamsToSign": -1,
+            "includeBodyHash": -1,
+            "addParamsToHeader": -1,
+            "realm": "",
+            "version": "1.0",
+            "nonce": "",
+            "timestamp": "",
+            "verifier": "",
+            "callback": "",
+            "tokenSecret": "",
+            "token": ""
+          }
+        },
+        "cookie": null
+      },
+      "parameters": null,
+      "assert": [],
+      "timeout": 0,
+      "regex": [],
+      "debug": "",
+      "connection": 0,
+      "variable": null
+    },
+    "var": "",
+    "compare": "",
+    "val": "",
+    "name": "",
+    "wait_ms": 0
+  }, {
+    "id": "d54072a4-5a70-4c84-8911-77cfa441b827",
+    "report_id": "",
+    "team_id": 0,
+    "is_check": false,
+    "uuid": "00000000-0000-0000-0000-000000000000",
+    "type": "api",
+    "pre_list": ["8d59ebb6-1c6e-4cea-b4b9-0ba4c577966f"],
+    "next_list": ["f5be45c5-8d61-43ff-80c5-8b745194ea07"],
+    "tag": false,
+    "debug": "",
+    "mode": 0,
+    "request_threshold": 0,
+    "response_threshold": 0,
+    "error_threshold": 0,
+    "percent_age": 0,
+    "weight": 100,
+    "api": {
+      "target_id": 1405,
+      "uuid": "00000000-0000-0000-0000-000000000000",
+      "name": "登录接口",
+      "team_id": 158,
+      "target_type": "api",
+      "method": "POST",
+      "request": {
+        "url": "{{url}}/api/demo/login",
+        "header": {
+          "parameter": []
+        },
+        "query": {
+          "parameter": []
+        },
+        "body": {
+          "mode": "json",
+          "raw": "{\r\n\t\"mobile\": \"18289454846\",\r\n\t\"ver_code\": \"1234\"\r\n}",
+          "parameter": []
+        },
+        "auth": {
+          "type": "noauth",
+          "kv": {
+            "key": "",
+            "value": ""
+          },
+          "bearer": {
+            "key": ""
+          },
+          "basic": {
+            "username": "",
+            "password": ""
+          },
+          "digest": {
+            "username": "",
+            "password": "",
+            "realm": "",
+            "nonce": "",
+            "algorithm": "",
+            "qop": "",
+            "nc": "",
+            "cnonce": "",
+            "opaque": ""
+          },
+          "hawk": {
+            "authId": "",
+            "authKey": "",
+            "algorithm": "",
+            "user": "",
+            "nonce": "",
+            "extraData": "",
+            "app": "",
+            "delegation": "",
+            "timestamp": "",
+            "includePayloadHash": -1
+          },
+          "awsv4": {
+            "accessKey": "",
+            "secretKey": "",
+            "region": "",
+            "service": "",
+            "sessionToken": "",
+            "addAuthDataToQuery": -1
+          },
+          "ntlm": {
+            "username": "",
+            "password": "",
+            "domain": "",
+            "workstation": "",
+            "disableRetryRequest": 1
+          },
+          "edgegrid": {
+            "accessToken": "",
+            "clientToken": "",
+            "clientSecret": "",
+            "nonce": "",
+            "timestamp": "",
+            "baseURi": "",
+            "headersToSign": ""
+          },
+          "oauth1": {
+            "consumerKey": "",
+            "consumerSecret": "",
+            "signatureMethod": "",
+            "addEmptyParamsToSign": -1,
+            "includeBodyHash": -1,
+            "addParamsToHeader": -1,
+            "realm": "",
+            "version": "1.0",
+            "nonce": "",
+            "timestamp": "",
+            "verifier": "",
+            "callback": "",
+            "tokenSecret": "",
+            "token": ""
+          }
+        },
+        "cookie": null
+      },
+      "parameters": null,
+      "assert": [],
+      "timeout": 0,
+      "regex": [{
+        "var": "token",
+        "express": "\"token\":\"(.*?)\"},",
+        "val": ""
+      }],
+      "debug": "",
+      "connection": 0,
+      "variable": null
+    },
+    "var": "",
+    "compare": "",
+    "val": "",
+    "name": "",
+    "wait_ms": 0
+  }, {
+    "id": "e1b5f3c5-00ab-4337-99eb-f92aed17645d",
+    "report_id": "",
+    "team_id": 0,
+    "is_check": false,
+    "uuid": "00000000-0000-0000-0000-000000000000",
+    "type": "api",
+    "pre_list": ["f5be45c5-8d61-43ff-80c5-8b745194ea07"],
+    "next_list": [],
+    "tag": false,
+    "debug": "",
+    "mode": 0,
+    "request_threshold": 0,
+    "response_threshold": 0,
+    "error_threshold": 0,
+    "percent_age": 0,
+    "weight": 100,
+    "api": {
+      "target_id": 1416,
+      "uuid": "00000000-0000-0000-0000-000000000000",
+      "name": "新增新闻",
+      "team_id": 158,
+      "target_type": "api",
+      "method": "POST",
+      "request": {
+        "url": "{{url}}/api/demo/news",
+        "header": {
+          "parameter": [{
+            "is_checked": 1,
+            "type": "Text",
+            "fileBase64": null,
+            "key": "token",
+            "value": "{{token}}",
+            "not_null": 1,
+            "description": "",
+            "field_type": "String"
+          }]
+        },
+        "query": {
+          "parameter": []
+        },
+        "body": {
+          "mode": "json",
+          "raw": "{\r\n\t\"id\": 30,\r\n\t\"title\": \"古代第一酒鬼，被老婆踹进酒缸，大喊三个字，今成年轻人的口头禅\",\r\n\t\"author\": \"醉绾明史记\",\r\n\t\"url\": \"https://www.apipost.cn/\",\r\n\t\"content\": \"在人类文明的发展进程中，酒扮演着十分重要的角色。从被发现的那一天起，人们对于酒便情有独钟。\"\r\n}",
+          "parameter": []
+        },
+        "auth": {
+          "type": "noauth",
+          "kv": {
+            "key": "",
+            "value": ""
+          },
+          "bearer": {
+            "key": ""
+          },
+          "basic": {
+            "username": "",
+            "password": ""
+          },
+          "digest": {
+            "username": "",
+            "password": "",
+            "realm": "",
+            "nonce": "",
+            "algorithm": "",
+            "qop": "",
+            "nc": "",
+            "cnonce": "",
+            "opaque": ""
+          },
+          "hawk": {
+            "authId": "",
+            "authKey": "",
+            "algorithm": "",
+            "user": "",
+            "nonce": "",
+            "extraData": "",
+            "app": "",
+            "delegation": "",
+            "timestamp": "",
+            "includePayloadHash": -1
+          },
+          "awsv4": {
+            "accessKey": "",
+            "secretKey": "",
+            "region": "",
+            "service": "",
+            "sessionToken": "",
+            "addAuthDataToQuery": -1
+          },
+          "ntlm": {
+            "username": "",
+            "password": "",
+            "domain": "",
+            "workstation": "",
+            "disableRetryRequest": 1
+          },
+          "edgegrid": {
+            "accessToken": "",
+            "clientToken": "",
+            "clientSecret": "",
+            "nonce": "",
+            "timestamp": "",
+            "baseURi": "",
+            "headersToSign": ""
+          },
+          "oauth1": {
+            "consumerKey": "",
+            "consumerSecret": "",
+            "signatureMethod": "",
+            "addEmptyParamsToSign": -1,
+            "includeBodyHash": -1,
+            "addParamsToHeader": -1,
+            "realm": "",
+            "version": "1.0",
+            "nonce": "",
+            "timestamp": "",
+            "verifier": "",
+            "callback": "",
+            "tokenSecret": "",
+            "token": ""
+          }
+        },
+        "cookie": null
+      },
+      "parameters": null,
+      "assert": [],
+      "timeout": 0,
+      "regex": [],
+      "debug": "",
+      "connection": 0,
+      "variable": null
+    },
+    "var": "",
+    "compare": "",
+    "val": "",
+    "name": "",
+    "wait_ms": 0
+  }],
+  "config_task": null,
+  "configuration": {
+    "parameterizedFile": {
+      "path": null,
+      "real_paths": null,
+      "variable_names": null
+    },
+    "variable": null,
+    "mu": {}
+  },
+  "variable": [{
+    "key": "url",
+    "value": "http://59.110.10.84:30008"
+  }, {
+    "key": "token",
+    "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtb2JpbGUiOiIxODI4OTQ1NDg0NiIsInZlcl9jb2RlIjoiMTIzNCIsImV4cCI6MTY2Njg3MTAxNiwiaXNzIjoicHJvOTExIn0.BvptDoYF_A_mzxe1H5X0G0XFVms3Fdqobwtuv_SRbiw"
+  }]
+}

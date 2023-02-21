@@ -1,0 +1,123 @@
+{
+  "target_id": 1900,
+  "uuid": "c859604c-d473-4efb-bfd2-795649e69cff",
+  "name": "echo",
+  "team_id": 175,
+  "target_type": "api",
+  "method": "POST",
+  "request": {
+    "url": "echo.apipost.cn/get.php",
+    "header": {
+      "parameter": [ ]
+    },
+    "query": {
+      "parameter": [ ]
+    },
+    "body": {
+      "mode": "none",
+      "raw": "",
+      "parameter": [ ]
+    },
+    "auth": {
+      "type": "noauth",
+      "kv": {
+        "key": "",
+        "value": ""
+      },
+      "bearer": {
+        "key": ""
+      },
+      "basic": {
+        "username": "",
+        "password": ""
+      },
+      "digest": {
+        "username": "",
+        "password": "",
+        "realm": "",
+        "nonce": "",
+        "algorithm": "",
+        "qop": "",
+        "nc": "",
+        "cnonce": "",
+        "opaque": ""
+      },
+      "hawk": {
+        "authId": "",
+        "authKey": "",
+        "algorithm": "",
+        "user": "",
+        "nonce": "",
+        "extraData": "",
+        "app": "",
+        "delegation": "",
+        "timestamp": "",
+        "includePayloadHash": -1
+      },
+      "awsv4": {
+        "accessKey": "",
+        "secretKey": "",
+        "region": "",
+        "service": "",
+        "sessionToken": "",
+        "addAuthDataToQuery": -1
+      },
+      "ntlm": {
+        "username": "",
+        "password": "",
+        "domain": "",
+        "workstation": "",
+        "disableRetryRequest": 1
+      },
+      "edgegrid": {
+        "accessToken": "",
+        "clientToken": "",
+        "clientSecret": "",
+        "nonce": "",
+        "timestamp": "",
+        "baseURi": "",
+        "headersToSign": ""
+      },
+      "oauth1": {
+        "consumerKey": "",
+        "consumerSecret": "",
+        "signatureMethod": "",
+        "addEmptyParamsToSign": -1,
+        "includeBodyHash": -1,
+        "addParamsToHeader": -1,
+        "realm": "",
+        "version": "1.0",
+        "nonce": "",
+        "timestamp": "",
+        "verifier": "",
+        "callback": "",
+        "tokenSecret": "",
+        "token": ""
+      }
+    },
+    "cookie": null
+  },
+  "parameters": null,
+  "assert": [
+    {
+      "is_checked": 1,
+      "response_type": 2,
+      "compare": "gte",
+      "var": "errcode",
+      "val": "0"
+    }
+  ],
+  "timeout": 0,
+  "regex": [
+    {
+      "is_checked": 1,
+      "type": 1,
+      "var": "host",
+      "express": "errcode",
+      "val": ""
+    }
+  ],
+  "debug": "all",
+  "connection": 0,
+  "variable": null
+}

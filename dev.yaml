@@ -1,0 +1,69 @@
+
+
+heartbeat:
+  port: 8002
+  region: "北京"
+  duration: 2
+  resources: 5
+  grpcHost: "kpcontroller.apipost.cn:443"
+
+
+http:
+  address: "0.0.0.0:8002"
+  port: 8002
+  readTimeout: 5000
+  writeTimeout: 5000
+  noDefaultUserAgentHeader: true
+  maxConnPerHost: 10000
+  MaxIdleConnDuration: 5000
+  NoDefaultUserAgentHeader: 30000
+
+reportRedis:
+  address:
+  password:
+  db: 0
+
+redis:
+  address: "172.17.101.191:6398"
+  password: "apipost"
+  db: 0
+
+kafka:
+  address: "172.17.101.188:9092"
+  topIc: "report"
+
+
+mongo:
+  db: "kunpeng"
+  user: "kunpeng"
+  password: "kYjJpU8BYvb4EJ9x"
+  stressDebugTable: "stress_debug"
+  sceneDebugTable: "scene_debug"
+  apiDebugTable: "api_debug"
+  debugTable: "debug_status"
+  autoTable: "auto_report"
+  address: "172.17.18.255:27017"
+
+
+oss:
+  endpoint: "http://oss-cn-beijing.aliyuncs.com"
+  accessKeyID: "LTAI5tEAzFMCX559VD8mRDoZ"
+  accessKeySecret: "5IV7ZpVx95vBHZ3Y74jr9amaMtXpCQ"
+  bucket: "apipost"
+  split: "kunpeng/"
+  down: "/data/parameter"
+
+machine:
+  maxGoroutines: 20005
+  serverType: 1
+  netName: ""
+  diskName: ""
+
+
+log:
+  path: "/data/logs/RunnerGo/RunnerGo-engine-info.log"
+
+
+management:
+  address: "https://kpmanage.apipost.cn/management/api/v1/plan/notify_stop_stress"
+  notifyRunFinish: "https://kpmanage.apipost.cn/management/api/v1/auto_plan/notify_run_finish"
