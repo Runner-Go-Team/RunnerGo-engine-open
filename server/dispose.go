@@ -71,10 +71,7 @@ func ExecutionPlan(plan *model.Plan) {
 
 	// 新建mongo客户端连接，用于发送debug数据
 	mongoClient, err := model.NewMongoClient(
-		config.Conf.Mongo.User,
-		config.Conf.Mongo.Password,
-		config.Conf.Mongo.Address,
-		config.Conf.Mongo.DB,
+		config.Conf.Mongo.DSN,
 		middlewares.LocalIp)
 	if err != nil {
 		log.Logger.Error(fmt.Sprintf("机器ip:%s, 连接mongo错误：%s", middlewares.LocalIp, err.Error()))
@@ -93,8 +90,8 @@ func ExecutionPlan(plan *model.Plan) {
 	partition := plan.Partition
 	go model.SendKafkaMsg(kafkaProducer, resultDataMsgCh, topic, partition, middlewares.LocalIp)
 
-	requestCollection := model.NewCollection(config.Conf.Mongo.DB, config.Conf.Mongo.StressDebugTable, mongoClient)
-	debugCollection := model.NewCollection(config.Conf.Mongo.DB, config.Conf.Mongo.DebugTable, mongoClient)
+	requestCollection := model.NewCollection(config.Conf.Mongo.DataBase, config.Conf.Mongo.StressDebugTable, mongoClient)
+	debugCollection := model.NewCollection(config.Conf.Mongo.DataBase, config.Conf.Mongo.DebugTable, mongoClient)
 	scene := plan.Scene
 
 	// 如果场景中的任务配置勾选了全局任务配置，那么使用全局任务配置
@@ -241,10 +238,7 @@ func DebugScene(scene model.Scene) {
 	wg := &sync.WaitGroup{}
 	currentWg := &sync.WaitGroup{}
 	mongoClient, err := model.NewMongoClient(
-		config.Conf.Mongo.User,
-		config.Conf.Mongo.Password,
-		config.Conf.Mongo.Address,
-		config.Conf.Mongo.DB,
+		config.Conf.Mongo.DSN,
 		middlewares.LocalIp)
 	if err != nil {
 		log.Logger.Error(fmt.Sprintf("机器ip:%s, 连接mongo错误：%s", middlewares.LocalIp, err))
@@ -293,7 +287,7 @@ func DebugScene(scene model.Scene) {
 	}
 	scene.Debug = model.All
 	defer mongoClient.Disconnect(context.TODO())
-	mongoCollection := model.NewCollection(config.Conf.Mongo.DB, config.Conf.Mongo.SceneDebugTable, mongoClient)
+	mongoCollection := model.NewCollection(config.Conf.Mongo.DataBase, config.Conf.Mongo.SceneDebugTable, mongoClient)
 	var sceneWg = &sync.WaitGroup{}
 	golink.DisposeScene(wg, currentWg, sceneWg, model.SceneType, scene, configuration, nil, nil, mongoCollection)
 	currentWg.Wait()
@@ -341,10 +335,7 @@ func DebugApi(debugApi model.Api) {
 	event.Debug = model.All
 	// 新建mongo客户端连接，用于发送debug数据
 	mongoClient, err := model.NewMongoClient(
-		config.Conf.Mongo.User,
-		config.Conf.Mongo.Password,
-		config.Conf.Mongo.Address,
-		config.Conf.Mongo.DB,
+		config.Conf.Mongo.DSN,
 		middlewares.LocalIp)
 	if err != nil {
 		log.Logger.Error(fmt.Sprintf("机器ip:%s, 连接mongo错误：%s", middlewares.LocalIp, err.Error()))
@@ -368,7 +359,7 @@ func DebugApi(debugApi model.Api) {
 		return true
 	})
 	defer mongoClient.Disconnect(context.TODO())
-	mongoCollection := model.NewCollection(config.Conf.Mongo.DB, config.Conf.Mongo.ApiDebugTable, mongoClient)
+	mongoCollection := model.NewCollection(config.Conf.Mongo.DataBase, config.Conf.Mongo.ApiDebugTable, mongoClient)
 
 	golink.DisposeRequest(nil, nil, nil, globalVar, event, mongoCollection)
 	log.Logger.Info(fmt.Sprintf("机器ip:%s, 团队：%s, 接口：%s, 调试结束！", middlewares.LocalIp, debugApi.TeamId, debugApi.Name))

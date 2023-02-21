@@ -9,8 +9,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func NewMongoClient(user, password, host, db, ip string) (mongoClient *mongo.Client, err error) {
-	conf := fmt.Sprintf("mongodb://%s:%s@%s/%s", user, password, host, db)
+func NewMongoClient(dns, ip string) (mongoClient *mongo.Client, err error) {
+	conf := fmt.Sprintf(dns)
 
 	clientOptions := options.Client().ApplyURI(conf)
 	mongoClient, err = mongo.Connect(context.TODO(), clientOptions)

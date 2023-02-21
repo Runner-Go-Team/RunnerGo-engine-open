@@ -111,10 +111,7 @@ func DisposeAutoPlan(plan *auto.Plan, c *gin.Context) {
 
 	// 新建mongo客户端连接，用于发送debug数据
 	mongoClient, err := model.NewMongoClient(
-		config.Conf.Mongo.User,
-		config.Conf.Mongo.Password,
-		config.Conf.Mongo.Address,
-		config.Conf.Mongo.DB,
+		config.Conf.Mongo.DSN,
 		middlewares.LocalIp)
 	if err != nil {
 		log.Logger.Error(fmt.Sprintf("机器ip:%s, 连接mongo错误：%s", middlewares.LocalIp, err))
@@ -125,7 +122,7 @@ func DisposeAutoPlan(plan *auto.Plan, c *gin.Context) {
 	//resultDataMsgCh := make(chan *model.ResultDataMsg, 10000)
 
 	var wg = &sync.WaitGroup{}
-	collection := model.NewCollection(config.Conf.Mongo.DB, config.Conf.Mongo.AutoTable, mongoClient)
+	collection := model.NewCollection(config.Conf.Mongo.DataBase, config.Conf.Mongo.AutoTable, mongoClient)
 
 	var reportMsg = new(model.ResultDataMsg)
 	reportMsg.TeamId = plan.TeamId

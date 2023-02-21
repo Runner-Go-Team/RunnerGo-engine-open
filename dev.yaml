@@ -26,7 +26,7 @@ reportRedis:
 redis:
   address: "172.17.101.191:6398"
   password: "apipost"
-  db: 0
+  db: 1
 
 kafka:
   address: "172.17.101.188:9092"
@@ -34,15 +34,13 @@ kafka:
 
 
 mongo:
-  db: "kunpeng"
-  user: "kunpeng"
-  password: "kYjJpU8BYvb4EJ9x"
+  dsn: "mongodb://kunpeng:kYjJpU8BYvb4EJ9x@172.17.101.255:27017/kunpeng?replicaSet=mgset-509843895"
+  database: "kunpeng"
   stressDebugTable: "stress_debug"
   sceneDebugTable: "scene_debug"
   apiDebugTable: "api_debug"
   debugTable: "debug_status"
   autoTable: "auto_report"
-  address: "172.17.18.255:27017"
 
 
 oss:
@@ -65,5 +63,5 @@ log:
 
 
 management:
-  address: "https://kpmanage.apipost.cn/management/api/v1/plan/notify_stop_stress"
-  notifyRunFinish: "https://kpmanage.apipost.cn/management/api/v1/auto_plan/notify_run_finish"
+  address: "https://manager.runnergo.cc/management/api/v1/plan/notify_stop_stress"
+  notifyRunFinish: "https://manager.runnergo.cc//management/api/v1/auto_plan/notify_run_finish"

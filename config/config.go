@@ -76,10 +76,8 @@ type Redis struct {
 }
 
 type Mongo struct {
-	User             string `yaml:"user"`
-	Password         string `yaml:"password"`
-	Address          string `yaml:"address"`
-	DB               string `yaml:"db"`
+	DSN              string `yaml:"dsn"`
+	DataBase         string `yaml:"database"`
 	StressDebugTable string `yaml:"stressDebugTable"`
 	DebugTable       string `yaml:"debugTable"`
 	SceneDebugTable  string `yaml:"sceneDebugTable"`
