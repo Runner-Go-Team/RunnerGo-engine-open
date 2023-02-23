@@ -34,7 +34,7 @@ kafka:
 
 
 mongo:
-  dsn: "mongodb://runnergo_open:czYNsm6LmfZ0XU3E@172.17.101.255:27017/runnergo_open?replicaSet=mgset-509843895"
+  dsn: "mongodb://runnergo_open:czYNsm6LmfZ0XU3E@172.17.18.255:27017/runnergo_open"
   database: "runnergo_open"
   stressDebugTable: "stress_debug"
   sceneDebugTable: "scene_debug"
