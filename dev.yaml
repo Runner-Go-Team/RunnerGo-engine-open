@@ -58,5 +58,5 @@ log:
 
 
 management:
-  address: "https://manager.runnergo.cc/management/api/v1/plan/notify_stop_stress"
+  notifyStopStress: "https://manager.runnergo.cc/management/api/v1/plan/notify_stop_stress"
   notifyRunFinish: "https://manager.runnergo.cc/management/api/v1/auto_plan/notify_run_finish"

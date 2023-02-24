@@ -27,8 +27,8 @@ type Log struct {
 	Path string `yaml:"path"`
 }
 type Management struct {
-	Address         string `yaml:"address"`
-	NotifyRunFinish string `yaml:"notifyRunFinish"`
+	NotifyStopStress string `yaml:"notifyStopStress"`
+	NotifyRunFinish  string `yaml:"notifyRunFinish"`
 }
 
 type Machine struct {
@@ -123,7 +123,7 @@ func initLog() {
 }
 func initManagement() {
 	var management Management
-	management.Address = os.Getenv("RUNNER_GO_MANAGEMENT_ADDRESS")
+	management.NotifyStopStress = os.Getenv("RUNNER_GO_MANAGEMENT_NOTIFY_STOP_STRESS")
 	management.NotifyRunFinish = os.Getenv("RUNNER_GO_MANAGEMENT_NOTIFY_RUN_FINISH")
 	Conf.Management = management
 }
