@@ -5,6 +5,7 @@ import (
 	"RunnerGo-engine/model"
 	"RunnerGo-engine/tools"
 	"context"
+	"flag"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -23,12 +24,20 @@ import (
 
 var (
 	GinRouter *gin.Engine
+	mode      int
 )
 
 func initService() {
 
 	// 初始化配置文件
-	config.InitConfig()
+
+	if mode == 0 {
+		// 读取配置文件方式
+		config.InitConfig()
+	} else {
+		// 读取环境变量方式
+		config.EnvInitConfig()
+	}
 
 	// 初始化logger
 	zap.S().Debug("初始化logger")
@@ -110,5 +119,7 @@ func initService() {
 }
 
 func main() {
+	flag.IntVar(&mode, "mode", 0, "读取环境变量还是读取配置文件")
+	flag.Parsed()
 	initService()
 }
