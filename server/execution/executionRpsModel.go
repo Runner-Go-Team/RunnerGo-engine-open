@@ -34,6 +34,12 @@ func RPSModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Config
 	currentWg := &sync.WaitGroup{}
 	targetTime, startTime, endTime := time.Now().Unix(), time.Now().Unix(), time.Now().Unix()
 	rpsTag := false
+	rpsMap := make(map[string]bool)
+	for _, node := range scene.Nodes {
+		if node.RequestThreshold > 0 {
+			rpsMap[node.Id] = true
+		}
+	}
 	switch scene.ConfigTask.ControlMode {
 	case model.CentralizedMode:
 		for startTime+stepRunTime > endTime {
@@ -47,24 +53,15 @@ func RPSModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Config
 						break
 					}
 
-					tag, apiLen := 0, len(result.Results)
 					for _, resultData := range result.Results {
-						if resultData.TotalRequestNum != 0 {
-							if resultData.ResponseThreshold == 0 {
-								tag++
+						if _, ok := rpsMap[resultData.EventId]; ok {
+							if resultData.Rps > float64(resultData.RequestThreshold) {
+								delete(rpsMap, resultData.EventId)
 							}
-							if resultData.Rps >= float64(resultData.RequestThreshold) && resultData.ResponseThreshold != 0 {
-								tag++
-							}
-							if resultData.Rps < float64(resultData.RequestThreshold) && resultData.ResponseThreshold != 0 {
-								tag--
-							}
-
 						}
-
 					}
 					// 如果所有的接口rps都达到阈值，那么直接进入最大并发数
-					if tag == apiLen {
+					if len(rpsMap) == 0 {
 						concurrent = maxConcurrent
 						stepRunTime = stableDuration
 						rpsTag = true
@@ -189,24 +186,15 @@ func RPSModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Config
 						break
 					}
 
-					tag, apiLen := 0, len(result.Results)
 					for _, resultData := range result.Results {
-						if resultData.TotalRequestNum != 0 {
-							if resultData.ResponseThreshold == 0 {
-								tag++
+						if _, ok := rpsMap[resultData.EventId]; ok {
+							if resultData.Rps > float64(resultData.RequestThreshold) {
+								delete(rpsMap, resultData.EventId)
 							}
-							if resultData.Rps >= float64(resultData.RequestThreshold) && resultData.ResponseThreshold != 0 {
-								tag++
-							}
-							if resultData.Rps < float64(resultData.RequestThreshold) && resultData.ResponseThreshold != 0 {
-								tag--
-							}
-
 						}
-
 					}
 					// 如果所有的接口rps都达到阈值，那么直接进入最大并发数
-					if tag == apiLen {
+					if len(rpsMap) == 0 {
 						concurrent = maxConcurrent
 						stepRunTime = stableDuration
 						rpsTag = true
