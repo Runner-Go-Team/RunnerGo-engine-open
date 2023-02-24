@@ -120,6 +120,6 @@ func initService() {
 
 func main() {
 	flag.IntVar(&mode, "m", 0, "读取环境变量还是读取配置文件")
-	flag.Parsed()
+	flag.Parse()
 	initService()
 }

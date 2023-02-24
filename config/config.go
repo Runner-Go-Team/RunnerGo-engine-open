@@ -123,7 +123,7 @@ func initLog() {
 }
 func initManagement() {
 	var management Management
-	management.Address = os.Getenv("RUNNER_GO_MANAGEMENT_Address")
+	management.Address = os.Getenv("RUNNER_GO_MANAGEMENT_ADDRESS")
 	management.NotifyRunFinish = os.Getenv("RUNNER_GO_MANAGEMENT_NOTIFY_RUN_FINISH")
 	Conf.Management = management
 }
@@ -181,7 +181,7 @@ func initMongo() {
 
 func initRedis() {
 	var runnerGoRedis Redis
-	runnerGoRedis.Address = os.Getenv("RUNNER_GO_REDIS")
+	runnerGoRedis.Address = os.Getenv("RUNNER_GO_REDIS_ADDRESS")
 	runnerGoRedis.Password = os.Getenv("RUNNER_GO_REDIS_PASSWORD")
 	db, err := strconv.ParseInt(os.Getenv("RUNNER_GO_DB"), 10, 64)
 	if err != nil {
