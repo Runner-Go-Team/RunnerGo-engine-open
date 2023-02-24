@@ -192,10 +192,10 @@ func initRedis() {
 }
 
 func initKafka() {
-	var runnerGokafka Kafka
-	runnerGokafka.TopIc = os.Getenv("RUNNER_GO_KAFKA_TOPIC")
-	runnerGokafka.Address = os.Getenv("RUNNER_GO_KAFKA_ADDRESS")
-	Conf.Kafka = runnerGokafka
+	var runnerGoKafka Kafka
+	runnerGoKafka.TopIc = os.Getenv("RUNNER_GO_KAFKA_TOPIC")
+	runnerGoKafka.Address = os.Getenv("RUNNER_GO_KAFKA_ADDRESS")
+	Conf.Kafka = runnerGoKafka
 
 }
 
