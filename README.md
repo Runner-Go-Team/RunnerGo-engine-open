@@ -24,8 +24,6 @@
 
 ### 私有化升级
 
-6版本升级7版本洗数据 php artisan upgrade:version  
-7版本升级洗数据 php artisan upgrade:db {oldVersion=0.0.0}
 
 
 ## 配置说明

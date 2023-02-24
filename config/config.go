@@ -119,46 +119,46 @@ func EnvInitConfig() {
 }
 
 func initLog() {
-	Conf.Log.Path = os.Getenv("Runner_Go_Log_Path")
+	Conf.Log.Path = os.Getenv("RUNNER_GO_ENGINE_LOG_PATH")
 }
 func initManagement() {
 	var management Management
-	management.Address = os.Getenv("Runner_Go_Management_Address")
-	management.NotifyRunFinish = os.Getenv("Runner_Go_Management_NotifyRunFinish")
+	management.Address = os.Getenv("RUNNER_GO_MANAGEMENT_Address")
+	management.NotifyRunFinish = os.Getenv("RUNNER_GO_MANAGEMENT_NOTIFY_RUN_FINISH")
 	Conf.Management = management
 }
 
 func initMachine() {
 	var runnerGoMachine Machine
-	maxGo, err := strconv.Atoi(os.Getenv("Runner_Go_Machine_Max_Goroutines"))
+	maxGo, err := strconv.Atoi(os.Getenv("RUNNER_GO_MACHINE_MAX_GOROUTINES"))
 	if err != nil {
 		maxGo = 20000
 	}
 	runnerGoMachine.MaxGoroutines = maxGo
-	serverType, err := strconv.Atoi(os.Getenv("Runner_Go_Machine_Server_Type"))
+	serverType, err := strconv.Atoi(os.Getenv("RUNNER_GO_MACHINE_SERVER_TYPE"))
 	if err != nil {
 		serverType = 0
 	}
 	runnerGoMachine.ServerType = serverType
-	runnerGoMachine.NetName = os.Getenv("Runner_Go_Machine_Net_Name")
-	runnerGoMachine.DiskName = os.Getenv("Runner_Go_Machine_Disk_Name")
+	runnerGoMachine.NetName = os.Getenv("RUNNER_GO_MACHINE_NET_NAME")
+	runnerGoMachine.DiskName = os.Getenv("RUNNER_GO_MACHINE_DISK_NAME")
 	Conf.Machine = runnerGoMachine
 }
 
 func initHeartbeat() {
 	var runnerGoHeartbeat Heartbeat
-	port, err := strconv.Atoi(os.Getenv("Runner_Go_HeartBeat_Port"))
+	port, err := strconv.Atoi(os.Getenv("RUNNER_GO_HEARTBEAT_PORT"))
 	if err != nil {
 		port = 0
 	}
 	runnerGoHeartbeat.Port = int32(port)
-	runnerGoHeartbeat.Region = os.Getenv("Runner_Go_HeartBeat_Region")
-	duration, err := strconv.ParseInt(os.Getenv("Runner_Go_HeartBeat_Duration"), 10, 64)
+	runnerGoHeartbeat.Region = os.Getenv("RUNNER_GO_HEARTBEAT_REGION")
+	duration, err := strconv.ParseInt(os.Getenv("RUNNER_GO_HEARTBEAT_DURATION"), 10, 64)
 	if err != nil {
 		duration = 3
 	}
 	runnerGoHeartbeat.Duration = duration
-	resources, err := strconv.ParseInt(os.Getenv("Runner_Go_HeartBeat_Resources"), 10, 64)
+	resources, err := strconv.ParseInt(os.Getenv("RUNNER_GO_HEARTBEAT_RESOURCES"), 10, 64)
 	if err != nil {
 		resources = 3
 	}
@@ -169,21 +169,21 @@ func initHeartbeat() {
 // 初始化mongo
 func initMongo() {
 	var runnerGoMongo Mongo
-	runnerGoMongo.DSN = os.Getenv("Runner_Go_Mongo_DSN")
-	runnerGoMongo.DataBase = os.Getenv("Runner_Go_Mongo_Database")
-	runnerGoMongo.StressDebugTable = os.Getenv("Runner_Go_Mongo_Stress_Debug_Table")
-	runnerGoMongo.DebugTable = os.Getenv("Runner_Go_Mongo_Debug_Table")
-	runnerGoMongo.SceneDebugTable = os.Getenv("Runner_Go_Mongo_Scene_Debug_Table")
-	runnerGoMongo.ApiDebugTable = os.Getenv("Runner_Go_Mongo_Api_Debug_Table")
-	runnerGoMongo.AutoTable = os.Getenv("Runner_Go_Mongo_AutoTable")
+	runnerGoMongo.DSN = os.Getenv("RUNNER_GO_MONGO_DSN")
+	runnerGoMongo.DataBase = os.Getenv("RUNNER_GO_MONGO_DATABASE")
+	runnerGoMongo.StressDebugTable = os.Getenv("RUNNER_GO_MONGO_STRESS_DEBUG_TABLE")
+	runnerGoMongo.DebugTable = os.Getenv("RUNNER_GO_MONGO_DEBUG_TABLE")
+	runnerGoMongo.SceneDebugTable = os.Getenv("RUNNER_GO_MONGO_SCENE_DEBUG_TABLE")
+	runnerGoMongo.ApiDebugTable = os.Getenv("RUNNER_GO_MONGO_API_DEBUG_TABLE")
+	runnerGoMongo.AutoTable = os.Getenv("RUNNER_GO_MONGO_AUTO_TABLE")
 	Conf.Mongo = runnerGoMongo
 }
 
 func initRedis() {
 	var runnerGoRedis Redis
-	runnerGoRedis.Address = os.Getenv("Runner_Go_Redis")
-	runnerGoRedis.Password = os.Getenv("Runner_Go_Redis_Password")
-	db, err := strconv.ParseInt(os.Getenv("Runner_Go_DB"), 10, 64)
+	runnerGoRedis.Address = os.Getenv("RUNNER_GO_REDIS")
+	runnerGoRedis.Password = os.Getenv("RUNNER_GO_REDIS_PASSWORD")
+	db, err := strconv.ParseInt(os.Getenv("RUNNER_GO_DB"), 10, 64)
 	if err != nil {
 		db = 0
 	}
@@ -193,47 +193,47 @@ func initRedis() {
 
 func initKafka() {
 	var runnerGokafka Kafka
-	runnerGokafka.TopIc = os.Getenv("Runner_Go_Kafka_Topic")
-	runnerGokafka.Address = os.Getenv("Runner_Go_Kafka_Address")
+	runnerGokafka.TopIc = os.Getenv("RUNNER_GO_KAFKA_TOPIC")
+	runnerGokafka.Address = os.Getenv("RUNNER_GO_KAFKA_ADDRESS")
 	Conf.Kafka = runnerGokafka
 
 }
 
 func initHttp() {
 	var http Http
-	http.Name = os.Getenv("Http_Name")
-	http.Address = os.Getenv("Http_Address")
-	http.Version = os.Getenv("Http_Version")
-	readTimeout, err := strconv.ParseInt(os.Getenv("Http_Read_Timeout"), 10, 64)
+	http.Name = os.Getenv("ENGINE_HTTP_NAME")
+	http.Address = os.Getenv("ENGINE_HTTP_ADDRESS")
+	http.Version = os.Getenv("HTTP_VERSION")
+	readTimeout, err := strconv.ParseInt(os.Getenv("HTTP_READ_TIMEOUT"), 10, 64)
 	if err != nil {
 		readTimeout = 0
 	}
 	http.ReadTimeout = time.Duration(readTimeout)
 
-	writeTimeout, err := strconv.ParseInt(os.Getenv("Http_Write_Timeout"), 10, 64)
+	writeTimeout, err := strconv.ParseInt(os.Getenv("HTTP_WRITE_TIMEOUT"), 10, 64)
 	if err != nil {
 		writeTimeout = 0
 	}
 	http.WriteTimeout = time.Duration(writeTimeout)
 
-	maxConnPerHost, err := strconv.Atoi(os.Getenv("Http_Max_Conn_Per_Host"))
+	maxConnPerHost, err := strconv.Atoi(os.Getenv("HTTP_MAX_CONN_PER_HOST"))
 	if err != nil {
 		maxConnPerHost = 0
 	}
 	http.MaxConnPerHost = maxConnPerHost
 
-	httpMaxIdleConnDuration, err := strconv.ParseInt(os.Getenv("Http_Max_Idle_Conn_Duration"), 10, 64)
+	httpMaxIdleConnDuration, err := strconv.ParseInt(os.Getenv("HTTP_MAX_IDLE_CONN_DURATION"), 10, 64)
 	if err != nil {
 		httpMaxIdleConnDuration = 0
 	}
 	http.MaxIdleConnDuration = time.Duration(httpMaxIdleConnDuration)
 
-	httpMaxConnWaitTimeout, err := strconv.ParseInt(os.Getenv("Http_Max_Conn_Wait_Timeout"), 10, 64)
+	httpMaxConnWaitTimeout, err := strconv.ParseInt(os.Getenv("HTTP_MAX_CONN_WAIT_TIMEOUT"), 10, 64)
 	if err != nil {
 		httpMaxConnWaitTimeout = 0
 	}
 	http.MaxConnWaitTimeout = time.Duration(httpMaxConnWaitTimeout)
-	if os.Getenv("Http_No_Default_User_Agent_Header") == "true" {
+	if os.Getenv("HTTP_NO_DEFAULT_USER_AGENT_HEADER") == "true" {
 		http.NoDefaultUserAgentHeader = true
 	} else {
 		http.NoDefaultUserAgentHeader = false
