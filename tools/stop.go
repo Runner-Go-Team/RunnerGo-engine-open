@@ -30,7 +30,7 @@ func SendStopStressReport(machines []string, teamId, planId, reportId string) {
 	if err != nil {
 		log.Logger.Error(fmt.Sprintf("机器ip:%s, json转化失败：%s", middlewares.LocalIp, err.Error()))
 	}
-	res, err := http.Post(config.Conf.Management.Address, "application/json", strings.NewReader(string(body)))
+	res, err := http.Post(config.Conf.Management.NotifyStopStress, "application/json", strings.NewReader(string(body)))
 
 	if err != nil {
 		log.Logger.Error(fmt.Sprintf("机器ip:%s, http请求建立链接失败：%s", middlewares.LocalIp, err.Error()))

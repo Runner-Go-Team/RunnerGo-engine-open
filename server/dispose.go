@@ -91,7 +91,7 @@ func ExecutionPlan(plan *model.Plan) {
 	go model.SendKafkaMsg(kafkaProducer, resultDataMsgCh, topic, partition, middlewares.LocalIp)
 
 	requestCollection := model.NewCollection(config.Conf.Mongo.DataBase, config.Conf.Mongo.StressDebugTable, mongoClient)
-	debugCollection := model.NewCollection(config.Conf.Mongo.DataBase, config.Conf.Mongo.DebugTable, mongoClient)
+	debugCollection := model.NewCollection(config.Conf.Mongo.DataBase, config.Conf.Mongo.DebugStatusTable, mongoClient)
 	scene := plan.Scene
 
 	// 如果场景中的任务配置勾选了全局任务配置，那么使用全局任务配置
