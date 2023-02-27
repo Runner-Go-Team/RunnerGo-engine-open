@@ -74,9 +74,10 @@ type Redis struct {
 
 type Mongo struct {
 	DSN              string `yaml:"dsn"`
+	Password         string `yaml:"password"`
 	DataBase         string `yaml:"database"`
 	StressDebugTable string `yaml:"stressDebugTable"`
-	DebugTable       string `yaml:"debugTable"`
+	DebugStatusTable string `yaml:"debugTable"`
 	SceneDebugTable  string `yaml:"sceneDebugTable"`
 	ApiDebugTable    string `yaml:"apiDebugTable"`
 	AutoTable        string `yaml:"autoTable"`
@@ -118,13 +119,43 @@ func EnvInitConfig() {
 	initHttp()
 }
 
+const (
+	LogPath          = "/data/logs/RunnerGo/RunnerGo-engine-info.log"
+	NotifyStopStress = "https://127.0.0.1:8080/management/api/v1/plan/notify_stop_stress"
+	NotifyRunFinish  = "https://127.0.0.1:8080/management/api/v1/plan/notify_run_finish"
+	Region           = "北京"
+	Port             = 8002
+	MongoData        = "runnergo_open"
+	StressDebug      = "stress_debug"
+	SceneDebugTable  = "scene_debug"
+	ApiDebugTable    = "api_debug"
+	DebugStatusTable = "debug_status"
+	AutoTable        = "auto_report"
+	RedisAddress     = "127.0.0.1:6379"
+	KafkaTopic       = "report"
+	KafkaAddress     = "127.0.0.1:27017"
+	HttpAddress      = "0.0.0.0:8002"
+)
+
 func initLog() {
-	Conf.Log.Path = os.Getenv("RUNNER_GO_ENGINE_LOG_PATH")
+	logPath := os.Getenv("RUNNER_GO_ENGINE_LOG_PATH")
+	if logPath == "" {
+		logPath = LogPath
+	}
+	Conf.Log.Path = logPath
 }
 func initManagement() {
 	var management Management
-	management.NotifyStopStress = os.Getenv("RUNNER_GO_MANAGEMENT_NOTIFY_STOP_STRESS")
-	management.NotifyRunFinish = os.Getenv("RUNNER_GO_MANAGEMENT_NOTIFY_RUN_FINISH")
+	notifyStopStress := os.Getenv("RUNNER_GO_MANAGEMENT_NOTIFY_STOP_STRESS")
+	if notifyStopStress == "" {
+		notifyStopStress = NotifyStopStress
+	}
+	management.NotifyStopStress = notifyStopStress
+	notifyRunFinish := os.Getenv("RUNNER_GO_MANAGEMENT_NOTIFY_RUN_FINISH")
+	if notifyRunFinish == "" {
+		notifyRunFinish = NotifyRunFinish
+	}
+	management.NotifyRunFinish = notifyRunFinish
 	Conf.Management = management
 }
 
@@ -149,10 +180,14 @@ func initHeartbeat() {
 	var runnerGoHeartbeat Heartbeat
 	port, err := strconv.Atoi(os.Getenv("RUNNER_GO_HEARTBEAT_PORT"))
 	if err != nil {
-		port = 0
+		port = Port
 	}
 	runnerGoHeartbeat.Port = int32(port)
-	runnerGoHeartbeat.Region = os.Getenv("RUNNER_GO_HEARTBEAT_REGION")
+	region := os.Getenv("RUNNER_GO_HEARTBEAT_REGION")
+	if region == "" {
+		region = Region
+	}
+	runnerGoHeartbeat.Region = region
 	duration, err := strconv.ParseInt(os.Getenv("RUNNER_GO_HEARTBEAT_DURATION"), 10, 64)
 	if err != nil {
 		duration = 3
@@ -169,19 +204,28 @@ func initHeartbeat() {
 // 初始化mongo
 func initMongo() {
 	var runnerGoMongo Mongo
-	runnerGoMongo.DSN = os.Getenv("RUNNER_GO_MONGO_DSN")
-	runnerGoMongo.DataBase = os.Getenv("RUNNER_GO_MONGO_DATABASE")
-	runnerGoMongo.StressDebugTable = os.Getenv("RUNNER_GO_MONGO_STRESS_DEBUG_TABLE")
-	runnerGoMongo.DebugTable = os.Getenv("RUNNER_GO_MONGO_DEBUG_TABLE")
-	runnerGoMongo.SceneDebugTable = os.Getenv("RUNNER_GO_MONGO_SCENE_DEBUG_TABLE")
-	runnerGoMongo.ApiDebugTable = os.Getenv("RUNNER_GO_MONGO_API_DEBUG_TABLE")
-	runnerGoMongo.AutoTable = os.Getenv("RUNNER_GO_MONGO_AUTO_TABLE")
+	runnerGoMongo.Password = os.Getenv("RUNNER_GO_MONGO_PASSWORD")
+	dsn := os.Getenv("RUNNER_GO_MONGO_DSN")
+	if dsn == "" {
+		dsn = fmt.Sprintf("mongodb://runnergo_open:%s@127.0.0.1:27017/runnergo_open", runnerGoMongo.Password)
+	}
+	runnerGoMongo.DSN = dsn
+	runnerGoMongo.DataBase = MongoData
+	runnerGoMongo.StressDebugTable = StressDebug
+	runnerGoMongo.DebugStatusTable = DebugStatusTable
+	runnerGoMongo.SceneDebugTable = SceneDebugTable
+	runnerGoMongo.ApiDebugTable = ApiDebugTable
+	runnerGoMongo.AutoTable = AutoTable
 	Conf.Mongo = runnerGoMongo
 }
 
 func initRedis() {
 	var runnerGoRedis Redis
-	runnerGoRedis.Address = os.Getenv("RUNNER_GO_REDIS_ADDRESS")
+	address := os.Getenv("RUNNER_GO_REDIS_ADDRESS")
+	if address == "" {
+		address = RedisAddress
+	}
+	runnerGoRedis.Address = address
 	runnerGoRedis.Password = os.Getenv("RUNNER_GO_REDIS_PASSWORD")
 	db, err := strconv.ParseInt(os.Getenv("RUNNER_GO_DB"), 10, 64)
 	if err != nil {
@@ -193,8 +237,16 @@ func initRedis() {
 
 func initKafka() {
 	var runnerGoKafka Kafka
-	runnerGoKafka.TopIc = os.Getenv("RUNNER_GO_KAFKA_TOPIC")
-	runnerGoKafka.Address = os.Getenv("RUNNER_GO_KAFKA_ADDRESS")
+	topic := os.Getenv("RUNNER_GO_KAFKA_TOPIC")
+	if topic == "" {
+		topic = KafkaTopic
+	}
+	runnerGoKafka.TopIc = topic
+	address := os.Getenv("RUNNER_GO_KAFKA_ADDRESS")
+	if address == "" {
+		address = KafkaAddress
+	}
+	runnerGoKafka.Address = address
 	Conf.Kafka = runnerGoKafka
 
 }
@@ -202,7 +254,11 @@ func initKafka() {
 func initHttp() {
 	var http Http
 	http.Name = os.Getenv("ENGINE_HTTP_NAME")
-	http.Address = os.Getenv("ENGINE_HTTP_ADDRESS")
+	address := os.Getenv("ENGINE_HTTP_ADDRESS")
+	if address == "" {
+		address = HttpAddress
+	}
+	http.Address = address
 	http.Version = os.Getenv("HTTP_VERSION")
 	readTimeout, err := strconv.ParseInt(os.Getenv("HTTP_READ_TIMEOUT"), 10, 64)
 	if err != nil {

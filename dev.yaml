@@ -31,11 +31,7 @@ kafka:
 mongo:
   dsn: "mongodb://runnergo_open:czYNsm6LmfZ0XU3E@172.17.18.255:27017/runnergo_open"
   database: "runnergo_open"
-  stressDebugTable: "stress_debug"
-  sceneDebugTable: "scene_debug"
-  apiDebugTable: "api_debug"
-  debugTable: "debug_status"
-  autoTable: "auto_report"
+
 
 
 oss:
