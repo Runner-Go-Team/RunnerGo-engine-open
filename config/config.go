@@ -138,7 +138,7 @@ const (
 )
 
 func initLog() {
-	logPath := os.Getenv("RUNNER_GO_ENGINE_LOG_PATH")
+	logPath := os.Getenv("RG_ENGINE_LOG_PATH")
 	if logPath == "" {
 		logPath = LogPath
 	}
@@ -146,12 +146,12 @@ func initLog() {
 }
 func initManagement() {
 	var management Management
-	notifyStopStress := os.Getenv("RUNNER_GO_MANAGEMENT_NOTIFY_STOP_STRESS")
+	notifyStopStress := os.Getenv("RG_MANAGEMENT_NOTIFY_STOP_STRESS")
 	if notifyStopStress == "" {
 		notifyStopStress = NotifyStopStress
 	}
 	management.NotifyStopStress = notifyStopStress
-	notifyRunFinish := os.Getenv("RUNNER_GO_MANAGEMENT_NOTIFY_RUN_FINISH")
+	notifyRunFinish := os.Getenv("RG_MANAGEMENT_NOTIFY_RUN_FINISH")
 	if notifyRunFinish == "" {
 		notifyRunFinish = NotifyRunFinish
 	}
@@ -161,39 +161,39 @@ func initManagement() {
 
 func initMachine() {
 	var runnerGoMachine Machine
-	maxGo, err := strconv.Atoi(os.Getenv("RUNNER_GO_MACHINE_MAX_GOROUTINES"))
+	maxGo, err := strconv.Atoi(os.Getenv("RG_MACHINE_MAX_GOROUTINES"))
 	if err != nil {
 		maxGo = 20000
 	}
 	runnerGoMachine.MaxGoroutines = maxGo
-	serverType, err := strconv.Atoi(os.Getenv("RUNNER_GO_MACHINE_SERVER_TYPE"))
+	serverType, err := strconv.Atoi(os.Getenv("RG_MACHINE_SERVER_TYPE"))
 	if err != nil {
 		serverType = 0
 	}
 	runnerGoMachine.ServerType = serverType
-	runnerGoMachine.NetName = os.Getenv("RUNNER_GO_MACHINE_NET_NAME")
-	runnerGoMachine.DiskName = os.Getenv("RUNNER_GO_MACHINE_DISK_NAME")
+	runnerGoMachine.NetName = os.Getenv("RG_MACHINE_NET_NAME")
+	runnerGoMachine.DiskName = os.Getenv("RG_MACHINE_DISK_NAME")
 	Conf.Machine = runnerGoMachine
 }
 
 func initHeartbeat() {
 	var runnerGoHeartbeat Heartbeat
-	port, err := strconv.Atoi(os.Getenv("RUNNER_GO_HEARTBEAT_PORT"))
+	port, err := strconv.Atoi(os.Getenv("RG_HEARTBEAT_PORT"))
 	if err != nil {
 		port = Port
 	}
 	runnerGoHeartbeat.Port = int32(port)
-	region := os.Getenv("RUNNER_GO_HEARTBEAT_REGION")
+	region := os.Getenv("RG_HEARTBEAT_REGION")
 	if region == "" {
 		region = Region
 	}
 	runnerGoHeartbeat.Region = region
-	duration, err := strconv.ParseInt(os.Getenv("RUNNER_GO_HEARTBEAT_DURATION"), 10, 64)
+	duration, err := strconv.ParseInt(os.Getenv("RG_HEARTBEAT_DURATION"), 10, 64)
 	if err != nil {
 		duration = 3
 	}
 	runnerGoHeartbeat.Duration = duration
-	resources, err := strconv.ParseInt(os.Getenv("RUNNER_GO_HEARTBEAT_RESOURCES"), 10, 64)
+	resources, err := strconv.ParseInt(os.Getenv("RG_HEARTBEAT_RESOURCES"), 10, 64)
 	if err != nil {
 		resources = 3
 	}
@@ -204,8 +204,8 @@ func initHeartbeat() {
 // 初始化mongo
 func initMongo() {
 	var runnerGoMongo Mongo
-	runnerGoMongo.Password = os.Getenv("RUNNER_GO_MONGO_PASSWORD")
-	dsn := os.Getenv("RUNNER_GO_MONGO_DSN")
+	runnerGoMongo.Password = os.Getenv("RG_MONGO_PASSWORD")
+	dsn := os.Getenv("RG_MONGO_DSN")
 	if dsn == "" {
 		dsn = fmt.Sprintf("mongodb://runnergo_open:%s@127.0.0.1:27017/runnergo_open", runnerGoMongo.Password)
 	}
@@ -221,13 +221,13 @@ func initMongo() {
 
 func initRedis() {
 	var runnerGoRedis Redis
-	address := os.Getenv("RUNNER_GO_REDIS_ADDRESS")
+	address := os.Getenv("RG_REDIS_ADDRESS")
 	if address == "" {
 		address = RedisAddress
 	}
 	runnerGoRedis.Address = address
-	runnerGoRedis.Password = os.Getenv("RUNNER_GO_REDIS_PASSWORD")
-	db, err := strconv.ParseInt(os.Getenv("RUNNER_GO_DB"), 10, 64)
+	runnerGoRedis.Password = os.Getenv("RG_REDIS_PASSWORD")
+	db, err := strconv.ParseInt(os.Getenv("RG_DB"), 10, 64)
 	if err != nil {
 		db = 0
 	}
@@ -237,12 +237,12 @@ func initRedis() {
 
 func initKafka() {
 	var runnerGoKafka Kafka
-	topic := os.Getenv("RUNNER_GO_KAFKA_TOPIC")
+	topic := os.Getenv("RG_KAFKA_TOPIC")
 	if topic == "" {
 		topic = KafkaTopic
 	}
 	runnerGoKafka.TopIc = topic
-	address := os.Getenv("RUNNER_GO_KAFKA_ADDRESS")
+	address := os.Getenv("RG_KAFKA_ADDRESS")
 	if address == "" {
 		address = KafkaAddress
 	}
@@ -253,8 +253,8 @@ func initKafka() {
 
 func initHttp() {
 	var http Http
-	http.Name = os.Getenv("ENGINE_HTTP_NAME")
-	address := os.Getenv("ENGINE_HTTP_ADDRESS")
+	http.Name = os.Getenv("RG_ENGINE_HTTP_NAME")
+	address := os.Getenv("RG_ENGINE_HTTP_ADDRESS")
 	if address == "" {
 		address = HttpAddress
 	}
