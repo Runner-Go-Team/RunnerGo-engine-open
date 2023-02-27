@@ -1,12 +1,12 @@
 package execution
 
 import (
-	"RunnerGo-engine/log"
-	"RunnerGo-engine/middlewares"
-	"RunnerGo-engine/model"
-	"RunnerGo-engine/server/golink"
 	"encoding/json"
 	"fmt"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/server/golink"
 	"go.mongodb.org/mongo-driver/mongo"
 	"math"
 	"sync"

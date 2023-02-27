@@ -1,7 +1,7 @@
 package routers
 
 import (
-	"RunnerGo-engine/api"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/api"
 	"github.com/gin-gonic/gin"
 )
 

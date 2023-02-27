@@ -1,13 +1,13 @@
 package model
 
 import (
-	"RunnerGo-engine/log"
-	"RunnerGo-engine/middlewares"
-	"RunnerGo-engine/tools"
 	"bytes"
 	"encoding/binary"
 	"encoding/gob"
 	"fmt"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/tools"
 	"github.com/ThomsonReutersEikon/go-ntlm/ntlm"
 	"github.com/comcast/go-edgegrid/edgegrid"
 	"github.com/hiyosi/hawk"

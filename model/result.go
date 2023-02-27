@@ -1,11 +1,11 @@
 package model
 
 import (
-	"RunnerGo-engine/log"
-	"RunnerGo-engine/middlewares"
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 )
 
 /*

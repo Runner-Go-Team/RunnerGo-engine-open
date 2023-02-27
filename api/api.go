@@ -1,16 +1,16 @@
 package api
 
 import (
-	"RunnerGo-engine/global"
-	"RunnerGo-engine/log"
-	"RunnerGo-engine/middlewares"
-	"RunnerGo-engine/model"
-	auto2 "RunnerGo-engine/model/auto"
 	"fmt"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/global"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
+	auto2 "github.com/Runner-Go-Team/RunnerGo-engine-open/model/auto"
 
-	"RunnerGo-engine/server"
-	"RunnerGo-engine/server/auto"
 	"encoding/json"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/server"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/server/auto"
 	"github.com/gin-gonic/gin"
 	uuid "github.com/satori/go.uuid"
 	"net/http"

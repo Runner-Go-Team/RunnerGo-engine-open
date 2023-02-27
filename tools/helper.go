@@ -3,11 +3,11 @@
 package tools
 
 import (
-	"RunnerGo-engine/log"
-	"RunnerGo-engine/middlewares"
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	"github.com/thedevsaddam/gojsonq"
 	"os"
 	"regexp"

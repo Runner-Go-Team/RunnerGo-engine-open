@@ -2,9 +2,9 @@
 package golink
 
 import (
-	"RunnerGo-engine/middlewares"
-	"RunnerGo-engine/model"
-	"RunnerGo-engine/server/client"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/server/client"
 	"github.com/valyala/fasthttp"
 	"go.mongodb.org/mongo-driver/mongo"
 	"net/url"

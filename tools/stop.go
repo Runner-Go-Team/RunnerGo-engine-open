@@ -1,11 +1,11 @@
 package tools
 
 import (
-	"RunnerGo-engine/config"
-	"RunnerGo-engine/log"
-	"RunnerGo-engine/middlewares"
 	"encoding/json"
 	"fmt"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/config"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	"io/ioutil"
 	"net/http"
 	"strings"

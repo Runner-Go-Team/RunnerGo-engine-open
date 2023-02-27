@@ -2,8 +2,8 @@
 package golink
 
 import (
-	"RunnerGo-engine/model"
-	"RunnerGo-engine/server/client"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/server/client"
 	"github.com/shopspring/decimal"
 )
 

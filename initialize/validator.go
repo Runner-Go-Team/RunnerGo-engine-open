@@ -1,8 +1,8 @@
 package initialize
 
 import (
-	"RunnerGo-engine/global"
 	"fmt"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/global"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/locales/en"
 	"github.com/go-playground/locales/zh"

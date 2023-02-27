@@ -1,8 +1,8 @@
 package model
 
 import (
-	"RunnerGo-engine/tools"
 	"fmt"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/tools"
 	"github.com/valyala/fasthttp"
 	"strconv"
 	"strings"

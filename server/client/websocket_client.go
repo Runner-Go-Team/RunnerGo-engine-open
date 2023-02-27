@@ -1,10 +1,10 @@
 package client
 
 import (
-	"RunnerGo-engine/log"
-	"RunnerGo-engine/middlewares"
-	"RunnerGo-engine/tools"
 	"fmt"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/tools"
 	"github.com/gorilla/websocket"
 	"time"
 )

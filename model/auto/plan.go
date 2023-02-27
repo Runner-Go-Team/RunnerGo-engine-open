@@ -1,6 +1,6 @@
 package auto
 
-import "RunnerGo-engine/model"
+import "github.com/Runner-Go-Team/RunnerGo-engine-open/model"
 
 type Plan struct {
 	PlanId        string               `json:"plan_id" bson:"plan_id"`     // 计划id

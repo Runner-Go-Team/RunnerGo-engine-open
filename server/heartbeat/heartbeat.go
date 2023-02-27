@@ -1,17 +1,17 @@
 package heartbeat
 
 import (
-	"RunnerGo-engine/middlewares"
-	"RunnerGo-engine/model"
 	"encoding/json"
 	"fmt"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
 	gonet "net"
 	"runtime"
 	"strings"
 	"time"
 
-	"RunnerGo-engine/config"
-	"RunnerGo-engine/log"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/config"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/disk"
 	"github.com/shirou/gopsutil/host"

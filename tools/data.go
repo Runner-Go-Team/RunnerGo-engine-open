@@ -1,10 +1,10 @@
 package tools
 
 import (
-	"RunnerGo-engine/log"
-	"RunnerGo-engine/middlewares"
 	"encoding/base64"
 	"fmt"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	"strings"
 )
 

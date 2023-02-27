@@ -1,12 +1,12 @@
 package main
 
 import (
-	"RunnerGo-engine/middlewares"
-	"RunnerGo-engine/model"
-	"RunnerGo-engine/tools"
 	"context"
 	"flag"
 	"fmt"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/tools"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"net/http"
@@ -15,10 +15,10 @@ import (
 	"syscall"
 	"time"
 
-	"RunnerGo-engine/config"
-	"RunnerGo-engine/initialize"
-	"RunnerGo-engine/log"
-	"RunnerGo-engine/server/heartbeat"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/config"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/initialize"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/server/heartbeat"
 	_ "net/http/pprof"
 )
 

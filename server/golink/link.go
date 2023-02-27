@@ -1,11 +1,11 @@
 package golink
 
 import (
-	"RunnerGo-engine/middlewares"
-	"RunnerGo-engine/model"
-	"RunnerGo-engine/tools"
 	"encoding/json"
 	"fmt"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/tools"
 	"go.mongodb.org/mongo-driver/mongo"
 	"golang.org/x/net/context"
 	"math"

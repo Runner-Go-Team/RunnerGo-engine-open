@@ -1,9 +1,9 @@
 package model
 
 import (
-	"RunnerGo-engine/log"
 	"encoding/json"
 	"fmt"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
 	"github.com/Shopify/sarama"
 )
 

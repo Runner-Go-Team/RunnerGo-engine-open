@@ -1,8 +1,8 @@
 package initialize
 
 import (
-	"RunnerGo-engine/middlewares"
-	"RunnerGo-engine/routers"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/routers"
 	"github.com/gin-gonic/gin"
 )
 

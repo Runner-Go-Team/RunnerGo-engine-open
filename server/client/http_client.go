@@ -1,10 +1,10 @@
 package client
 
 import (
-	"RunnerGo-engine/config"
-	"RunnerGo-engine/model"
 	"crypto/tls"
 	"fmt"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/config"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
 	"github.com/valyala/fasthttp"
 	"strings"
 	"time"
