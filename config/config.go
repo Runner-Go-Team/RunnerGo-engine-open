@@ -121,20 +121,20 @@ func EnvInitConfig() {
 
 const (
 	LogPath          = "/data/logs/RunnerGo/RunnerGo-engine-info.log"
-	NotifyStopStress = "https://127.0.0.1:8080/management/api/v1/plan/notify_stop_stress"
-	NotifyRunFinish  = "https://127.0.0.1:8080/management/api/v1/plan/notify_run_finish"
+	NotifyStopStress = "https://127.0.0.0:30000/management/api/v1/plan/notify_stop_stress"
+	NotifyRunFinish  = "https://127.0.0.0:30000/management/api/v1/plan/notify_run_finish"
 	Region           = "北京"
-	Port             = 8002
+	Port             = 30000
 	MongoData        = "runnergo_open"
 	StressDebug      = "stress_debug"
 	SceneDebugTable  = "scene_debug"
 	ApiDebugTable    = "api_debug"
 	DebugStatusTable = "debug_status"
 	AutoTable        = "auto_report"
-	RedisAddress     = "127.0.0.1:6379"
+	RedisAddress     = "127.0.0.0:6379"
 	KafkaTopic       = "report"
-	KafkaAddress     = "127.0.0.1:27017"
-	HttpAddress      = "0.0.0.0:8002"
+	KafkaAddress     = "127.0.0.0:9092"
+	HttpAddress      = "0.0.0.0:30000"
 )
 
 func initLog() {
