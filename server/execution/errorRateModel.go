@@ -32,7 +32,7 @@ func ErrorRateModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.
 	stepRunTime := scene.ConfigTask.ModeConf.StepRunTime
 	stableDuration := scene.ConfigTask.ModeConf.Duration
 
-	adjustKey := fmt.Sprintf("SubscriptionStressPlanStatusChange:%s:%s:%s", reportMsg.TeamId, reportMsg.PlanId, reportMsg.ReportId)
+	adjustKey := fmt.Sprintf("SubscriptionStressPlanStatusChange:%s", reportMsg.ReportId)
 	pubSub := model.SubscribeMsg(adjustKey)
 	statusCh := pubSub.Channel()
 	defer pubSub.Close()
@@ -44,7 +44,7 @@ func ErrorRateModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.
 	concurrent := startConcurrent
 	// 只要开始时间+持续时长大于当前时间就继续循环
 	target := 0
-	key := fmt.Sprintf("reportData:%s:%s:%s", reportMsg.TeamId, reportMsg.PlanId, reportMsg.ReportId)
+	key := fmt.Sprintf("reportData:%s", reportMsg.ReportId)
 	currentWg := &sync.WaitGroup{}
 	concurrentMap := new(sync.Map)
 	targetTime, startTime, endTime := time.Now().Unix(), time.Now().Unix(), time.Now().Unix()

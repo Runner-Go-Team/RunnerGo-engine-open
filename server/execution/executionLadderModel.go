@@ -27,7 +27,7 @@ func LadderModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Con
 	target := 0
 	currentWg := &sync.WaitGroup{}
 	targetTime, startTime, endTime := time.Now().Unix(), time.Now().Unix(), time.Now().Unix()
-	adjustKey := fmt.Sprintf("SubscriptionStressPlanStatusChange:%s:%s:%s", reportMsg.TeamId, reportMsg.PlanId, reportMsg.ReportId)
+	adjustKey := fmt.Sprintf("SubscriptionStressPlanStatusChange:%s", reportMsg.ReportId)
 	pubSub := model.SubscribeMsg(adjustKey)
 	statusCh := pubSub.Channel()
 	defer pubSub.Close()

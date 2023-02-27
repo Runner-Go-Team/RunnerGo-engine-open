@@ -25,12 +25,12 @@ func RTModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Configu
 
 	target := 0
 
-	adjustKey := fmt.Sprintf("SubscriptionStressPlanStatusChange:%s:%s:%s", reportMsg.TeamId, reportMsg.PlanId, reportMsg.ReportId)
+	adjustKey := fmt.Sprintf("SubscriptionStressPlanStatusChange:%s", reportMsg.ReportId)
 	pubSub := model.SubscribeMsg(adjustKey)
 	statusCh := pubSub.Channel()
 	defer pubSub.Close()
 	debug := scene.Debug
-	key := fmt.Sprintf("reportData:%s:%s:%s", reportMsg.TeamId, reportMsg.PlanId, reportMsg.ReportId)
+	key := fmt.Sprintf("reportData:%s", reportMsg.ReportId)
 	currentWg := &sync.WaitGroup{}
 	concurrentMap := new(sync.Map)
 	// 只要开始时间+持续时长大于当前时间就继续循环

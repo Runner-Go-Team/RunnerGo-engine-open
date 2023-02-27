@@ -17,7 +17,7 @@ func ConcurrentModel(wg *sync.WaitGroup, scene model.Scene, configuration *model
 
 	concurrent := scene.ConfigTask.ModeConf.Concurrency
 	// 订阅redis中消息  任务状态：包括：报告停止；debug日志状态；任务配置变更
-	adjustKey := fmt.Sprintf("SubscriptionStressPlanStatusChange:%s:%s:%s", reportMsg.TeamId, reportMsg.PlanId, reportMsg.ReportId)
+	adjustKey := fmt.Sprintf("SubscriptionStressPlanStatusChange:%s", reportMsg.ReportId)
 	pubSub := model.SubscribeMsg(adjustKey)
 	statusCh := pubSub.Channel()
 	defer pubSub.Close()
