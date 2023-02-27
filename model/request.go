@@ -101,7 +101,6 @@ func (b *Body) SetBody(req *fasthttp.Request) string {
 				}
 				for _, base64Str := range value.FileBase64 {
 					by, fileType := tools.Base64DeEncode(base64Str, FileType)
-					log.Logger.Debug(fmt.Sprintf("机器ip:%s, fileType:    ", middlewares.LocalIp), fileType)
 					if by == nil {
 						continue
 					}
