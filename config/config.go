@@ -207,7 +207,7 @@ func initMongo() {
 	runnerGoMongo.Password = os.Getenv("RG_MONGO_PASSWORD")
 	dsn := os.Getenv("RG_MONGO_DSN")
 	if dsn == "" {
-		dsn = fmt.Sprintf("mongodb://runnergo_open:%s@127.0.0.1:27017/runnergo_open", runnerGoMongo.Password)
+		dsn = fmt.Sprintf("mongodb://runnergo_open:%s@127.0.0.0:27017/runnergo_open", runnerGoMongo.Password)
 	}
 	runnerGoMongo.DSN = dsn
 	runnerGoMongo.DataBase = MongoData
