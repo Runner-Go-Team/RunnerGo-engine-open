@@ -135,7 +135,11 @@ func makeDebugMsg(regex []map[string]interface{}, debugMsg map[string]interface{
 	debugMsg["request_header"] = req.Header.String()
 	debugMsg["response_time"] = responseTime
 	if string(req.Body()) != "" {
-		debugMsg["request_body"], _ = url.QueryUnescape(string(req.Body()))
+		var errBody error
+		debugMsg["request_body"], errBody = url.QueryUnescape(string(req.Body()))
+		if errBody != nil {
+			debugMsg["request_body"] = string(req.Body())
+		}
 	} else {
 		debugMsg["request_body"] = str
 	}
