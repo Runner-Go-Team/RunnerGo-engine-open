@@ -178,9 +178,13 @@ func InitLocalIp() {
 func SendHeartBeatRedis(field string, duration int64) {
 	for {
 		CheckHeartBeat()
-		hb, _ := json.Marshal(heartbeat)
+		log.Logger.Debug("heartbeat:   ", heartbeat)
+		hb, err := json.Marshal(heartbeat)
+		if err != nil {
+			log.Logger.Debug("err:   ", err)
+		}
 		log.Logger.Debug("hb:     ", Key, "               ", field, "                   ", string(hb))
-		err := model.InsertHeartbeat(Key, field, string(hb))
+		err = model.InsertHeartbeat(Key, field, string(hb))
 		if err != nil {
 			log.Logger.Error(fmt.Sprintf("机器ip:%s, 心跳发送失败, 写入redis失败:   %s", middlewares.LocalIp, err.Error()))
 		}
