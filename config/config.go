@@ -252,18 +252,25 @@ func initMongo() {
 
 func initRedis() {
 	var runnerGoRedis Redis
+	var reportRedis ReportRedis
 	address := os.Getenv("RG_REDIS_ADDRESS")
 	if address == "" {
 		address = RedisAddress
 	}
-	runnerGoRedis.Address = address
+	reportRedis.Address = address
+	runnerGoRedis.Address = reportRedis.Address
 	runnerGoRedis.Password = os.Getenv("RG_REDIS_PASSWORD")
+	reportRedis.Password = runnerGoRedis.Password
 	db, err := strconv.ParseInt(os.Getenv("RG_DB"), 10, 64)
 	if err != nil {
 		db = 0
 	}
-	runnerGoRedis.DB = db
+	reportRedis.DB = db
+	runnerGoRedis.DB = reportRedis.DB
+
 	Conf.Redis = runnerGoRedis
+	Conf.ReportRedis = reportRedis
+
 }
 
 func initKafka() {
