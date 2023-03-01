@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
 	"github.com/go-redis/redis"
 	"time"
 )
@@ -22,6 +23,7 @@ func InitRedisClient(reportAddr, reportPassword string, reportDb int64, addr, pa
 			Password: password,
 			DB:       int(db),
 		})
+	log.Logger.Debug("redis:   ", addr, password, db)
 	_, err = ReportRdb.Ping().Result()
 	if err != nil {
 		return err
