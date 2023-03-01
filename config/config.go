@@ -86,7 +86,7 @@ type Mongo struct {
 func InitConfig() {
 
 	var conf string
-	flag.StringVar(&conf, "c", "./dev.yaml", "配置文件,默认为conf文件夹下的open文件")
+	flag.StringVar(&conf, "c", "./open.yaml", "配置文件,默认为conf文件夹下的open文件")
 	if !flag.Parsed() {
 		flag.Parse()
 	}
