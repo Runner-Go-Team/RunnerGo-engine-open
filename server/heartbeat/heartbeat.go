@@ -28,6 +28,7 @@ var (
 func CheckHeartBeat() *HeartBeat {
 	heartbeat.Name = GetHostName()
 	heartbeat.CpuUsage = GetCpuUsed()
+	log.Logger.Debug("cpu:   ", heartbeat.CpuUsage)
 	heartbeat.MemInfo = GetMemInfo()
 	heartbeat.CpuLoad = GetCPULoad()
 	heartbeat.Networks = GetNetwork()
@@ -177,6 +178,7 @@ func InitLocalIp() {
 
 func SendHeartBeatRedis(field string, duration int64) {
 	for {
+		log.Logger.Debug("filed:    ", field, "     ", duration)
 		CheckHeartBeat()
 		hb, _ := json.Marshal(heartbeat)
 		err := model.InsertHeartbeat(Key, field, string(hb))
