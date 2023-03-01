@@ -8,13 +8,13 @@ heartbeat:
 
 
 http:
-  address: "0.0.0.0:8002"
-  port: 8002
-  readTimeout: 5000
-  writeTimeout: 5000
+  address: "0.0.0.0:8002"                                    #本服务host
+  port: 8002                                                 #本服务端口
+  readTimeout: 5000                                          #fasthttp client完整响应读取(包括正文)的最大持续时间
+  writeTimeout: 5000                                         #fasthttp client完整请求写入(包括正文)的最大持续时间
   noDefaultUserAgentHeader: true
   maxConnPerHost: 10000
-  MaxIdleConnDuration: 5000
+  MaxIdleConnDuration: 5000                                  #空闲的保持连接将在此持续时间后关闭
   NoDefaultUserAgentHeader: 30000
 
 redis:
@@ -46,9 +46,9 @@ machine:
 
 
 log:
-  path: "/data/logs/RunnerGo/RunnerGo-engine-info.log"
+  path: "/data/logs/RunnerGo/RunnerGo-engine-info.log"         #本服务log存放地址
 
 
 management:
-  notifyStopStress: ""
-  notifyRunFinish: ""
+  notifyStopStress: ""                          #management服务停止性能任务接口
+  notifyRunFinish: ""                           #management服务任务完成接口
