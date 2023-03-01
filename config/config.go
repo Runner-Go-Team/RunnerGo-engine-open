@@ -125,7 +125,7 @@ const (
 	NotifyRunFinish  = "https://127.0.0.0:30000/management/api/v1/plan/notify_run_finish"
 	Region           = "北京"
 	Port             = 30000
-	MongoData        = "runnergo_open"
+	MongoData        = "runnergo"
 	StressDebug      = "stress_debug"
 	SceneDebugTable  = "scene_debug"
 	ApiDebugTable    = "api_debug"
@@ -207,15 +207,46 @@ func initMongo() {
 	runnerGoMongo.Password = os.Getenv("RG_MONGO_PASSWORD")
 	dsn := os.Getenv("RG_MONGO_DSN")
 	if dsn == "" {
-		dsn = fmt.Sprintf("mongodb://runnergo_open:%s@127.0.0.0:27017/runnergo_open", runnerGoMongo.Password)
+		dsn = fmt.Sprintf("mongodb://runnergo:%s@127.0.0.0:27017/runnergo", runnerGoMongo.Password)
 	}
 	runnerGoMongo.DSN = dsn
-	runnerGoMongo.DataBase = MongoData
-	runnerGoMongo.StressDebugTable = StressDebug
-	runnerGoMongo.DebugStatusTable = DebugStatusTable
-	runnerGoMongo.SceneDebugTable = SceneDebugTable
-	runnerGoMongo.ApiDebugTable = ApiDebugTable
-	runnerGoMongo.AutoTable = AutoTable
+	mongoData := os.Getenv("RG_MONGO_DATABASE")
+	if mongoData == "" {
+		runnerGoMongo.DataBase = MongoData
+	} else {
+		runnerGoMongo.DataBase = mongoData
+	}
+	stressDebug := os.Getenv("RG_MONGO_STRESS_DEBUG_TABLE")
+	if stressDebug == "" {
+		runnerGoMongo.StressDebugTable = StressDebug
+	} else {
+		runnerGoMongo.StressDebugTable = stressDebug
+	}
+	debugStatusTable := os.Getenv("RG_MONGO_DEBUG_TABLE")
+	if debugStatusTable == "" {
+		runnerGoMongo.DebugStatusTable = DebugStatusTable
+	} else {
+		runnerGoMongo.DebugStatusTable = debugStatusTable
+	}
+	sceneDebugTable := os.Getenv("RG_MONGO_SCENE_DEBUG_TABLE")
+	if stressDebug == "" {
+		runnerGoMongo.SceneDebugTable = SceneDebugTable
+	} else {
+		runnerGoMongo.SceneDebugTable = sceneDebugTable
+	}
+	apiDebugTable := os.Getenv("RG_MONGO_API_DEBUG_TABLE")
+	if apiDebugTable == "" {
+		runnerGoMongo.ApiDebugTable = ApiDebugTable
+	} else {
+		runnerGoMongo.ApiDebugTable = apiDebugTable
+	}
+	autoTable := os.Getenv("RG_MONGO_AUTO_TABLE")
+	if autoTable == "" {
+		runnerGoMongo.AutoTable = AutoTable
+	} else {
+		runnerGoMongo.AutoTable = autoTable
+	}
+
 	Conf.Mongo = runnerGoMongo
 }
 
