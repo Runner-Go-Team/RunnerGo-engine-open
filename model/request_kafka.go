@@ -51,6 +51,7 @@ func SendKafkaMsg(kafkaProducer sarama.SyncProducer, resultDataMsgCh chan *Resul
 
 // NewKafkaProducer 构建生产者
 func NewKafkaProducer(addrs []string) (kafkaProducer sarama.SyncProducer, err error) {
+	log.Logger.Debug("address:      ", addrs)
 	config := sarama.NewConfig()
 	config.Producer.RequiredAcks = sarama.WaitForAll           // 发送完数据需要leader和follow都确认
 	config.Producer.Partitioner = sarama.NewManualPartitioner  // 设置选择分区的策略为Hash,当设置key时，所有的key的消息都在一个分区Partitioner里
