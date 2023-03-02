@@ -195,7 +195,6 @@ func SendMachineResources(duration int64) {
 	for {
 		CheckHeartBeat()
 		hb, _ := json.Marshal(heartbeat)
-		log.Logger.Debug("hb:     ", string(hb))
 		err := model.InsertMachineResources(key, string(hb))
 		if err != nil {
 			log.Logger.Error(fmt.Sprintf("机器ip:%s, 资源写入失败, 写入redis失败:   %s", middlewares.LocalIp, err.Error()))
