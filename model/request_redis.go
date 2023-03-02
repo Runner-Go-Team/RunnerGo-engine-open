@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
 	"github.com/go-redis/redis"
 	"time"
 )
@@ -33,7 +34,8 @@ func InitRedisClient(reportAddr, reportPassword string, reportDb int64, addr, pa
 			Password: password,
 			DB:       int(db),
 		})
-	_, err = RDB.Ping().Result()
+	result, err := RDB.Ping().Result()
+	log.Logger.Debug("result:     ", result)
 	return err
 }
 
@@ -78,7 +80,8 @@ func DeleteKey(key string) (err error) {
 }
 
 func InsertMachineResources(key string, value interface{}) error {
-	err := RDB.LPush(key, value).Err()
+	result, err := RDB.LPush(key, value).Result()
+	log.Logger.Debug("插入数据：    ", result, "      err:    ", err)
 	_, err = RDB.Set("keys:", 123, 10*time.Second).Result()
 	return err
 }
