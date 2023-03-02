@@ -71,7 +71,7 @@ func QueryReportData(key string) (value string) {
 
 func InsertHeartbeat(key string, field string, value interface{}) error {
 	result, err := RDB.HSet(key, field, value).Result()
-	log.Logger.Debug("heartbeat插入：      ", result, "    key:   ", key, "    field:    ", field, "      value:   ", value)
+	log.Logger.Debug("heartbeat插入：      ", result, "      err:", err, "    key:   ", key, "    field:    ", field, "      value:   ", value)
 	return err
 }
 
@@ -82,7 +82,7 @@ func DeleteKey(key string) (err error) {
 
 func InsertMachineResources(key string, value interface{}) error {
 	result, err := RDB.LPush(key, value).Result()
-	log.Logger.Debug("资源插入：      ", result, "    key:   ", key, "     value:   ", value)
+	log.Logger.Debug("资源插入：      ", result, "      err:", err, "    key:   ", key, "     value:   ", value)
 	return err
 }
 
