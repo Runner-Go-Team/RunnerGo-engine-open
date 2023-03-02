@@ -261,7 +261,7 @@ func initRedis() {
 	runnerGoRedis.Address = reportRedis.Address
 	runnerGoRedis.Password = os.Getenv("RG_REDIS_PASSWORD")
 	reportRedis.Password = runnerGoRedis.Password
-	db, err := strconv.ParseInt(os.Getenv("RG_DB"), 10, 64)
+	db, err := strconv.ParseInt(os.Getenv("RG_REDIS_DB"), 10, 64)
 	if err != nil {
 		db = 0
 	}
