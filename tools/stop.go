@@ -71,6 +71,7 @@ func SendStopAutoReport(teamId, planId, reportId string, duration int64) {
 	if err != nil {
 		log.Logger.Error(fmt.Sprintf("机器ip:%s, json转化失败：%s", middlewares.LocalIp, err.Error()))
 	}
+	log.Logger.Debug("url :", config.Conf.Management.NotifyRunFinish)
 	res, err := http.Post(config.Conf.Management.NotifyRunFinish, "application/json", strings.NewReader(string(body)))
 
 	if err != nil {
