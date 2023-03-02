@@ -122,7 +122,7 @@ func EnvInitConfig() {
 const (
 	LogPath          = "/data/logs/RunnerGo/RunnerGo-engine-info.log"
 	NotifyStopStress = "https://127.0.0.0:30000/management/api/v1/plan/notify_stop_stress"
-	NotifyRunFinish  = "https://127.0.0.0:30000/management/api/v1/plan/notify_run_finish"
+	NotifyRunFinish  = "https://127.0.0.0:30000/management/api/v1/auto_plan/notify_run_finish"
 	Region           = "北京"
 	Port             = 30000
 	MongoData        = "runnergo"
