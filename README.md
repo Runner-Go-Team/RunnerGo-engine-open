@@ -1,6 +1,76 @@
 # RunnerGo-collector-open
 
+```text
+engine 服务为发压服务，主要是发送请求
+```
+## 本地部署
 
+# 下载，使用git命令下载到本地
+```gitignore
+ git clone https://github.com/Runner-Go-Team/RunnerGo-engine-open.git
+```
+
+# 修改配置文件， open.yaml
+```yaml
+heartbeat:
+  port: 8002
+  region: "北京"
+  duration: 2
+  resources: 5
+
+
+http:
+  address: "0.0.0.0:8002"                                    #本服务host
+  port: 8002                                                 #本服务端口
+  readTimeout: 5000                                          #fasthttp client完整响应读取(包括正文)的最大持续时间
+  writeTimeout: 5000                                         #fasthttp client完整请求写入(包括正文)的最大持续时间
+  noDefaultUserAgentHeader: true
+  maxConnPerHost: 10000
+  MaxIdleConnDuration: 5000                                  #空闲的保持连接将在此持续时间后关闭
+  NoDefaultUserAgentHeader: 30000
+
+redis:
+  address: ""                                                #redis地址
+  password: "apipost"
+  db: 1
+
+kafka:                                                           
+  address: ""                                                #kafka地址
+  topIc: "report"
+
+
+mongo:
+  dsn: ""                                                    #mongo地址
+  database: "runnergo_open"                                  #mongo库
+  stressDebugTable: "stress_debug"                           # 性能测试中接口debug日志集合
+  sceneDebugTable: "scene_debug"                             # 场景调试，接口debug日志集合
+  apiDebugTable: "api_debug"                                  # api调试，接口debug日志集合
+  debugTable: "debug_status"                                  # 性能测试中，是否开启debug日志模式集合
+  autoTable: "auto_report"                                   # 自动化测试，接口debug日志集合
+
+
+
+machine:
+  maxGoroutines: 20005                                      
+  serverType: 1
+  netName: ""
+  diskName: ""
+
+
+log:
+  path: "/data/logs/RunnerGo/RunnerGo-engine-info.log"         #本服务log存放地址
+
+
+management:
+  notifyStopStress: "https://****/management/api/v1/plan/notify_stop_stress"                          #management服务停止性能任务接口
+  notifyRunFinish: "https://***/management/api/v1/auto_plan/notify_run_finish"                           #management服务任务完成接口
+```
+
+
+# 启动
+```text
+ 配置完成后，在根目录./main启动engine服务
+```
 
 ## 开源部署
 1. 配置环境变量
