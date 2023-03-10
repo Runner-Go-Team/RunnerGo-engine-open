@@ -198,6 +198,10 @@ func ErrorRateModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.
 				switch subscriptionStressPlanStatusChange.Type {
 				case model.StopPlan:
 					if subscriptionStressPlanStatusChange.StopPlan == "stop" {
+						concurrentMap.Range(func(key, value any) bool {
+							concurrentMap.Delete(key)
+							return true
+						})
 						return fmt.Sprintf("并发数：%d, 总运行时长%ds, 任务手动结束！", concurrent, time.Now().Unix()-targetTime)
 					}
 				case model.DebugStatus:

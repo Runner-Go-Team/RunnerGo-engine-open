@@ -152,6 +152,10 @@ func LadderModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Con
 				switch subscriptionStressPlanStatusChange.Type {
 				case model.StopPlan:
 					if subscriptionStressPlanStatusChange.StopPlan == "stop" {
+						concurrentMap.Range(func(key, value any) bool {
+							concurrentMap.Delete(key)
+							return true
+						})
 						return fmt.Sprintf("最大并发数：%d， 总运行时长%ds, 任务手动结束！", concurrent, endTime-targetTime)
 					}
 				case model.DebugStatus:
