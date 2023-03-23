@@ -1,15 +1,15 @@
 
 
 heartbeat:
-  port: 20222
+  port: 8002
   region: "北京"
   duration: 2
   resources: 5
 
 
 http:
-  address: "0.0.0.0:20222"                                    #本服务host
-  port: 20222                                               #本服务端口
+  address: "0.0.0.0:8002"                                    #本服务host
+  port: 8002                                               #本服务端口
   readTimeout: 5000                                          #fasthttp client完整响应读取(包括正文)的最大持续时间
   writeTimeout: 5000                                         #fasthttp client完整请求写入(包括正文)的最大持续时间
   noDefaultUserAgentHeader: true
