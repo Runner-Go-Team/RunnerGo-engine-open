@@ -8,7 +8,7 @@ heartbeat:
 
 
 http:
-  address: "0.0.0.0:8002"                                    #本服务host
+  address: "0.0.0.0:20222"                                    #本服务host
   port: 20222                                               #本服务端口
   readTimeout: 5000                                          #fasthttp client完整响应读取(包括正文)的最大持续时间
   writeTimeout: 5000                                         #fasthttp client完整请求写入(包括正文)的最大持续时间
