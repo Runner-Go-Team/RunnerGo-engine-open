@@ -197,7 +197,6 @@ func (b *Body) SetBody(req *fasthttp.Request) string {
 			if value.IsChecked != Open || value.Key == "" || value.Value == nil {
 				continue
 			}
-			log.Logger.Debug(fmt.Sprintf("value: %s   ", value.Value.(string)))
 			args.Add(value.Key, value.Value.(string))
 
 		}
