@@ -18,8 +18,8 @@ http:
   NoDefaultUserAgentHeader: 30000
 
 redis:
-  address: ""
-  password: ""
+  address: "72.17.18.255:27017"
+  password: "apipost"
   db: 1
 
 kafka:
@@ -28,7 +28,7 @@ kafka:
 
 
 mongo:
-  dsn: ""
+  dsn: "mongodb://runnergo_open:czYNsm6LmfZ0XU3E@172.17.18.255:27017/runnergo_open"
   database: "runnergo_open"
   stressDebugTable: "stress_debug"
   sceneDebugTable: "scene_debug"
@@ -50,5 +50,5 @@ log:
 
 
 management:
-  notifyStopStress: "https://***/management/api/v1/plan/notify_stop_stress"                          #management服务停止性能任务接口
-  notifyRunFinish: "https://***/management/api/v1/auto_plan/notify_run_finish"                           #management服务任务完成接口
+  notifyStopStress: "https://manager.runnergo.cc/management/api/v1/plan/notify_stop_stress"                          #management服务停止性能任务接口
+  notifyRunFinish: "https://manager.runnergo.cc/management/api/v1/auto_plan/notify_run_finish"                           #management服务任务完成接口

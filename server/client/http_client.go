@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"fmt"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/config"
-	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
 	"github.com/valyala/fasthttp"
 	"strings"
@@ -59,8 +58,6 @@ func HTTPRequest(method, url string, body *model.Body, query *model.Query, heade
 			maxRedirectsCount = httpApiSetup.RedirectsNum
 		}
 		err = client.DoRedirects(req, resp, maxRedirectsCount)
-		log.Logger.Debug("请求错误： ", err)
-		log.Logger.Debug("重定向：     ", string(resp.Body()))
 	} else {
 		err = client.Do(req, resp)
 	}
