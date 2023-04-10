@@ -35,10 +35,15 @@ func RPSModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Config
 	targetTime, startTime, endTime := time.Now().Unix(), time.Now().Unix(), time.Now().Unix()
 	rpsTag := false
 	rpsMap := make(map[string]bool)
-	for _, node := range scene.Nodes {
-		if node.RequestThreshold > 0 {
-			rpsMap[node.Id] = true
+	for _, nodes := range scene.Nodes {
+		if nodes != nil {
+			for _, node := range nodes {
+				if node.RequestThreshold > 0 {
+					rpsMap[node.Id] = true
+				}
+			}
 		}
+
 	}
 	switch scene.ConfigTask.ControlMode {
 	case model.CentralizedMode:

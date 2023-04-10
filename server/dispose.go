@@ -27,6 +27,7 @@ func DisposeTask(plan *model.Plan, c *gin.Context) {
 		global.ReturnMsg(c, http.StatusBadRequest, "执行计划失败：", "计划的场景不能为空 ")
 		return
 	}
+
 	if plan.ReportId == "" {
 		global.ReturnMsg(c, http.StatusBadRequest, "执行计划失败：", "reportId 不能为空 ")
 		return

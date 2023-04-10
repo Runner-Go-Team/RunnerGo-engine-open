@@ -21,7 +21,7 @@ type Scene struct {
 	Version                 int64          `json:"version" bson:"version"`
 	Debug                   string         `json:"debug" bson:"debug"`
 	EnablePlanConfiguration bool           `json:"enable_plan_configuration" bson:"enable_plan_configuration"` // 是否启用计划的任务配置，默认为true，
-	Nodes                   []Event        `json:"nodes" bson:"nodes"`                                         // 事件列表
+	Nodes                   [][]Event      `json:"nodes" bson:"nodes"`                                         // 事件列表
 	ConfigTask              *ConfigTask    `json:"config_task" bson:"config_task"`                             // 任务配置
 	Configuration           *Configuration `json:"configuration" bson:"configuration"`                         // 场景配置
 	Variable                []*KV          `json:"variable" bson:"variable"`                                   // 场景配置
