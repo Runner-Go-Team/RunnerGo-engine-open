@@ -18,7 +18,7 @@ func DisposeScene(wg, currentWg, sceneWg *sync.WaitGroup, runType string, scene 
 	sceneBy, _ := json.Marshal(scene)
 	var tempScene model.Scene
 	json.Unmarshal(sceneBy, &tempScene)
-	nodesList := tempScene.Nodes
+	nodesList := tempScene.NodesRound
 	if configuration.ParameterizedFile.VariableNames != nil && configuration.ParameterizedFile.VariableNames.VarMapList != nil {
 		configuration.Mu.Lock()
 		kvList := configuration.VarToSceneKV()

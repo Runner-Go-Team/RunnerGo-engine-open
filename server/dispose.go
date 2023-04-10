@@ -23,8 +23,22 @@ import (
 // DisposeTask 处理任务
 func DisposeTask(plan *model.Plan, c *gin.Context) {
 	// 如果场景为空或者场景中的事件为空，直接结束该方法
-	if plan.Scene.Nodes == nil {
+	if plan.Scene.NodesRound == nil {
+		global.ReturnMsg(c, http.StatusBadRequest, "执行计划失败：", "计划的场景不能为nil ")
+		return
+	}
+
+	if len(plan.Scene.Nodes) == 0 {
 		global.ReturnMsg(c, http.StatusBadRequest, "执行计划失败：", "计划的场景不能为空 ")
+		return
+	}
+
+	if plan.Scene.NodesRound[0] == nil {
+		global.ReturnMsg(c, http.StatusBadRequest, "执行计划失败：", "计划的场景事件列表不能为空")
+		return
+	}
+	if len(plan.Scene.NodesRound[0]) == 0 {
+		global.ReturnMsg(c, http.StatusBadRequest, "执行计划失败：", "计划的场景事件不能为空")
 		return
 	}
 
