@@ -13,7 +13,7 @@ import (
 )
 
 // RPSModel 响应时间模式
-func RPSModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Configuration, reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, debugCollection, requestCollection *mongo.Collection) string {
+func RPSModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Configuration, reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestCollection *mongo.Collection) string {
 	startConcurrent := scene.ConfigTask.ModeConf.StartConcurrency
 	step := scene.ConfigTask.ModeConf.Step
 	maxConcurrent := scene.ConfigTask.ModeConf.MaxConcurrency
@@ -35,8 +35,8 @@ func RPSModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Config
 	targetTime, startTime, endTime := time.Now().Unix(), time.Now().Unix(), time.Now().Unix()
 	rpsTag := false
 	rpsMap := make(map[string]bool)
-	for _, nodes := range scene.Nodes {
-		if nodes != nil {
+	for _, nodes := range scene.NodesRound {
+		if nodes != nil && len(nodes) > 0 {
 			for _, node := range nodes {
 				if node.RequestThreshold > 0 {
 					rpsMap[node.Id] = true
