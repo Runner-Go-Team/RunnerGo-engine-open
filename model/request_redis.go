@@ -19,9 +19,9 @@ type RedisClient struct {
 func InitRedisClient(reportAddr, reportPassword string, reportDb int64, addr, password string, db int64) (err error) {
 	ReportRdb = redis.NewClient(
 		&redis.Options{
-			Addr:     addr,
-			Password: password,
-			DB:       int(db),
+			Addr:     reportAddr,
+			Password: reportPassword,
+			DB:       int(reportDb),
 		})
 	_, err = ReportRdb.Ping().Result()
 	if err != nil {

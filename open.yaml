@@ -18,7 +18,12 @@ http:
   NoDefaultUserAgentHeader: 30000
 
 redis:
-  address: "172.17.18.255:27017"
+  address: "172.17.101.191:6398"
+  password: "apipost"
+  db: 1
+
+reportRedis:
+  address: "172.17.101.191:6398"
   password: "apipost"
   db: 1
 
