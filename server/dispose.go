@@ -217,15 +217,15 @@ func TaskDecomposition(plan *model.Plan, wg *sync.WaitGroup, resultDataMsgCh cha
 	var msg string
 	switch scene.ConfigTask.Mode {
 	case model.ConcurrentModel:
-		msg = execution.ConcurrentModel(wg, scene, configuration, reportMsg, resultDataMsgCh, debugCollection, mongoCollection)
+		msg = execution.ConcurrentModel(wg, scene, configuration, reportMsg, resultDataMsgCh, mongoCollection)
 	case model.ErrorRateModel:
-		msg = execution.ErrorRateModel(wg, scene, configuration, reportMsg, resultDataMsgCh, debugCollection, mongoCollection)
+		msg = execution.ErrorRateModel(wg, scene, configuration, reportMsg, resultDataMsgCh, mongoCollection)
 	case model.LadderModel:
-		msg = execution.LadderModel(wg, scene, configuration, reportMsg, resultDataMsgCh, debugCollection, mongoCollection)
+		msg = execution.LadderModel(wg, scene, configuration, reportMsg, resultDataMsgCh, mongoCollection)
 	case model.RTModel:
-		msg = execution.RTModel(wg, scene, configuration, reportMsg, resultDataMsgCh, debugCollection, mongoCollection)
+		msg = execution.RTModel(wg, scene, configuration, reportMsg, resultDataMsgCh, mongoCollection)
 	case model.RpsModel:
-		msg = execution.RPSModel(wg, scene, configuration, reportMsg, resultDataMsgCh, debugCollection, mongoCollection)
+		msg = execution.RPSModel(wg, scene, configuration, reportMsg, resultDataMsgCh, mongoCollection)
 	default:
 		var machines []string
 		msg = "任务类型不存在"
@@ -304,7 +304,7 @@ func DebugScene(scene model.Scene) {
 	defer mongoClient.Disconnect(context.TODO())
 	mongoCollection := model.NewCollection(config.Conf.Mongo.DataBase, config.Conf.Mongo.SceneDebugTable, mongoClient)
 	var sceneWg = &sync.WaitGroup{}
-	golink.DisposeScene(wg, currentWg, sceneWg, model.SceneType, scene, configuration, nil, nil, mongoCollection)
+	golink.DisposeScene(wg, sceneWg, model.SceneType, scene, configuration, nil, nil, mongoCollection)
 	currentWg.Wait()
 	wg.Wait()
 	sceneWg.Wait()

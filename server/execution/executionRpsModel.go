@@ -137,7 +137,7 @@ func RPSModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Config
 					currentWg.Add(1)
 					go func(concurrentId, concurrent int64, useConfiguration *model.Configuration, currentScene model.Scene) {
 						var sceneWg = &sync.WaitGroup{}
-						golink.DisposeScene(wg, currentWg, sceneWg, model.PlanType, scene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
+						golink.DisposeScene(wg, sceneWg, model.PlanType, scene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
 						sceneWg.Wait()
 						concurrentMap.Delete(concurrentId)
 						currentWg.Done()
@@ -278,7 +278,7 @@ func RPSModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Config
 								break
 							}
 							var sceneWg = &sync.WaitGroup{}
-							golink.DisposeScene(wg, currentWg, sceneWg, model.PlanType, scene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
+							golink.DisposeScene(wg, sceneWg, model.PlanType, scene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
 							sceneWg.Wait()
 						}
 						concurrentMap.Delete(concurrentId)

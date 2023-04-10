@@ -13,7 +13,7 @@ import (
 )
 
 // LadderModel 阶梯模式
-func LadderModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Configuration, reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, debugCollection, requestCollection *mongo.Collection) string {
+func LadderModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Configuration, reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestCollection *mongo.Collection) string {
 	startConcurrent := scene.ConfigTask.ModeConf.StartConcurrency
 	step := scene.ConfigTask.ModeConf.Step
 	maxConcurrent := scene.ConfigTask.ModeConf.MaxConcurrency
@@ -101,7 +101,7 @@ func LadderModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Con
 					currentWg.Add(1)
 					go func(concurrentId, concurrent int64, wg *sync.WaitGroup, useConfiguration *model.Configuration) {
 						var sceneWg = &sync.WaitGroup{}
-						golink.DisposeScene(wg, currentWg, sceneWg, model.PlanType, scene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
+						golink.DisposeScene(wg, sceneWg, model.PlanType, scene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
 						sceneWg.Wait()
 						wg.Done()
 						currentWg.Done()
@@ -204,7 +204,7 @@ func LadderModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Con
 								break
 							}
 							var sceneWg = &sync.WaitGroup{}
-							golink.DisposeScene(wg, currentWg, sceneWg, model.PlanType, currentScene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, i, concurrent)
+							golink.DisposeScene(wg, sceneWg, model.PlanType, currentScene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, i, concurrent)
 							sceneWg.Wait()
 
 						}

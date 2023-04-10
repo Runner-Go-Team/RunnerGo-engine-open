@@ -204,14 +204,11 @@ func disposeCase(scene model.Scene, sceneRunMode, caseMode int64, wg *sync.WaitG
 		if c.Configuration.Variable == nil {
 			c.Configuration.Variable = []*model.KV{}
 		}
-		var currentWg = new(sync.WaitGroup)
 		switch caseMode {
 		case model.AuToOrderMode:
 			var sceneWg = &sync.WaitGroup{}
-			golink.DisposeScene(wg, currentWg, sceneWg, model.SceneType, c, configuration, reportMsg, resultDataMsgCh, collection)
+			golink.DisposeScene(wg, sceneWg, model.SceneType, c, configuration, reportMsg, resultDataMsgCh, collection)
 			sceneWg.Wait()
 		}
-		//wg.Wait()
-		currentWg.Wait()
 	}
 }
