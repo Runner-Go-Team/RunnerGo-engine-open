@@ -28,11 +28,6 @@ func DisposeTask(plan *model.Plan, c *gin.Context) {
 		return
 	}
 
-	if len(plan.Scene.Nodes) == 0 {
-		global.ReturnMsg(c, http.StatusBadRequest, "执行计划失败：", "计划的场景不能为空 ")
-		return
-	}
-
 	if plan.Scene.NodesRound[0] == nil {
 		global.ReturnMsg(c, http.StatusBadRequest, "执行计划失败：", "计划的场景事件列表不能为空")
 		return
