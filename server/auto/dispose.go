@@ -172,7 +172,7 @@ func sceneDecomposition(plan *auto.Plan, wg *sync.WaitGroup, reportMsg *model.Re
 	}
 	wg.Wait()
 	tools.SendStopAutoReport(plan.TeamId, plan.PlanId, plan.ReportId, time.Now().UnixMilli()-startTime)
-	log.Logger.Info(fmt.Sprintf("机器ip:%s, 团队: %s, 自动化计划: %s, 报告: %s  已完成, 运行：%d", middlewares.LocalIp, plan.TeamId, plan.PlanId, plan.ReportId, time.Now().UnixMilli()-startTime))
+	log.Logger.Info(fmt.Sprintf("机器ip:%s, 团队: %s, 自动化计划: %s, 报告: %s  已完成, 运行：%d毫秒", middlewares.LocalIp, plan.TeamId, plan.PlanId, plan.ReportId, time.Now().UnixMilli()-startTime))
 
 }
 
