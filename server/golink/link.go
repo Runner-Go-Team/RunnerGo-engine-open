@@ -82,7 +82,7 @@ func DisposeScene(wg, sceneWg *sync.WaitGroup, runType string, scene model.Scene
 				node.SceneId = scene.SceneId
 				node.ReportId = scene.ReportId
 				node.ParentId = scene.ParentId
-				var nodeCh = make(chan model.EventResult)
+				var nodeCh = make(chan model.EventResult, 50)
 				preNode.Store(node.Id, nodeCh)
 				go disposeDebugNode(nodeCh, preNode, tempScene, globalVar, node, wg, sceneWg, reportMsg, resultDataMsgCh, requestCollection)
 			default:
@@ -416,10 +416,10 @@ func disposeDebugNode(nodeCh chan model.EventResult, preNode *sync.Map, scene mo
 
 		DisposeRequest(reportMsg, resultDataMsgCh, nil, globalVar, event, requestCollection)
 		eventResult.Status = model.End
+
 		for _, _ = range event.NextList {
 			nodeCh <- eventResult
 		}
-
 	case model.IfControllerType:
 		keys := tools.FindAllDestStr(event.Var, "{{(.*?)}}")
 		if len(keys) > 0 {
