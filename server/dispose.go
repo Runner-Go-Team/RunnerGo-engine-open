@@ -23,10 +23,20 @@ import (
 // DisposeTask 处理任务
 func DisposeTask(plan *model.Plan, c *gin.Context) {
 	// 如果场景为空或者场景中的事件为空，直接结束该方法
-	if plan.Scene.Nodes == nil {
-		global.ReturnMsg(c, http.StatusBadRequest, "执行计划失败：", "计划的场景不能为空 ")
+	if plan.Scene.NodesRound == nil {
+		global.ReturnMsg(c, http.StatusBadRequest, "执行计划失败：", "计划的场景不能为nil ")
 		return
 	}
+
+	if plan.Scene.NodesRound[0] == nil {
+		global.ReturnMsg(c, http.StatusBadRequest, "执行计划失败：", "计划的场景事件列表不能为空")
+		return
+	}
+	if len(plan.Scene.NodesRound[0]) == 0 {
+		global.ReturnMsg(c, http.StatusBadRequest, "执行计划失败：", "计划的场景事件不能为空")
+		return
+	}
+
 	if plan.ReportId == "" {
 		global.ReturnMsg(c, http.StatusBadRequest, "执行计划失败：", "reportId 不能为空 ")
 		return
@@ -202,15 +212,15 @@ func TaskDecomposition(plan *model.Plan, wg *sync.WaitGroup, resultDataMsgCh cha
 	var msg string
 	switch scene.ConfigTask.Mode {
 	case model.ConcurrentModel:
-		msg = execution.ConcurrentModel(wg, scene, configuration, reportMsg, resultDataMsgCh, debugCollection, mongoCollection)
+		msg = execution.ConcurrentModel(wg, scene, configuration, reportMsg, resultDataMsgCh, mongoCollection)
 	case model.ErrorRateModel:
-		msg = execution.ErrorRateModel(wg, scene, configuration, reportMsg, resultDataMsgCh, debugCollection, mongoCollection)
+		msg = execution.ErrorRateModel(wg, scene, configuration, reportMsg, resultDataMsgCh, mongoCollection)
 	case model.LadderModel:
-		msg = execution.LadderModel(wg, scene, configuration, reportMsg, resultDataMsgCh, debugCollection, mongoCollection)
+		msg = execution.LadderModel(wg, scene, configuration, reportMsg, resultDataMsgCh, mongoCollection)
 	case model.RTModel:
-		msg = execution.RTModel(wg, scene, configuration, reportMsg, resultDataMsgCh, debugCollection, mongoCollection)
+		msg = execution.RTModel(wg, scene, configuration, reportMsg, resultDataMsgCh, mongoCollection)
 	case model.RpsModel:
-		msg = execution.RPSModel(wg, scene, configuration, reportMsg, resultDataMsgCh, debugCollection, mongoCollection)
+		msg = execution.RPSModel(wg, scene, configuration, reportMsg, resultDataMsgCh, mongoCollection)
 	default:
 		var machines []string
 		msg = "任务类型不存在"
@@ -289,7 +299,7 @@ func DebugScene(scene model.Scene) {
 	defer mongoClient.Disconnect(context.TODO())
 	mongoCollection := model.NewCollection(config.Conf.Mongo.DataBase, config.Conf.Mongo.SceneDebugTable, mongoClient)
 	var sceneWg = &sync.WaitGroup{}
-	golink.DisposeScene(wg, currentWg, sceneWg, model.SceneType, scene, configuration, nil, nil, mongoCollection)
+	golink.DisposeScene(wg, sceneWg, model.SceneType, scene, configuration, nil, nil, mongoCollection)
 	currentWg.Wait()
 	wg.Wait()
 	sceneWg.Wait()

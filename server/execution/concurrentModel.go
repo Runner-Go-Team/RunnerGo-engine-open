@@ -13,7 +13,7 @@ import (
 )
 
 // ConcurrentModel 并发模式
-func ConcurrentModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Configuration, reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, debugCollection, requestCollection *mongo.Collection) string {
+func ConcurrentModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Configuration, reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestCollection *mongo.Collection) string {
 
 	concurrent := scene.ConfigTask.ModeConf.Concurrency
 	// 订阅redis中消息  任务状态：包括：报告停止；debug日志状态；任务配置变更
@@ -80,10 +80,9 @@ func ConcurrentModel(wg *sync.WaitGroup, scene model.Scene, configuration *model
 						currentWg.Add(1)
 						go func(concurrentId, concurrent int64, useConfiguration *model.Configuration, currentScene model.Scene) {
 							var sceneWg = &sync.WaitGroup{}
-							golink.DisposeScene(wg, currentWg, sceneWg, model.PlanType, currentScene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent, currentTime)
+							golink.DisposeScene(wg, sceneWg, model.PlanType, currentScene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent, currentTime)
 							sceneWg.Wait()
 							concurrentMap.Delete(concurrentId)
-							currentWg.Done()
 							wg.Done()
 						}(j, concurrent, configuration, scene)
 					}
@@ -150,12 +149,11 @@ func ConcurrentModel(wg *sync.WaitGroup, scene model.Scene, configuration *model
 									}
 								}
 								var sceneWg = &sync.WaitGroup{}
-								golink.DisposeScene(wg, currentWg, sceneWg, model.PlanType, currentScene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent, currentTime)
+								golink.DisposeScene(wg, sceneWg, model.PlanType, currentScene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent, currentTime)
 								sceneWg.Wait()
 
 							}
 							concurrentMap.Store(concurrentId, false)
-							currentWg.Done()
 							wg.Done()
 						}(i, configuration, scene)
 					}
@@ -242,7 +240,7 @@ func ConcurrentModel(wg *sync.WaitGroup, scene model.Scene, configuration *model
 						scene.Debug = debug
 						go func(concurrentId, concurrent int64, useConfiguration *model.Configuration, currentScene model.Scene) {
 							var sceneWg = &sync.WaitGroup{}
-							golink.DisposeScene(wg, currentWg, sceneWg, model.PlanType, currentScene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
+							golink.DisposeScene(wg, sceneWg, model.PlanType, currentScene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
 
 							sceneWg.Wait()
 							concurrentMap.Delete(concurrentId)
@@ -323,7 +321,7 @@ func ConcurrentModel(wg *sync.WaitGroup, scene model.Scene, configuration *model
 								// 查询是否开启debug
 								currentScene.Debug = debug
 								var sceneWg = &sync.WaitGroup{}
-								golink.DisposeScene(wg, currentWg, sceneWg, model.PlanType, currentScene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
+								golink.DisposeScene(wg, sceneWg, model.PlanType, currentScene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
 								sceneWg.Wait()
 							}
 							concurrentMap.Delete(concurrentId)

@@ -7,7 +7,6 @@ import (
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/tools"
 	"go.mongodb.org/mongo-driver/mongo"
-	"golang.org/x/net/context"
 	"math"
 	"strings"
 	"sync"
@@ -15,11 +14,11 @@ import (
 )
 
 // DisposeScene 对场景进行处理
-func DisposeScene(wg, currentWg, sceneWg *sync.WaitGroup, runType string, scene model.Scene, configuration *model.Configuration, reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestCollection *mongo.Collection, options ...int64) {
+func DisposeScene(wg, sceneWg *sync.WaitGroup, runType string, scene model.Scene, configuration *model.Configuration, reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestCollection *mongo.Collection, options ...int64) {
 	sceneBy, _ := json.Marshal(scene)
 	var tempScene model.Scene
 	json.Unmarshal(sceneBy, &tempScene)
-	nodes := tempScene.Nodes
+	nodesList := tempScene.NodesRound
 	if configuration.ParameterizedFile.VariableNames != nil && configuration.ParameterizedFile.VariableNames.VarMapList != nil {
 		configuration.Mu.Lock()
 		kvList := configuration.VarToSceneKV()
@@ -62,51 +61,46 @@ func DisposeScene(wg, currentWg, sceneWg *sync.WaitGroup, runType string, scene 
 		}
 		return true
 	})
-	ctx := context.Background()
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-	for _, node := range nodes {
-		node.Uuid = scene.Uuid
-		wg.Add(1)
-		currentWg.Add(1)
-		sceneWg.Add(1)
-		switch runType {
-		case model.PlanType:
-			var nodeCh = make(chan model.EventResult)
-			node.TeamId = reportMsg.TeamId
-			node.PlanId = reportMsg.PlanId
-			node.ReportId = reportMsg.ReportId
-			node.Debug = scene.Debug
-			preNode.Store(node.Id, nodeCh)
-			go disposePlanNode(nodeCh, preNode, tempScene, globalVar, node, ctx, wg, currentWg, sceneWg, reportMsg, resultDataMsgCh, requestCollection, options...)
-		case model.SceneType:
-			node.TeamId = scene.TeamId
-			node.PlanId = scene.PlanId
-			node.CaseId = scene.CaseId
-			node.SceneId = scene.SceneId
-			node.ReportId = scene.ReportId
-			node.ParentId = scene.ParentId
-			var nodeCh = make(chan model.EventResult)
-			preNode.Store(node.Id, nodeCh)
-			go disposeDebugNode(nodeCh, preNode, tempScene, globalVar, node, ctx, wg, currentWg, sceneWg, reportMsg, resultDataMsgCh, requestCollection)
-		default:
-			wg.Done()
-			currentWg.Done()
-			sceneWg.Done()
+	for _, nodes := range nodesList {
+		for _, node := range nodes {
+			node.Uuid = scene.Uuid
+			wg.Add(1)
+			sceneWg.Add(1)
+			switch runType {
+			case model.PlanType:
+				var nodeCh = make(chan model.EventResult)
+				node.TeamId = reportMsg.TeamId
+				node.PlanId = reportMsg.PlanId
+				node.ReportId = reportMsg.ReportId
+				node.Debug = scene.Debug
+				preNode.Store(node.Id, nodeCh)
+				go disposePlanNode(nodeCh, preNode, tempScene, globalVar, node, wg, sceneWg, reportMsg, resultDataMsgCh, requestCollection, options...)
+			case model.SceneType:
+				node.TeamId = scene.TeamId
+				node.PlanId = scene.PlanId
+				node.CaseId = scene.CaseId
+				node.SceneId = scene.SceneId
+				node.ReportId = scene.ReportId
+				node.ParentId = scene.ParentId
+				var nodeCh = make(chan model.EventResult)
+				preNode.Store(node.Id, nodeCh)
+				go disposeDebugNode(nodeCh, preNode, tempScene, globalVar, node, wg, sceneWg, reportMsg, resultDataMsgCh, requestCollection)
+			default:
+				wg.Done()
+				sceneWg.Done()
+			}
 		}
+		sceneWg.Wait()
+
 	}
 
 }
 
 // disposePlanNode 处理node节点
-func disposePlanNode(nodeCh chan model.EventResult, preNode *sync.Map, scene model.Scene, globalVar *sync.Map, event model.Event, ctx context.Context, wg, currentWg, sceneWg *sync.WaitGroup, reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestCollection *mongo.Collection, disOptions ...int64) {
+func disposePlanNode(nodeCh chan model.EventResult, preNode *sync.Map, scene model.Scene, globalVar *sync.Map, event model.Event, wg, sceneWg *sync.WaitGroup, reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestCollection *mongo.Collection, disOptions ...int64) {
 	defer wg.Done()
-	defer currentWg.Done()
 	defer sceneWg.Done()
 	defer close(nodeCh)
-	select {
-	case <-ctx.Done():
-	}
 
 	var (
 		goroutineId int64 // 启动的第几个协程
@@ -328,14 +322,10 @@ func disposePlanNode(nodeCh chan model.EventResult, preNode *sync.Map, scene mod
 	}
 }
 
-func disposeDebugNode(nodeCh chan model.EventResult, preNode *sync.Map, scene model.Scene, globalVar *sync.Map, event model.Event, ctx context.Context, wg, currentWg, sceneWg *sync.WaitGroup, reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestCollection *mongo.Collection) {
+func disposeDebugNode(nodeCh chan model.EventResult, preNode *sync.Map, scene model.Scene, globalVar *sync.Map, event model.Event, wg, sceneWg *sync.WaitGroup, reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestCollection *mongo.Collection) {
 	defer wg.Done()
-	defer currentWg.Done()
 	defer sceneWg.Done()
 	defer close(nodeCh)
-	select {
-	case <-ctx.Done():
-	}
 	var eventResult = model.EventResult{}
 	// 如果该事件上一级有事件，那么就一直查询上一级事件的状态，直到上一级所有事件全部完成
 	if event.PreList != nil && len(event.PreList) > 0 {

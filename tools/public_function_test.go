@@ -10,7 +10,7 @@ import (
 func TestCallPublicFunc(t *testing.T) {
 	InitPublicFunc()
 	fmt.Println(CallPublicFunc("RandomFloat0", nil)[0])
-	fmt.Println(fmt.Sprintf("%s     ", MD5("ABC")))
+	fmt.Println(fmt.Sprintf("%s     ", MD5("fhdssfhibnk146s3")))
 }
 
 func TestParsFunc(t *testing.T) {
