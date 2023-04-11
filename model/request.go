@@ -249,6 +249,18 @@ func (header *Header) SetHeader(req *fasthttp.Request) {
 	}
 }
 
+func (cookie *Cookie) SetCookie(req *fasthttp.Request) {
+	if cookie.Parameter == nil {
+		return
+	}
+	for _, v := range cookie.Parameter {
+		if v.IsChecked != Open || v.Value == nil {
+			continue
+		}
+		req.Header.SetCookie(v.Key, v.Value.(string))
+	}
+}
+
 type Query struct {
 	Parameter []*VarForm `json:"parameter" bson:"parameter"`
 }
@@ -759,13 +771,14 @@ func (v *VarForm) Conversion() {
 
 // ReplaceQueryParameterizes 替换query中的变量
 func (r *Api) ReplaceQueryParameterizes(globalVar *sync.Map) {
+	if globalVar == nil {
+		return
+	}
 	r.ReplaceUrl(globalVar)
-
 	r.ReplaceBodyVarForm(globalVar)
 	r.ReplaceQueryVarForm(globalVar)
-
 	r.ReplaceHeaderVarForm(globalVar)
-
+	r.ReplaceCookieVarForm(globalVar)
 	r.ReplaceAuthVarForm(globalVar)
 
 }
@@ -807,7 +820,7 @@ func (r *Api) ReplaceUrl(globalVar *sync.Map) {
 }
 
 func (r *Api) ReplaceBodyVarForm(globalVar *sync.Map) {
-	if globalVar == nil {
+	if r.Request.Body == nil {
 		return
 	}
 	switch r.Request.Body.Mode {
@@ -967,7 +980,62 @@ func (r *Api) ReplaceBodyVarForm(globalVar *sync.Map) {
 }
 
 func (r *Api) ReplaceHeaderVarForm(globalVar *sync.Map) {
-	if r.Request.Header.Parameter == nil {
+	if r.Request.Header == nil || r.Request.Header.Parameter == nil {
+		return
+	}
+	for _, queryVarForm := range r.Request.Header.Parameter {
+		queryParameterizes := tools.FindAllDestStr(queryVarForm.Key, "{{(.*?)}}")
+		if queryParameterizes != nil {
+			for _, v := range queryParameterizes {
+				if len(v) < 2 {
+					continue
+				}
+				if value, ok := globalVar.Load(v[1]); ok {
+					if value == nil {
+						continue
+					}
+					queryVarForm.Key = strings.Replace(queryVarForm.Key, v[0], value.(string), -1)
+				}
+			}
+		}
+		if queryVarForm.Value == nil {
+			continue
+		}
+		queryParameterizes = tools.FindAllDestStr(queryVarForm.Value.(string), "{{(.*?)}}")
+		if queryParameterizes == nil {
+			continue
+		}
+		for _, v := range queryParameterizes {
+			if len(v) < 2 {
+				continue
+			}
+			realVar := tools.ParsFunc(v[1])
+			if realVar != v[1] {
+				queryVarForm.Value = strings.Replace(queryVarForm.Value.(string), v[0], realVar, -1)
+				continue
+			}
+			if value, ok := globalVar.Load(v[1]); ok {
+				if value == nil {
+					continue
+				}
+				switch fmt.Sprintf("%T", value) {
+				case "int":
+					value = fmt.Sprintf("%d", value)
+				case "bool":
+					value = fmt.Sprintf("%t", value)
+				case "float64":
+					value = fmt.Sprintf("%f", value)
+				}
+				queryVarForm.Value = strings.Replace(queryVarForm.Value.(string), v[0], value.(string), -1)
+			}
+
+		}
+		queryVarForm.Conversion()
+	}
+}
+
+func (r *Api) ReplaceCookieVarForm(globalVar *sync.Map) {
+	if r.Request.Cookie == nil || r.Request.Cookie.Parameter == nil {
 		return
 	}
 	for _, queryVarForm := range r.Request.Header.Parameter {
@@ -1022,7 +1090,7 @@ func (r *Api) ReplaceHeaderVarForm(globalVar *sync.Map) {
 }
 
 func (r *Api) ReplaceQueryVarForm(globalVar *sync.Map) {
-	if r.Request.Query.Parameter == nil {
+	if r.Request.Query == nil || r.Request.Query.Parameter == nil {
 		return
 	}
 	for _, queryVarForm := range r.Request.Query.Parameter {
@@ -1081,12 +1149,12 @@ func (r *Api) ReplaceQueryVarForm(globalVar *sync.Map) {
 
 func (r *Api) ReplaceAuthVarForm(globalVar *sync.Map) {
 
-	if r.Request.Auth.KV.Value == nil {
+	if r.Request.Auth == nil {
 		return
 	}
 	switch r.Request.Auth.Type {
 	case Kv:
-		if r.Request.Auth.KV == nil || r.Request.Auth.KV.Key == "" {
+		if r.Request.Auth.KV == nil || r.Request.Auth.KV.Key == "" || r.Request.Auth.KV.Value == nil {
 			return
 		}
 		values := tools.FindAllDestStr(r.Request.Auth.KV.Value.(string), "{{(.*?)}}")

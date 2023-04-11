@@ -27,7 +27,7 @@ func HttpSend(event model.Event, api model.Api, globalVar *sync.Map, requestColl
 		api.HttpApiSetup = new(model.HttpApiSetup)
 	}
 	resp, req, requestTime, sendBytes, err, str, startTime, endTime := client.HTTPRequest(api.Method, api.Request.URL, api.Request.Body, api.Request.Query,
-		api.Request.Header, api.Request.Auth, api.HttpApiSetup)
+		api.Request.Header, api.Request.Cookie, api.Request.Auth, api.HttpApiSetup)
 	defer fasthttp.ReleaseResponse(resp) // 用完需要释放资源
 	defer fasthttp.ReleaseRequest(req)
 	var regex []map[string]interface{}
