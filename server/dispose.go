@@ -246,7 +246,6 @@ func TaskDecomposition(plan *model.Plan, wg *sync.WaitGroup, resultDataMsgCh cha
 // DebugScene 场景调试
 func DebugScene(scene model.Scene) {
 	wg := &sync.WaitGroup{}
-	currentWg := &sync.WaitGroup{}
 	mongoClient, err := model.NewMongoClient(
 		config.Conf.Mongo.DSN,
 		middlewares.LocalIp)
@@ -300,7 +299,6 @@ func DebugScene(scene model.Scene) {
 	mongoCollection := model.NewCollection(config.Conf.Mongo.DataBase, config.Conf.Mongo.SceneDebugTable, mongoClient)
 	var sceneWg = &sync.WaitGroup{}
 	golink.DisposeScene(wg, sceneWg, model.SceneType, scene, configuration, nil, nil, mongoCollection)
-	currentWg.Wait()
 	wg.Wait()
 	sceneWg.Wait()
 	log.Logger.Info(fmt.Sprintf("机器ip:%s, 团队: %s, 场景：%s, 调试结束！", middlewares.LocalIp, scene.TeamId, scene.SceneName))

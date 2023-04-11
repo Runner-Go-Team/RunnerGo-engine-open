@@ -9,7 +9,7 @@ heartbeat:
 
 http:
   address: "0.0.0.0:8002"                                    #本服务host
-  port: 8002                                                 #本服务端口
+  port: 8002                                               #本服务端口
   readTimeout: 5000                                          #fasthttp client完整响应读取(包括正文)的最大持续时间
   writeTimeout: 5000                                         #fasthttp client完整请求写入(包括正文)的最大持续时间
   noDefaultUserAgentHeader: true
@@ -18,17 +18,22 @@ http:
   NoDefaultUserAgentHeader: 30000
 
 redis:
-  address: ""
+  address: "172.17.101.191:6398"
+  password: "apipost"
+  db: 1
+
+reportRedis:
+  address: "172.17.101.191:6398"
   password: "apipost"
   db: 1
 
 kafka:
-  address: ""
+  address: "172.17.101.188:9092"
   topIc: "runnergo"
 
 
 mongo:
-  dsn: ""
+  dsn: "mongodb://runnergo_open:czYNsm6LmfZ0XU3E@172.17.18.255:27017/runnergo_open"
   database: "runnergo_open"
   stressDebugTable: "stress_debug"
   sceneDebugTable: "scene_debug"
@@ -50,5 +55,5 @@ log:
 
 
 management:
-  notifyStopStress: ""                          #management服务停止性能任务接口
-  notifyRunFinish: ""                           #management服务任务完成接口
+  notifyStopStress: "https://manager.runnergo.cc/management/api/v1/plan/notify_stop_stress"                          #management服务停止性能任务接口
+  notifyRunFinish: "https://manager.runnergo.cc/management/api/v1/auto_plan/notify_run_finish"                           #management服务任务完成接口
