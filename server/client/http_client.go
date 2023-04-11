@@ -10,17 +10,16 @@ import (
 	"time"
 )
 
-func HTTPRequest(method, url string, body *model.Body, query *model.Query, header *model.Header, auth *model.Auth, httpApiSetup *model.HttpApiSetup) (resp *fasthttp.Response, req *fasthttp.Request, requestTime uint64, sendBytes float64, err error, str string, startTime, endTime time.Time) {
+func HTTPRequest(method, url string, body *model.Body, query *model.Query, header *model.Header, cookie *model.Cookie, auth *model.Auth, httpApiSetup *model.HttpApiSetup) (resp *fasthttp.Response, req *fasthttp.Request, requestTime uint64, sendBytes float64, err error, str string, startTime, endTime time.Time) {
 
 	client := fastClient(httpApiSetup.ReadTimeOut, httpApiSetup.WriteTimeOut)
 	req = fasthttp.AcquireRequest()
 
 	// set methon
 	req.Header.SetMethod(method)
-
 	// set header
 	header.SetHeader(req)
-
+	cookie.SetCookie(req)
 	urls := strings.Split(url, "//")
 	if !strings.EqualFold(urls[0], model.HTTP) && !strings.EqualFold(urls[0], model.HTTPS) {
 		url = model.HTTP + "//" + url
