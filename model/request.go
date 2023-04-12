@@ -232,7 +232,7 @@ type Header struct {
 }
 
 func (header *Header) SetHeader(req *fasthttp.Request) {
-	if header.Parameter == nil {
+	if header == nil || header.Parameter == nil {
 		return
 	}
 	for _, v := range header.Parameter {
@@ -250,7 +250,7 @@ func (header *Header) SetHeader(req *fasthttp.Request) {
 }
 
 func (cookie *Cookie) SetCookie(req *fasthttp.Request) {
-	if cookie.Parameter == nil {
+	if cookie == nil || cookie.Parameter == nil {
 		return
 	}
 	for _, v := range cookie.Parameter {
