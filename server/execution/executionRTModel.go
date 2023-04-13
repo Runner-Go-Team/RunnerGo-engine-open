@@ -93,7 +93,7 @@ func RTModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Configu
 
 			select {
 			case c := <-statusCh:
-
+				log.Logger.Debug("接收到manage消息：  ", c.String())
 				var subscriptionStressPlanStatusChange = new(model.SubscriptionStressPlanStatusChange)
 				_ = json.Unmarshal([]byte(c.Payload), subscriptionStressPlanStatusChange)
 				if subscriptionStressPlanStatusChange.MachineModeConf == nil {
@@ -250,7 +250,7 @@ func RTModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Configu
 
 			select {
 			case c := <-statusCh:
-
+				log.Logger.Debug("接收到manage消息：  ", c.String())
 				var subscriptionStressPlanStatusChange = new(model.SubscriptionStressPlanStatusChange)
 				_ = json.Unmarshal([]byte(c.Payload), subscriptionStressPlanStatusChange)
 				if subscriptionStressPlanStatusChange.MachineModeConf == nil {
