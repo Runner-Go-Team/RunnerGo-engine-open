@@ -36,6 +36,7 @@ func ConcurrentModel(wg *sync.WaitGroup, scene model.Scene, configuration *model
 			for i := int64(0); i < rounds; i++ {
 				select {
 				case c := <-statusCh:
+					log.Logger.Debug("接收到manage消息：  ", c.String())
 					var subscriptionStressPlanStatusChange = new(model.SubscriptionStressPlanStatusChange)
 					_ = json.Unmarshal([]byte(c.Payload), subscriptionStressPlanStatusChange)
 					if subscriptionStressPlanStatusChange.MachineModeConf == nil {
@@ -96,6 +97,7 @@ func ConcurrentModel(wg *sync.WaitGroup, scene model.Scene, configuration *model
 			for !stop {
 				select {
 				case c := <-statusCh:
+					log.Logger.Debug("接收到manage消息：  ", c.String())
 					var subscriptionStressPlanStatusChange = new(model.SubscriptionStressPlanStatusChange)
 					_ = json.Unmarshal([]byte(c.Payload), subscriptionStressPlanStatusChange)
 					if subscriptionStressPlanStatusChange.MachineModeConf == nil {
@@ -192,6 +194,7 @@ func ConcurrentModel(wg *sync.WaitGroup, scene model.Scene, configuration *model
 			for startTime+duration >= time.Now().Unix() {
 				select {
 				case c := <-statusCh:
+					log.Logger.Debug("接收到manage消息：  ", c.String())
 					var subscriptionStressPlanStatusChange = new(model.SubscriptionStressPlanStatusChange)
 					_ = json.Unmarshal([]byte(c.Payload), subscriptionStressPlanStatusChange)
 					if subscriptionStressPlanStatusChange.MachineModeConf == nil {
@@ -259,6 +262,7 @@ func ConcurrentModel(wg *sync.WaitGroup, scene model.Scene, configuration *model
 			for startTime+duration >= time.Now().Unix() {
 				select {
 				case c := <-statusCh:
+					log.Logger.Debug("接收到manage消息：  ", c.String())
 					var subscriptionStressPlanStatusChange = new(model.SubscriptionStressPlanStatusChange)
 					_ = json.Unmarshal([]byte(c.Payload), subscriptionStressPlanStatusChange)
 					if subscriptionStressPlanStatusChange.MachineModeConf == nil {

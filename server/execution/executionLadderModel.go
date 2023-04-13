@@ -40,6 +40,7 @@ func LadderModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Con
 
 			select {
 			case c := <-statusCh:
+				log.Logger.Debug("接收到manage消息：  ", c.String())
 				var subscriptionStressPlanStatusChange = new(model.SubscriptionStressPlanStatusChange)
 				_ = json.Unmarshal([]byte(c.Payload), subscriptionStressPlanStatusChange)
 				if subscriptionStressPlanStatusChange.MachineModeConf == nil {
@@ -143,6 +144,7 @@ func LadderModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Con
 		for startTime+stepRunTime > endTime {
 			select {
 			case c := <-statusCh:
+				log.Logger.Debug("接收到manage消息：  ", c.String())
 				var subscriptionStressPlanStatusChange = new(model.SubscriptionStressPlanStatusChange)
 				_ = json.Unmarshal([]byte(c.Payload), subscriptionStressPlanStatusChange)
 				if subscriptionStressPlanStatusChange.MachineModeConf == nil {
