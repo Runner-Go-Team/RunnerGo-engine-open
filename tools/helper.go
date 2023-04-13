@@ -148,13 +148,19 @@ func JsonPath(source, expression string) string {
 	district := gq.Find(expression)
 	value := ""
 	if district != nil {
-		by, err := json.Marshal(district)
-		if err != nil {
-			value = ""
+		switch fmt.Sprintf("%T", district) {
+		case "string":
+			value = district.(string)
+		default:
+			by, err := json.Marshal(district)
+			if err != nil {
+				value = ""
+			}
+			if by != nil {
+				value = string(by)
+			}
 		}
-		if by != nil {
-			value = string(by)
-		}
+
 	}
 	return value
 }
