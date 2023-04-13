@@ -105,66 +105,18 @@ func (assertionText *AssertionText) VerifyAssertionText(response *fasthttp.Respo
 		switch assertionText.Compare {
 		case Equal:
 			value := tools.JsonPath(resp, assertionText.Var)
-			if value == nil {
-				return AssertError, false, "响应中" + assertionText.Var + "不存在， 断言: 失败！"
-			}
-			switch fmt.Sprintf("%T", value) {
-			case "string":
-				if value == assertionText.Val {
-					return NoError, true, fmt.Sprintf("%s 等于 %s, 断言： 成功！", assertionText.Var, value)
-				} else {
-					return AssertError, false, fmt.Sprintf("%s 等于 %s, 断言： 失败！", assertionText.Var, value)
-				}
-			case "bool":
-				if value == true && assertionText.Val == "true" {
-					return NoError, true, fmt.Sprintf("%s 等于 %t, 断言： 成功！", assertionText.Var, value)
-				} else if value == false && assertionText.Val == "false" {
-					return NoError, true, fmt.Sprintf("%s 等于 %t, 断言： 成功！", assertionText.Var, value)
-				} else {
-					return AssertError, false, fmt.Sprintf("%s 等于 %t, 断言： 失败！", assertionText.Var, value)
-				}
-			case "float64":
-				if num, err := strconv.ParseFloat(assertionText.Val, 64); err == nil {
-					if value == num {
-						return NoError, true, fmt.Sprintf("%s 等于 %s, 断言： 成功！", assertionText.Var, assertionText.Val)
-					} else {
-						return AssertError, false, fmt.Sprintf("%s 等于 %s, 断言： 失败！", assertionText.Var, assertionText.Val)
-					}
-				} else {
-					return AssertError, false, "不是数字类型，无法比较大小！"
-				}
+			if value == assertionText.Val {
+				return NoError, true, fmt.Sprintf("%s 等于 %s, 断言： 成功！", assertionText.Var, value)
+			} else {
+				return AssertError, false, fmt.Sprintf("%s 等于 %s, 断言： 失败！", assertionText.Var, value)
 			}
 
 		case UNEqual:
 			value := tools.JsonPath(resp, assertionText.Var)
-			if value == nil {
-				return AssertError, false, "响应中" + assertionText.Var + "不存在， 断言: 失败！"
-			}
-			switch fmt.Sprintf("%T", value) {
-			case "string":
-				if value != assertionText.Val {
-					return NoError, true, fmt.Sprintf("%s 不等于 %s, 断言： 成功！", assertionText.Var, assertionText.Val)
-				} else {
-					return AssertError, false, fmt.Sprintf("%s 不等于 %s, 断言： 失败！", assertionText.Var, assertionText.Val)
-				}
-			case "bool":
-				if value != true && assertionText.Val != "true" {
-					return NoError, true, fmt.Sprintf("%s 不等于 %s, 断言： 成功！", assertionText.Var, assertionText.Val)
-				} else if value != false && assertionText.Val != "false" {
-					return NoError, true, fmt.Sprintf("%s 不等于 %s, 断言： 成功！", assertionText.Var, assertionText.Val)
-				} else {
-					return AssertError, false, fmt.Sprintf("%s 不等于 %s, 断言： 失败！", assertionText.Var, assertionText.Val)
-				}
-			case "float64":
-				if num, err := strconv.ParseFloat(assertionText.Val, 64); err == nil {
-					if value != num {
-						return NoError, true, fmt.Sprintf("%s 不等于 %s, 断言： 成功！", assertionText.Var, assertionText.Val)
-					} else {
-						return AssertError, false, fmt.Sprintf("%s 不等于 %s, 断言： 失败！", assertionText.Var, assertionText.Val)
-					}
-				} else {
-					return AssertError, false, "不是数字类型，无法比较大小！"
-				}
+			if value != assertionText.Val {
+				return NoError, true, fmt.Sprintf("%s 不等于 %s, 断言： 成功！", assertionText.Var, assertionText.Val)
+			} else {
+				return AssertError, false, fmt.Sprintf("%s 不等于 %s, 断言： 失败！", assertionText.Var, assertionText.Val)
 			}
 		case Includes:
 			if strings.Contains(resp, assertionText.Val) {
@@ -193,27 +145,15 @@ func (assertionText *AssertionText) VerifyAssertionText(response *fasthttp.Respo
 
 		case GreaterThan:
 			value := tools.JsonPath(resp, assertionText.Var)
-			if value == nil {
-				return AssertError, false, "响应体中" + assertionText.Var + "不存在， 断言: 失败！"
-			}
 			if num, err := strconv.ParseFloat(assertionText.Val, 64); err == nil {
-				switch fmt.Sprintf("%T", value) {
-				case "string":
-					if i, err := strconv.ParseFloat(value.(string), 64); err == nil {
-						if i > num {
-							return NoError, true, fmt.Sprintf("%s 大于 %s, 断言： 成功！", assertionText.Var, assertionText.Val)
-						} else {
-							return AssertError, false, fmt.Sprintf("%s 大于 %s, 断言： 失败！", assertionText.Var, assertionText.Val)
-						}
-					} else {
-						return AssertError, false, "不是数字类型，无法比较大小！"
-					}
-				case "float64":
-					if value.(float64) > num {
+				if i, err := strconv.ParseFloat(value, 64); err == nil {
+					if i > num {
 						return NoError, true, fmt.Sprintf("%s 大于 %s, 断言： 成功！", assertionText.Var, assertionText.Val)
 					} else {
 						return AssertError, false, fmt.Sprintf("%s 大于 %s, 断言： 失败！", assertionText.Var, assertionText.Val)
 					}
+				} else {
+					return AssertError, false, "不是数字类型，无法比较大小！"
 				}
 
 			} else {
@@ -221,52 +161,25 @@ func (assertionText *AssertionText) VerifyAssertionText(response *fasthttp.Respo
 			}
 		case GreaterThanOrEqual:
 			value := tools.JsonPath(resp, assertionText.Var)
-			if value == nil {
-				return AssertError, false, "响应体中" + assertionText.Var + "不存在， 断言: 失败！"
-			}
 			if num, err := strconv.ParseFloat(assertionText.Val, 64); err == nil {
-				switch fmt.Sprintf("%T", value) {
-				case "string":
-					if i, err := strconv.ParseFloat(value.(string), 64); err == nil {
-						if i >= num {
-							return NoError, true, fmt.Sprintf("%s 大于等于 %s, 断言： 成功！", assertionText.Var, assertionText.Val)
-						} else {
-							return AssertError, false, fmt.Sprintf("%s 大于等于 %s, 断言： 失败！", assertionText.Var, assertionText.Val)
-						}
-					} else {
-						return AssertError, false, "不是数字类型，无法比较大小！"
-					}
-				case "float64":
-					if value.(float64) >= num {
+				if i, err := strconv.ParseFloat(value, 64); err == nil {
+					if i >= num {
 						return NoError, true, fmt.Sprintf("%s 大于等于 %s, 断言： 成功！", assertionText.Var, assertionText.Val)
 					} else {
 						return AssertError, false, fmt.Sprintf("%s 大于等于 %s, 断言： 失败！", assertionText.Var, assertionText.Val)
 					}
+				} else {
+					return AssertError, false, "不是数字类型，无法比较大小！"
 				}
-
 			} else {
 				return AssertError, false, "不是数字类型，无法比较大小！"
 			}
 
 		case LessThan:
 			value := tools.JsonPath(resp, assertionText.Var)
-			if value == nil {
-				return AssertError, false, "响应体中" + assertionText.Var + "不存在， 断言: 失败！"
-			}
 			if num, err := strconv.ParseFloat(assertionText.Val, 64); err == nil {
-				switch fmt.Sprintf("%T", value) {
-				case "string":
-					if i, err := strconv.ParseFloat(value.(string), 64); err == nil {
-						if i < num {
-							return NoError, true, fmt.Sprintf("%s 小于 %s, 断言： 成功！", assertionText.Var, assertionText.Val)
-						} else {
-							return AssertError, false, fmt.Sprintf("%s 小于 %s, 断言： 失败！", assertionText.Var, assertionText.Val)
-						}
-					} else {
-						return AssertError, false, "不是数字类型，无法比较大小！"
-					}
-				case "float64":
-					if value.(float64) < num {
+				if i, err := strconv.ParseFloat(value, 64); err == nil {
+					if i < num {
 						return NoError, true, fmt.Sprintf("%s 小于 %s, 断言： 成功！", assertionText.Var, assertionText.Val)
 					} else {
 						return AssertError, false, fmt.Sprintf("%s 小于 %s, 断言： 失败！", assertionText.Var, assertionText.Val)
@@ -278,29 +191,16 @@ func (assertionText *AssertionText) VerifyAssertionText(response *fasthttp.Respo
 			}
 		case LessThanOrEqual:
 			value := tools.JsonPath(resp, assertionText.Var)
-			if value == nil {
-				return AssertError, false, "响应体中" + assertionText.Var + "不存在， 断言: 失败！"
-			}
 			if num, err := strconv.ParseFloat(assertionText.Val, 64); err == nil {
-				switch fmt.Sprintf("%T", value) {
-				case "string":
-					if i, err := strconv.ParseFloat(value.(string), 64); err == nil {
-						if i <= num {
-							return NoError, true, fmt.Sprintf("%s 小于等于 %s, 断言： 成功！", assertionText.Var, assertionText.Val)
-						} else {
-							return AssertError, false, fmt.Sprintf("%s 小于等于 %s, 断言： 失败！", assertionText.Var, assertionText.Val)
-						}
-					} else {
-						return AssertError, false, "不是数字类型，无法比较大小！"
-					}
-				case "float64":
-					if value.(float64) <= num {
+				if i, err := strconv.ParseFloat(value, 64); err == nil {
+					if i <= num {
 						return NoError, true, fmt.Sprintf("%s 小于等于 %s, 断言： 成功！", assertionText.Var, assertionText.Val)
 					} else {
 						return AssertError, false, fmt.Sprintf("%s 小于等于 %s, 断言： 失败！", assertionText.Var, assertionText.Val)
 					}
+				} else {
+					return AssertError, false, "不是数字类型，无法比较大小！"
 				}
-
 			} else {
 				return AssertError, false, "不是数字类型，无法比较大小！"
 			}

@@ -143,10 +143,20 @@ func GetGid() (gid string) {
 }
 
 // JsonPath json格式提取数据
-func JsonPath(source, expression string) (district interface{}) {
+func JsonPath(source, expression string) string {
 	gq := gojsonq.New().FromString(source)
-	district = gq.Find(expression)
-	return
+	district := gq.Find(expression)
+	value := ""
+	if district != nil {
+		by, err := json.Marshal(district)
+		if err != nil {
+			value = ""
+		}
+		if by != nil {
+			value = string(by)
+		}
+	}
+	return value
 }
 
 //  HtmlPath html格式提取数据
