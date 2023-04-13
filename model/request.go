@@ -266,16 +266,6 @@ func (re RegularExpression) Extract(resp *fasthttp.Response, globalVar *sync.Map
 		globalVar.Store(name, value)
 	case JsonExtract:
 		value = tools.JsonPath(string(resp.Body()), re.Express)
-		switch fmt.Sprintf("%T", value) {
-		case "float64":
-			value = fmt.Sprintf("%f", value)
-			list := strings.Split(value.(string), ".")
-			if list[1] == "000000" {
-				value = list[0]
-			}
-		case "bool":
-			value = fmt.Sprintf("%t", value)
-		}
 		globalVar.Store(name, value)
 	case HeaderExtract:
 		re.Express = re.Express + "\r"
