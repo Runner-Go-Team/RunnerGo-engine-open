@@ -28,20 +28,20 @@ import (
 
 // Api 请求数据
 type Api struct {
-	TargetId      string               `json:"target_id" bson:"target_id"`
-	Uuid          uuid.UUID            `json:"uuid" bson:"uuid"`
-	Name          string               `json:"name" bson:"name"`
-	TeamId        string               `json:"team_id" bson:"team_id"`
-	TargetType    string               `json:"target_type" bson:"target_type"` // api/webSocket/tcp/grpc
-	Method        string               `json:"method" bson:"method"`           // 方法 GET/POST/PUT
-	Request       Request              `json:"request" bson:"request"`
-	Assert        []*AssertionText     `json:"assert" bson:"assert"`         // 验证的方法(断言)
-	Regex         []*RegularExpression `json:"regex" bson:"regex"`           // 正则表达式
-	Debug         string               `json:"debug" bson:"debug"`           // 是否开启Debug模式
-	Connection    int64                `json:"connection" bson:"connection"` // 0:websocket长连接
-	Configuration *Configuration       `json:"configuration" bson:"configuration"`
-	Variable      []*KV                `json:"variable" bson:"variable"` // 全局变量
-	HttpApiSetup  *HttpApiSetup        `json:"http_api_setup" bson:"http_api_setup"`
+	TargetId       string               `json:"target_id"`
+	Uuid           uuid.UUID            `json:"uuid"`
+	Name           string               `json:"name"`
+	TeamId         string               `json:"team_id"`
+	TargetType     string               `json:"target_type"` // api/webSocket/tcp/grpc
+	Method         string               `json:"method"`      // 方法 GET/POST/PUT
+	Request        Request              `json:"request"`
+	Assert         []*AssertionText     `json:"assert"`     // 验证的方法(断言)
+	Regex          []*RegularExpression `json:"regex"`      // 正则表达式
+	Debug          string               `json:"debug"`      // 是否开启Debug模式
+	Connection     int64                `json:"connection"` // 0:websocket长连接
+	Configuration  *Configuration       `json:"configuration"`
+	GlobalVariable *GlobalVariable      `json:"global_variable"` // 全局变量
+	HttpApiSetup   *HttpApiSetup        `json:"http_api_setup"`
 }
 
 type HttpApiSetup struct {
@@ -53,19 +53,19 @@ type HttpApiSetup struct {
 
 type Request struct {
 	PreUrl    string     `json:"pre_url"`
-	URL       string     `json:"url" bson:"url"`
-	Parameter []*VarForm `json:"parameter" bson:"parameter"`
-	Header    *Header    `json:"header" bson:"header"` // Headers
-	Query     *Query     `json:"query" bson:"query"`
-	Body      *Body      `json:"body" bson:"body"`
-	Auth      *Auth      `json:"auth" bson:"auth"`
-	Cookie    *Cookie    `json:"cookie" bson:"cookie"`
+	URL       string     `json:"url"`
+	Parameter []*VarForm `json:"parameter"`
+	Header    *Header    `json:"header"` // Headers
+	Query     *Query     `json:"query"`
+	Body      *Body      `json:"body"`
+	Auth      *Auth      `json:"auth"`
+	Cookie    *Cookie    `json:"cookie"`
 }
 
 type Body struct {
-	Mode      string     `json:"mode" bson:"mode"`
-	Raw       string     `json:"raw" bson:"raw"`
-	Parameter []*VarForm `json:"parameter" bson:"parameter"`
+	Mode      string     `json:"mode"`
+	Raw       string     `json:"raw"`
+	Parameter []*VarForm `json:"parameter"`
 }
 
 func (b *Body) SetBody(req *fasthttp.Request) string {
@@ -180,7 +180,7 @@ func (b *Body) SetBody(req *fasthttp.Request) string {
 }
 
 type Header struct {
-	Parameter []*VarForm `json:"parameter" bson:"parameter"`
+	Parameter []*VarForm `json:"parameter"`
 }
 
 func (header *Header) SetHeader(req *fasthttp.Request) {
@@ -214,7 +214,7 @@ func (cookie *Cookie) SetCookie(req *fasthttp.Request) {
 }
 
 type Query struct {
-	Parameter []*VarForm `json:"parameter" bson:"parameter"`
+	Parameter []*VarForm `json:"parameter"`
 }
 
 func (r *Api) SetQuery() {
@@ -340,8 +340,9 @@ type KV struct {
 }
 
 type PlanKv struct {
-	Var string `json:"Var"`
-	Val string `json:"Val"`
+	IsCheck int32  `json:"is_check"`
+	Var     string `json:"Var"`
+	Val     string `json:"Val"`
 }
 
 type Form struct {

@@ -25,20 +25,25 @@ func DisposeScene(wg, sceneWg *sync.WaitGroup, runType string, scene model.Scene
 		configuration.Mu.Unlock()
 		if kvList != nil {
 			for _, v := range kvList {
-				scene.Configuration.Variable = append(scene.Configuration.Variable, v)
+				varForm := new(model.VarForm)
+				varForm.IsChecked = model.Open
+				varForm.Key = v.Key
+				varForm.Value = v.Value
+				scene.Configuration.GlobalVariable.Variable = append(scene.Configuration.GlobalVariable.Variable, varForm)
 			}
 		}
 	}
 
 	var globalVar, preNodeMap = new(sync.Map), new(sync.Map)
-	for _, par := range scene.Configuration.Variable {
+	for _, par := range scene.Configuration.GlobalVariable.Variable {
 		globalVar.Store(par.Key, par.Value)
 	}
 
-	for _, v := range configuration.Variable {
-		if _, ok := globalVar.Load(v.Key); !ok {
-			globalVar.Store(v.Key, v.Value)
+	for _, v := range configuration.GlobalVariable.Variable {
+		if _, ok := globalVar.Load(v.Key); ok {
+			continue
 		}
+		globalVar.Store(v.Key, v.Value)
 	}
 	globalVar.Range(func(key, value any) bool {
 		if value == nil {
@@ -204,7 +209,7 @@ func disposePlanNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.Ma
 	event.TeamId = scene.TeamId
 	event.Debug = scene.Debug
 	event.ReportId = scene.ReportId
-
+	scene.GlobalVariable.GlobalToRequest(event.Api)
 	switch event.Type {
 	case model.RequestType:
 		event.Api.Uuid = scene.Uuid
@@ -408,18 +413,15 @@ func disposeDebugNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.M
 	event.TeamId = scene.TeamId
 	event.Debug = scene.Debug
 	event.ReportId = scene.ReportId
+	scene.GlobalVariable.GlobalToRequest(event.Api)
 	switch event.Type {
 	case model.RequestType:
 		event.Api.Uuid = scene.Uuid
 		event.CaseId = scene.CaseId
-
 		DisposeRequest(reportMsg, resultDataMsgCh, nil, globalVar, event, requestCollection)
 		eventResult.Status = model.End
 
 		preNodeMap.Store(event.Id, eventResult)
-		//for _, _ = range event.NextList {
-		//	nodeCh <- eventResult
-		//}
 	case model.IfControllerType:
 		keys := tools.FindAllDestStr(event.Var, "{{(.*?)}}")
 		if len(keys) > 0 {
