@@ -3,7 +3,6 @@
 package tools
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
@@ -11,7 +10,6 @@ import (
 	"github.com/thedevsaddam/gojsonq"
 	"os"
 	"regexp"
-	"runtime"
 	"strings"
 	"time"
 )
@@ -133,15 +131,6 @@ func PathExists(path string) bool {
 
 }
 
-func GetGid() (gid string) {
-	b := make([]byte, 64)
-	b = b[:runtime.Stack(b, false)]
-	b = bytes.TrimPrefix(b, []byte("goroutine "))
-	b = b[:bytes.IndexByte(b, ' ')]
-	gid = string(b)
-	return
-}
-
 // JsonPath json格式提取数据
 func JsonPath(source, expression string) string {
 	gq := gojsonq.New().FromString(source)
@@ -163,9 +152,4 @@ func JsonPath(source, expression string) string {
 
 	}
 	return value
-}
-
-//  HtmlPath html格式提取数据
-func HtmlPath() {
-
 }

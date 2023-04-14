@@ -12,6 +12,7 @@ import (
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/server/execution"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/server/golink"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/tools"
+	"github.com/Shopify/sarama"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
 	"net/http"
@@ -62,20 +63,11 @@ func DisposeTask(plan *model.Plan, c *gin.Context) {
 		global.ReturnMsg(c, http.StatusBadRequest, "执行计划失败：", "计划任务不能为空")
 		return
 	}
-	go func() {
-		ExecutionPlan(plan)
-	}()
-
-	global.ReturnMsg(c, http.StatusOK, "开始执行计划", nil)
-}
-
-// ExecutionPlan 执行计划
-func ExecutionPlan(plan *model.Plan) {
 
 	// 设置kafka消费者，目的是像kafka中发送测试结果
 	kafkaProducer, err := model.NewKafkaProducer([]string{config.Conf.Kafka.Address})
 	if err != nil {
-		log.Logger.Error(fmt.Sprintf("机器ip:%s, kafka连接失败: %s", middlewares.LocalIp, err.Error()))
+		global.ReturnMsg(c, http.StatusBadRequest, "执行计划失败：", fmt.Sprintf("机器ip:%s, kafka连接失败: %s", middlewares.LocalIp, err.Error()))
 		return
 	}
 
@@ -84,10 +76,20 @@ func ExecutionPlan(plan *model.Plan) {
 		config.Conf.Mongo.DSN,
 		middlewares.LocalIp)
 	if err != nil {
-		log.Logger.Error(fmt.Sprintf("机器ip:%s, 连接mongo错误：%s", middlewares.LocalIp, err.Error()))
+		global.ReturnMsg(c, http.StatusBadRequest, "执行计划失败：", fmt.Sprintf("机器ip:%s, 连接mongo错误：%s", middlewares.LocalIp, err.Error()))
 		return
 	}
 	defer mongoClient.Disconnect(context.TODO())
+
+	go func() {
+		ExecutionPlan(plan, kafkaProducer, mongoClient)
+	}()
+
+	global.ReturnMsg(c, http.StatusOK, "开始执行计划", nil)
+}
+
+// ExecutionPlan 执行计划
+func ExecutionPlan(plan *model.Plan, kafkaProducer sarama.SyncProducer, mongoClient *mongo.Client) {
 
 	// 设置接收数据缓存
 	resultDataMsgCh := make(chan *model.ResultDataMsg, 500000)
@@ -109,45 +111,47 @@ func ExecutionPlan(plan *model.Plan) {
 		scene.ConfigTask = plan.ConfigTask
 	}
 
-	if plan.Variable != nil {
-		for _, value := range plan.Variable {
-			values := tools.FindAllDestStr(value.Val, "{{(.*?)}}")
-			if values == nil {
-				continue
-			}
+	if scene.Configuration == nil {
+		scene.Configuration = new(model.Configuration)
+		scene.Configuration.Mu = sync.Mutex{}
+	}
 
-			for _, v := range values {
-				if len(v) < 2 {
-					continue
-				}
-				realVar := tools.ParsFunc(v[1])
-				if realVar != v[1] {
-					value.Val = strings.Replace(value.Val, v[0], realVar, -1)
-				}
-			}
-		}
+	if scene.Configuration.ParameterizedFile == nil {
+		scene.Configuration.ParameterizedFile = new(model.ParameterizedFile)
 	}
-	// 循环读全局变量，如果场景变量不存在则将添加到场景变量中，如果有参数化数据则，将其替换
-	if plan.Variable != nil {
-		if scene.Configuration.Variable == nil {
-			scene.Configuration.Variable = []*model.KV{}
-		}
-		for _, value := range plan.Variable {
-			var target = false
-			for _, kv := range scene.Configuration.Variable {
-				if value.Var == kv.Key {
-					target = true
-					continue
-				}
-			}
-			if !target {
-				var variable = new(model.KV)
-				variable.Key = value.Var
-				variable.Value = value.Val
-				scene.Configuration.Variable = append(scene.Configuration.Variable, variable)
-			}
-		}
+	if scene.Configuration.ParameterizedFile.VariableNames == nil {
+		scene.Configuration.ParameterizedFile.VariableNames = new(model.VariableNames)
+		scene.Configuration.ParameterizedFile.VariableNames.VarMapList = make(map[string][]string)
 	}
+	if scene.Configuration.GlobalVariable == nil {
+		scene.Configuration.GlobalVariable = new(model.GlobalVariable)
+	}
+
+	if scene.Configuration.GlobalVariable.Variable == nil {
+		scene.Configuration.GlobalVariable.Variable = []*model.VarForm{}
+	}
+	if scene.Configuration.GlobalVariable.Header == nil {
+		scene.Configuration.GlobalVariable.Header = new(model.Header)
+	}
+	if scene.Configuration.GlobalVariable.Header.Parameter == nil {
+		scene.Configuration.GlobalVariable.Header.Parameter = []*model.VarForm{}
+	}
+	if scene.Configuration.GlobalVariable.Cookie == nil {
+		scene.Configuration.GlobalVariable.Cookie = new(model.Cookie)
+	}
+	if scene.Configuration.GlobalVariable.Cookie.Parameter == nil {
+		scene.Configuration.GlobalVariable.Cookie.Parameter = []*model.VarForm{}
+	}
+
+	if scene.Configuration.GlobalVariable.Assert == nil {
+		scene.Configuration.GlobalVariable.Assert = []*model.AssertionText{}
+	}
+
+	if plan.GlobalVariable != nil {
+		plan.GlobalVariable.GlobalToLocal(scene.Configuration.GlobalVariable)
+	}
+	scene.Configuration.GlobalVariable.InitReplace()
+
 	// 分解任务
 	TaskDecomposition(plan, wg, resultDataMsgCh, debugCollection, requestCollection)
 }
@@ -158,12 +162,7 @@ func TaskDecomposition(plan *model.Plan, wg *sync.WaitGroup, resultDataMsgCh cha
 	scene := plan.Scene
 	scene.TeamId = plan.TeamId
 	scene.ReportId = plan.ReportId
-	if scene.Configuration == nil {
-		scene.Configuration = new(model.Configuration)
-	}
-	if scene.Configuration.Variable == nil {
-		scene.Configuration.Variable = []*model.KV{}
-	}
+
 	if scene.Configuration.ParameterizedFile == nil {
 		scene.Configuration.ParameterizedFile = new(model.ParameterizedFile)
 	}
@@ -253,39 +252,48 @@ func DebugScene(scene model.Scene) {
 		log.Logger.Error(fmt.Sprintf("机器ip:%s, 连接mongo错误：%s", middlewares.LocalIp, err))
 		return
 	}
-	if scene.Variable != nil {
-		if scene.Configuration == nil {
-			scene.Configuration = new(model.Configuration)
-		}
-		if scene.Configuration.Variable == nil {
-			scene.Configuration.Variable = []*model.KV{}
-		}
-		for _, v := range scene.Variable {
-			target := false
-			for _, sv := range scene.Configuration.Variable {
-				if v.Key == sv.Key {
-					target = true
-				}
-			}
-			if !target {
-				scene.Configuration.Variable = append(scene.Configuration.Variable, v)
-			}
-		}
-	}
 
 	if scene.Configuration == nil {
-		scene.Configuration.Variable = []*model.KV{}
+		scene.Configuration = new(model.Configuration)
 		scene.Configuration.Mu = sync.Mutex{}
 	}
 
+	if scene.Configuration.ParameterizedFile == nil {
+		scene.Configuration.ParameterizedFile = new(model.ParameterizedFile)
+	}
 	if scene.Configuration.ParameterizedFile.VariableNames == nil {
 		scene.Configuration.ParameterizedFile.VariableNames = new(model.VariableNames)
 		scene.Configuration.ParameterizedFile.VariableNames.VarMapList = make(map[string][]string)
 	}
-	if scene.Configuration.Variable == nil {
-		scene.Configuration.Variable = []*model.KV{}
-		scene.Configuration.Mu = sync.Mutex{}
+	if scene.Configuration.GlobalVariable == nil {
+		scene.Configuration.GlobalVariable = new(model.GlobalVariable)
 	}
+
+	if scene.Configuration.GlobalVariable.Variable == nil {
+		scene.Configuration.GlobalVariable.Variable = []*model.VarForm{}
+	}
+	if scene.Configuration.GlobalVariable.Header == nil {
+		scene.Configuration.GlobalVariable.Header = new(model.Header)
+	}
+	if scene.Configuration.GlobalVariable.Header.Parameter == nil {
+		scene.Configuration.GlobalVariable.Header.Parameter = []*model.VarForm{}
+	}
+	if scene.Configuration.GlobalVariable.Cookie == nil {
+		scene.Configuration.GlobalVariable.Cookie = new(model.Cookie)
+	}
+	if scene.Configuration.GlobalVariable.Cookie.Parameter == nil {
+		scene.Configuration.GlobalVariable.Cookie.Parameter = []*model.VarForm{}
+	}
+
+	if scene.Configuration.GlobalVariable.Assert == nil {
+		scene.Configuration.GlobalVariable.Assert = []*model.AssertionText{}
+	}
+
+	if scene.GlobalVariable != nil {
+		scene.GlobalVariable.GlobalToLocal(scene.Configuration.GlobalVariable)
+	}
+
+	scene.Configuration.GlobalVariable.InitReplace()
 	configuration := scene.Configuration
 	if configuration.ParameterizedFile != nil {
 		p := scene.Configuration.ParameterizedFile
@@ -310,15 +318,26 @@ func DebugApi(debugApi model.Api) {
 
 	var globalVar = new(sync.Map)
 
-	if debugApi.Variable != nil {
-		for _, value := range debugApi.Variable {
-			globalVar.Store(value.Key, value.Value)
+	if debugApi.GlobalVariable != nil {
+		debugApi.GlobalVariable.GlobalToRequest(debugApi)
+
+		if debugApi.GlobalVariable.Variable != nil {
+			for _, kv := range debugApi.GlobalVariable.Variable {
+				if kv.IsChecked == model.Open {
+					globalVar.Store(kv.Key, kv.Value)
+				}
+
+			}
 		}
+
 	}
 	if debugApi.Configuration != nil {
-		if debugApi.Configuration.Variable != nil {
-			for _, value := range debugApi.Configuration.Variable {
-				globalVar.Store(value.Key, value.Value)
+		if debugApi.Configuration.GlobalVariable != nil && debugApi.Configuration.GlobalVariable.Variable != nil {
+			for _, kv := range debugApi.Configuration.GlobalVariable.Variable {
+				if kv.IsChecked != model.Open {
+					continue
+				}
+				globalVar.Store(kv.Key, kv.Value)
 			}
 		}
 		if debugApi.Configuration.ParameterizedFile != nil {
