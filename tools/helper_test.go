@@ -3,6 +3,7 @@ package tools
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"testing"
 	"time"
 )
@@ -11,11 +12,16 @@ func TestFindDestStr(t *testing.T) {
 	//str := "{\"code\":0,\"data\":123, \"abc\": {\"token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtb2JpbGUiOiIxNTM3Mjg3NjA5MiIsInZlcl9jb2RlIjoiMTIzNCIsImV4cCI6MTY2MDY1MTY4OCwiaXNzIjoicHJvOTExIn0.D73rBvMuFiM030UyF5Mveayhe1ahpAHOtEMMwsmfN78\"},\"msg\":\"success\"}"
 	//rex := "{\"code\": 0,{\"data\":[0-9]+,"
 	//rex := "\"data\":[0-9]+,"
-	str := "HTTP/1.1 302 Found\nServer: BWS/1.1\nDate: Mon, 13 Feb 2023 06:26:53 GMT\nContent-Type: text/html\nContent-Length: 154\nBdpagetype: 3\nConnection: keep-alive\nLocation: https://www.baidu.com/search/error.html\nTraceid: 167626961204115765867159599028344081017\nX-Frame-Options: sameorigin\nX-Ua-Compatible: IE=Edge,chrome=1\nSet-Cookie: BDSVRTM=0; path=/\n\n"
-	rex := "Content-Type:(.*?)"
-	result := FindDestStr(str, rex)
+	str := "{\"big\": 248963637882912768}"
+	rex := "\"big\": [0-9]+"
 	//re := regexp.MustCompile(rex)
-	//fmt.Println(re.FindAllString(str, -1))
+	compileRegex := regexp.MustCompile(rex)
+	var result string
+	matchArr := compileRegex.FindStringSubmatch(str)
+	if len(matchArr) > 0 {
+		result = matchArr[len(matchArr)-1]
+	}
+
 	fmt.Println(result)
 	//buf := "abc azc a7c aac 888 a9c  tac"
 	//compileRegex = regexp.MustCompile(`a[]0-9]c`)

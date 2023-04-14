@@ -209,7 +209,10 @@ func disposePlanNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.Ma
 	event.TeamId = scene.TeamId
 	event.Debug = scene.Debug
 	event.ReportId = scene.ReportId
-	scene.GlobalVariable.GlobalToRequest(event.Api)
+	if scene.GlobalVariable != nil {
+		scene.GlobalVariable.GlobalToRequest(event.Api)
+	}
+
 	switch event.Type {
 	case model.RequestType:
 		event.Api.Uuid = scene.Uuid
@@ -413,7 +416,9 @@ func disposeDebugNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.M
 	event.TeamId = scene.TeamId
 	event.Debug = scene.Debug
 	event.ReportId = scene.ReportId
-	scene.GlobalVariable.GlobalToRequest(event.Api)
+	if scene.GlobalVariable != nil {
+		scene.GlobalVariable.GlobalToRequest(event.Api)
+	}
 	switch event.Type {
 	case model.RequestType:
 		event.Api.Uuid = scene.Uuid
