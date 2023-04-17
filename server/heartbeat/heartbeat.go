@@ -6,6 +6,7 @@ import (
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
 	gonet "net"
+	"os"
 	"runtime"
 	"strings"
 	"time"
@@ -164,6 +165,11 @@ func GetNetwork() (networkList []Network) {
 }
 
 func InitLocalIp() {
+	if ip := os.Getenv("RG_ENGINE_IP_FOR_FORCE"); ip != "" {
+		middlewares.LocalIp = ip
+		log.Logger.Info("本机ip：", middlewares.LocalIp, "环境变量强制修订")
+		return
+	}
 
 	conn, err := gonet.Dial("udp", "8.8.8.8:53")
 	if err != nil {
