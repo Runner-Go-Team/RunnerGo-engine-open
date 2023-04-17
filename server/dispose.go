@@ -319,18 +319,16 @@ func DebugApi(debugApi model.Api) {
 	var globalVar = new(sync.Map)
 
 	if debugApi.GlobalVariable != nil {
-		debugApi.GlobalVariable.GlobalToRequest(debugApi)
-
 		if debugApi.GlobalVariable.Variable != nil {
 			for _, kv := range debugApi.GlobalVariable.Variable {
 				if kv.IsChecked == model.Open {
 					globalVar.Store(kv.Key, kv.Value)
 				}
-
 			}
 		}
 
 	}
+
 	if debugApi.Configuration != nil {
 		if debugApi.Configuration.SceneVariable != nil && debugApi.Configuration.SceneVariable.Variable != nil {
 			for _, kv := range debugApi.Configuration.SceneVariable.Variable {
