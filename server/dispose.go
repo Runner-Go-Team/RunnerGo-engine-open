@@ -122,34 +122,34 @@ func ExecutionPlan(plan *model.Plan, kafkaProducer sarama.SyncProducer, mongoCli
 		scene.Configuration.ParameterizedFile.VariableNames = new(model.VariableNames)
 		scene.Configuration.ParameterizedFile.VariableNames.VarMapList = make(map[string][]string)
 	}
-	if scene.Configuration.GlobalVariable == nil {
-		scene.Configuration.GlobalVariable = new(model.GlobalVariable)
+	if scene.Configuration.SceneVariable == nil {
+		scene.Configuration.SceneVariable = new(model.GlobalVariable)
 	}
 
-	if scene.Configuration.GlobalVariable.Variable == nil {
-		scene.Configuration.GlobalVariable.Variable = []*model.VarForm{}
+	if scene.Configuration.SceneVariable.Variable == nil {
+		scene.Configuration.SceneVariable.Variable = []*model.VarForm{}
 	}
-	if scene.Configuration.GlobalVariable.Header == nil {
-		scene.Configuration.GlobalVariable.Header = new(model.Header)
+	if scene.Configuration.SceneVariable.Header == nil {
+		scene.Configuration.SceneVariable.Header = new(model.Header)
 	}
-	if scene.Configuration.GlobalVariable.Header.Parameter == nil {
-		scene.Configuration.GlobalVariable.Header.Parameter = []*model.VarForm{}
+	if scene.Configuration.SceneVariable.Header.Parameter == nil {
+		scene.Configuration.SceneVariable.Header.Parameter = []*model.VarForm{}
 	}
-	if scene.Configuration.GlobalVariable.Cookie == nil {
-		scene.Configuration.GlobalVariable.Cookie = new(model.Cookie)
+	if scene.Configuration.SceneVariable.Cookie == nil {
+		scene.Configuration.SceneVariable.Cookie = new(model.Cookie)
 	}
-	if scene.Configuration.GlobalVariable.Cookie.Parameter == nil {
-		scene.Configuration.GlobalVariable.Cookie.Parameter = []*model.VarForm{}
+	if scene.Configuration.SceneVariable.Cookie.Parameter == nil {
+		scene.Configuration.SceneVariable.Cookie.Parameter = []*model.VarForm{}
 	}
 
-	if scene.Configuration.GlobalVariable.Assert == nil {
-		scene.Configuration.GlobalVariable.Assert = []*model.AssertionText{}
+	if scene.Configuration.SceneVariable.Assert == nil {
+		scene.Configuration.SceneVariable.Assert = []*model.AssertionText{}
 	}
 
 	if plan.GlobalVariable != nil {
-		plan.GlobalVariable.GlobalToLocal(scene.Configuration.GlobalVariable)
+		plan.GlobalVariable.GlobalToLocal(scene.Configuration.SceneVariable)
 	}
-	scene.Configuration.GlobalVariable.InitReplace()
+	scene.Configuration.SceneVariable.InitReplace()
 
 	// 分解任务
 	TaskDecomposition(plan, wg, resultDataMsgCh, mongoClient, requestCollection)
@@ -265,35 +265,35 @@ func DebugScene(scene model.Scene) {
 		scene.Configuration.ParameterizedFile.VariableNames = new(model.VariableNames)
 		scene.Configuration.ParameterizedFile.VariableNames.VarMapList = make(map[string][]string)
 	}
-	if scene.Configuration.GlobalVariable == nil {
-		scene.Configuration.GlobalVariable = new(model.GlobalVariable)
+	if scene.Configuration.SceneVariable == nil {
+		scene.Configuration.SceneVariable = new(model.GlobalVariable)
 	}
 
-	if scene.Configuration.GlobalVariable.Variable == nil {
-		scene.Configuration.GlobalVariable.Variable = []*model.VarForm{}
+	if scene.Configuration.SceneVariable.Variable == nil {
+		scene.Configuration.SceneVariable.Variable = []*model.VarForm{}
 	}
-	if scene.Configuration.GlobalVariable.Header == nil {
-		scene.Configuration.GlobalVariable.Header = new(model.Header)
+	if scene.Configuration.SceneVariable.Header == nil {
+		scene.Configuration.SceneVariable.Header = new(model.Header)
 	}
-	if scene.Configuration.GlobalVariable.Header.Parameter == nil {
-		scene.Configuration.GlobalVariable.Header.Parameter = []*model.VarForm{}
+	if scene.Configuration.SceneVariable.Header.Parameter == nil {
+		scene.Configuration.SceneVariable.Header.Parameter = []*model.VarForm{}
 	}
-	if scene.Configuration.GlobalVariable.Cookie == nil {
-		scene.Configuration.GlobalVariable.Cookie = new(model.Cookie)
+	if scene.Configuration.SceneVariable.Cookie == nil {
+		scene.Configuration.SceneVariable.Cookie = new(model.Cookie)
 	}
-	if scene.Configuration.GlobalVariable.Cookie.Parameter == nil {
-		scene.Configuration.GlobalVariable.Cookie.Parameter = []*model.VarForm{}
+	if scene.Configuration.SceneVariable.Cookie.Parameter == nil {
+		scene.Configuration.SceneVariable.Cookie.Parameter = []*model.VarForm{}
 	}
 
-	if scene.Configuration.GlobalVariable.Assert == nil {
-		scene.Configuration.GlobalVariable.Assert = []*model.AssertionText{}
+	if scene.Configuration.SceneVariable.Assert == nil {
+		scene.Configuration.SceneVariable.Assert = []*model.AssertionText{}
 	}
 
 	if scene.GlobalVariable != nil {
-		scene.GlobalVariable.GlobalToLocal(scene.Configuration.GlobalVariable)
+		scene.GlobalVariable.GlobalToLocal(scene.Configuration.SceneVariable)
 	}
 
-	scene.Configuration.GlobalVariable.InitReplace()
+	scene.Configuration.SceneVariable.InitReplace()
 	configuration := scene.Configuration
 	if configuration.ParameterizedFile != nil {
 		p := scene.Configuration.ParameterizedFile
@@ -332,8 +332,8 @@ func DebugApi(debugApi model.Api) {
 
 	}
 	if debugApi.Configuration != nil {
-		if debugApi.Configuration.GlobalVariable != nil && debugApi.Configuration.GlobalVariable.Variable != nil {
-			for _, kv := range debugApi.Configuration.GlobalVariable.Variable {
+		if debugApi.Configuration.SceneVariable != nil && debugApi.Configuration.SceneVariable.Variable != nil {
+			for _, kv := range debugApi.Configuration.SceneVariable.Variable {
 				if kv.IsChecked != model.Open {
 					continue
 				}
