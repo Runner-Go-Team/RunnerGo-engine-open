@@ -766,6 +766,9 @@ func (r *Api) ReplaceQueryParameterizes(globalVar *sync.Map) {
 	if globalVar == nil {
 		return
 	}
+	if r.GlobalVariable == nil {
+		r.GlobalVariable = new(GlobalVariable)
+	}
 	r.ReplaceUrl(globalVar)
 	r.ReplaceBodyVarForm(globalVar)
 	r.ReplaceQueryVarForm(globalVar)

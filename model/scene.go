@@ -274,8 +274,16 @@ func (g *GlobalVariable) GlobalToRequest(api Api) {
 	if api.TargetType != "api" {
 		return
 	}
-
-	if g.Cookie != nil && g.Cookie.Parameter != nil && len(g.Cookie.Parameter) > 0 {
+	if api.GlobalVariable == nil {
+		api.GlobalVariable = new(GlobalVariable)
+	}
+	if len(g.Cookie.Parameter) > 0 {
+		if api.GlobalVariable.Cookie == nil {
+			api.GlobalVariable.Cookie = new(Cookie)
+		}
+		if api.GlobalVariable.Cookie.Parameter == nil {
+			api.GlobalVariable.Cookie.Parameter = []*VarForm{}
+		}
 		for _, parameter := range g.Cookie.Parameter {
 			if parameter.IsChecked != Open {
 				continue
@@ -300,7 +308,13 @@ func (g *GlobalVariable) GlobalToRequest(api Api) {
 		}
 	}
 
-	if api.GlobalVariable.Header != nil && api.GlobalVariable.Header.Parameter != nil && len(api.GlobalVariable.Header.Parameter) > 0 {
+	if len(g.Header.Parameter) > 0 {
+		if api.GlobalVariable.Header == nil {
+			api.GlobalVariable.Header = new(Header)
+		}
+		if api.GlobalVariable.Header.Parameter == nil {
+			api.GlobalVariable.Header.Parameter = []*VarForm{}
+		}
 		for _, parameter := range api.GlobalVariable.Header.Parameter {
 			if parameter.IsChecked != Open {
 				continue
@@ -326,6 +340,9 @@ func (g *GlobalVariable) GlobalToRequest(api Api) {
 	}
 
 	if api.GlobalVariable.Assert != nil && len(api.GlobalVariable.Assert) > 0 {
+		if api.GlobalVariable.Assert == nil {
+			api.GlobalVariable.Assert = []*AssertionText{}
+		}
 		for _, parameter := range api.GlobalVariable.Assert {
 			if parameter.IsChecked != Open {
 				continue
