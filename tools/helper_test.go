@@ -1,7 +1,6 @@
 package tools
 
 import (
-	"encoding/json"
 	"fmt"
 	"regexp"
 	"testing"
@@ -50,18 +49,7 @@ func TestHtmlPath(t *testing.T) {
 }
 
 func TestJsonPath(t *testing.T) {
-	str := "{\"variable\": 100000,\"a\": true, \"scene\": {\"team_id\": \"7138dbc2-f1c0-49c2-b50d-471e157d022d\",\"nodes\": [{\"id\": \"f62ee89a-5dba-4f06-879f-8534e3a89faf\"},{\"id\": \"f62ee89a-5dba-4f06-879f-8534e3a89faf\"}]}}"
-
-	value := JsonPath(str, "a")
-	fmt.Println(fmt.Sprintf("%T", value))
-	fmt.Println(value)
-	by, err := json.Marshal(value)
-	if err != nil {
-		value = ""
-	}
-	if by != nil {
-		value = string(by)
-	}
-
+	str := "{\n\t\"code\": 200,\n\t\"message\": \"操作成功\",\n\t\"data\": {\n\t\t\"page\": 1,\n\t\t\"limit\": 10,\n\t\t\"totalPage\": 1,\n\t\t\"total\": 2,\n\t\t\"list\": [\n\t\t\t{\n\t\t\t\t\"id\": 1646.6920,\n\t\t\t\t\"mergeBoxNo\": \"MB83312168171280158677330\",\n\t\t\t\t\"status\": 0,\n\t\t\t\t\"proTotalNum\": 2,\n\t\t\t\t\"freightFee\": null,\n\t\t\t\t\"estimatedPrice\": \"0.20\",\n\t\t\t\t\"imagesList\": [\n\t\t\t\t\t\"image/m90146731624_1.jpg\",\n\t\t\t\t\t\"image/m90146731624_1.jpg\"\n\t\t\t\t]\n\t\t\t},\n\t\t\t{\n\t\t\t\t\"id\": 1646692072641560577,\n\t\t\t\t\"mergeBoxNo\": \"MB66705168143695883362148\",\n\t\t\t\t\"status\": 0,\n\t\t\t\t\"proTotalNum\": 1,\n\t\t\t\t\"freightFee\": null,\n\t\t\t\t\"estimatedPrice\": \"0.00\",\n\t\t\t\t\"imagesList\": [\n\t\t\t\t\t\"image/m95245867744_1.jpg\"\n\t\t\t\t]\n\t\t\t}\n\t\t]\n\t}\n}"
+	value := JsonPath(str, "data.list.1")
 	fmt.Println(value)
 }
