@@ -270,96 +270,75 @@ func (g *GlobalVariable) InitReplace() {
 	}
 }
 
-func (g *GlobalVariable) GlobalToRequest(api Api) {
-	if api.TargetType != "api" {
-		return
-	}
-	if api.GlobalVariable == nil {
-		api.GlobalVariable = new(GlobalVariable)
-	}
+func (g *GlobalVariable) GlobalToRequest(cookie *Cookie, header *Header, assertion []*AssertionText) {
 	if len(g.Cookie.Parameter) > 0 {
-		if api.GlobalVariable.Cookie == nil {
-			api.GlobalVariable.Cookie = new(Cookie)
+		if cookie == nil {
+			cookie = new(Cookie)
 		}
-		if api.GlobalVariable.Cookie.Parameter == nil {
-			api.GlobalVariable.Cookie.Parameter = []*VarForm{}
+		if cookie.Parameter == nil {
+			cookie.Parameter = []*VarForm{}
 		}
 		for _, parameter := range g.Cookie.Parameter {
 			if parameter.IsChecked != Open {
 				continue
 			}
-			if api.Request.Cookie == nil {
-				api.Request.Cookie = new(Cookie)
-			}
-			if api.Request.Cookie.Parameter == nil {
-				api.Request.Cookie.Parameter = []*VarForm{}
-			}
 			var isExist bool
-			for _, value := range api.Request.Cookie.Parameter {
+			for _, value := range cookie.Parameter {
 				if value.IsChecked == Open && parameter.Key == value.Key {
 					isExist = true
 				}
 			}
-			if !isExist {
+			if isExist {
 				continue
 			}
-			api.Request.Cookie.Parameter = append(api.Request.Cookie.Parameter, parameter)
+			cookie.Parameter = append(cookie.Parameter, parameter)
 
 		}
 	}
 
 	if len(g.Header.Parameter) > 0 {
-		if api.GlobalVariable.Header == nil {
-			api.GlobalVariable.Header = new(Header)
+		if header == nil {
+			header = new(Header)
 		}
-		if api.GlobalVariable.Header.Parameter == nil {
-			api.GlobalVariable.Header.Parameter = []*VarForm{}
+		if header.Parameter == nil {
+			header.Parameter = []*VarForm{}
 		}
-		for _, parameter := range api.GlobalVariable.Header.Parameter {
+		for _, parameter := range g.Header.Parameter {
 			if parameter.IsChecked != Open {
 				continue
 			}
-			if api.Request.Header == nil {
-				api.Request.Header = new(Header)
-			}
-			if api.Request.Header.Parameter == nil {
-				api.Request.Header.Parameter = []*VarForm{}
-			}
 			var isExist bool
-			for _, value := range api.Request.Header.Parameter {
-				if value.IsChecked == Open && parameter.Key == value.Key {
+			for _, value := range header.Parameter {
+				if value.IsChecked == Open && parameter.Key == value.Key && parameter.Value == parameter.Value {
 					isExist = true
 				}
 			}
-			if !isExist {
+			if isExist {
 				continue
 			}
-			api.Request.Header.Parameter = append(api.Request.Header.Parameter, parameter)
+			header.Parameter = append(header.Parameter, parameter)
 
 		}
 	}
 
-	if api.GlobalVariable.Assert != nil && len(api.GlobalVariable.Assert) > 0 {
-		if api.GlobalVariable.Assert == nil {
-			api.GlobalVariable.Assert = []*AssertionText{}
+	if len(g.Assert) > 0 {
+		if assertion == nil {
+			assertion = []*AssertionText{}
 		}
-		for _, parameter := range api.GlobalVariable.Assert {
+		for _, parameter := range g.Assert {
 			if parameter.IsChecked != Open {
 				continue
 			}
-			if api.Assert == nil {
-				api.Request.Header = new(Header)
-			}
 			var isExist bool
-			for _, assert := range api.Assert {
-				if assert.IsChecked == Open && parameter.ResponseType == assert.ResponseType && parameter.Compare == assert.Compare && parameter.Val == assert.Val && parameter.Var == assert.Var {
+			for _, asser := range assertion {
+				if asser.IsChecked == Open && parameter.ResponseType == asser.ResponseType && parameter.Compare == asser.Compare && parameter.Val == asser.Val && parameter.Var == asser.Var {
 					isExist = true
 				}
 			}
-			if !isExist {
+			if isExist {
 				continue
 			}
-			api.Assert = append(api.Assert, parameter)
+			assertion = append(assertion, parameter)
 
 		}
 	}

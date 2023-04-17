@@ -210,7 +210,7 @@ func disposePlanNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.Ma
 	event.Debug = scene.Debug
 	event.ReportId = scene.ReportId
 	if scene.GlobalVariable != nil {
-		scene.GlobalVariable.GlobalToRequest(event.Api)
+		scene.GlobalVariable.GlobalToLocal(event.Api.GlobalVariable)
 	}
 
 	switch event.Type {
@@ -417,7 +417,7 @@ func disposeDebugNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.M
 	event.Debug = scene.Debug
 	event.ReportId = scene.ReportId
 	if scene.GlobalVariable != nil {
-		scene.GlobalVariable.GlobalToRequest(event.Api)
+		scene.GlobalVariable.GlobalToRequest(event.Api.Request.Cookie, event.Api.Request.Header, event.Api.Assert)
 	}
 	switch event.Type {
 	case model.RequestType:
@@ -551,6 +551,9 @@ func DisposeRequest(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.
 	}
 	api.Request.PreUrl = strings.TrimSpace(api.Request.PreUrl)
 	api.Request.URL = api.Request.PreUrl + api.Request.URL
+	if api.GlobalVariable != nil {
+		api.GlobalVariable.GlobalToRequest(api.Request.Cookie, api.Request.Header, api.Assert)
+	}
 
 	// 请求中所有的变量替换成真正的值
 	api.ReplaceQueryParameterizes(globalVar)
