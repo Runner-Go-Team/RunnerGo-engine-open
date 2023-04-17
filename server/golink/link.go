@@ -551,6 +551,7 @@ func DisposeRequest(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.
 	}
 	api.Request.PreUrl = strings.TrimSpace(api.Request.PreUrl)
 	api.Request.URL = api.Request.PreUrl + api.Request.URL
+
 	// 请求中所有的变量替换成真正的值
 	api.ReplaceQueryParameterizes(globalVar)
 
