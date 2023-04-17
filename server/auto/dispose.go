@@ -72,13 +72,13 @@ func DisposeAutoPlan(plan *auto.Plan, c *gin.Context) {
 		if scene.Configuration == nil {
 			scene.Configuration = new(model.Configuration)
 		}
-		if scene.Configuration.GlobalVariable != nil && plan.GlobalVariable != nil {
-			plan.GlobalVariable.GlobalToLocal(scene.Configuration.GlobalVariable)
-			scene.Configuration.GlobalVariable.InitReplace()
+		if scene.Configuration.SceneVariable != nil && plan.GlobalVariable != nil {
+			plan.GlobalVariable.GlobalToLocal(scene.Configuration.SceneVariable)
+			scene.Configuration.SceneVariable.InitReplace()
 		}
 
-		if scene.Configuration.GlobalVariable == nil && plan.GlobalVariable != nil {
-			scene.Configuration.GlobalVariable = plan.GlobalVariable
+		if scene.Configuration.SceneVariable == nil && plan.GlobalVariable != nil {
+			scene.Configuration.SceneVariable = plan.GlobalVariable
 		}
 
 		if scene.Configuration.ParameterizedFile == nil {
