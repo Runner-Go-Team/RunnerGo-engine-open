@@ -762,6 +762,7 @@ func (v *VarForm) Conversion() {
 
 // ReplaceQueryParameterizes 替换query中的变量
 func (r *Api) ReplaceQueryParameterizes(globalVar *sync.Map) {
+	// 将全局函数等，添加到api请求中
 	if globalVar == nil {
 		return
 	}
@@ -771,7 +772,21 @@ func (r *Api) ReplaceQueryParameterizes(globalVar *sync.Map) {
 	r.ReplaceHeaderVarForm(globalVar)
 	r.ReplaceCookieVarForm(globalVar)
 	r.ReplaceAuthVarForm(globalVar)
+	r.AddAssertion()
 
+}
+
+func (r *Api) AddAssertion() {
+	if r.GlobalVariable == nil || r.GlobalVariable.Assert == nil || len(r.GlobalVariable.Assert) <= 0 {
+		return
+	}
+	if r.Assert == nil {
+		r.Assert = r.GlobalVariable.Assert
+		return
+	}
+	for _, assert := range r.GlobalVariable.Assert {
+		r.Assert = append(r.Assert, assert)
+	}
 }
 
 func (r *Api) ReplaceUrl(globalVar *sync.Map) {
@@ -974,6 +989,14 @@ func (r *Api) ReplaceHeaderVarForm(globalVar *sync.Map) {
 	if r.Request.Header == nil || r.Request.Header.Parameter == nil {
 		return
 	}
+	if r.GlobalVariable.Header != nil && r.GlobalVariable.Header.Parameter != nil && len(r.GlobalVariable.Header.Parameter) > 0 {
+		for _, header := range r.GlobalVariable.Header.Parameter {
+			if header.IsChecked != Open {
+				continue
+			}
+			r.Request.Header.Parameter = append(r.Request.Header.Parameter)
+		}
+	}
 	for _, queryVarForm := range r.Request.Header.Parameter {
 		queryParameterizes := tools.FindAllDestStr(queryVarForm.Key, "{{(.*?)}}")
 		if queryParameterizes != nil {
@@ -1028,6 +1051,14 @@ func (r *Api) ReplaceHeaderVarForm(globalVar *sync.Map) {
 func (r *Api) ReplaceCookieVarForm(globalVar *sync.Map) {
 	if r.Request.Cookie == nil || r.Request.Cookie.Parameter == nil {
 		return
+	}
+	if r.GlobalVariable.Cookie != nil && r.GlobalVariable.Cookie.Parameter != nil && len(r.GlobalVariable.Cookie.Parameter) > 0 {
+		for _, header := range r.GlobalVariable.Cookie.Parameter {
+			if header.IsChecked != Open {
+				continue
+			}
+			r.Request.Cookie.Parameter = append(r.Request.Cookie.Parameter)
+		}
 	}
 	for _, queryVarForm := range r.Request.Header.Parameter {
 		queryParameterizes := tools.FindAllDestStr(queryVarForm.Key, "{{(.*?)}}")
