@@ -33,7 +33,7 @@ type Scene struct {
 
 type Configuration struct {
 	ParameterizedFile *ParameterizedFile `json:"parameterizedFile"`
-	GlobalVariable    *GlobalVariable    `json:"global_variable"`
+	SceneVariable     *GlobalVariable    `json:"scene_variable"`
 	Mu                sync.Mutex         `json:"mu" bson:"mu"`
 }
 

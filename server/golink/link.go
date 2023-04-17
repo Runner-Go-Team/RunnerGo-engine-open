@@ -29,17 +29,17 @@ func DisposeScene(wg, sceneWg *sync.WaitGroup, runType string, scene model.Scene
 				varForm.IsChecked = model.Open
 				varForm.Key = v.Key
 				varForm.Value = v.Value
-				scene.Configuration.GlobalVariable.Variable = append(scene.Configuration.GlobalVariable.Variable, varForm)
+				scene.Configuration.SceneVariable.Variable = append(scene.Configuration.SceneVariable.Variable, varForm)
 			}
 		}
 	}
 
 	var globalVar, preNodeMap = new(sync.Map), new(sync.Map)
-	for _, par := range scene.Configuration.GlobalVariable.Variable {
+	for _, par := range scene.Configuration.SceneVariable.Variable {
 		globalVar.Store(par.Key, par.Value)
 	}
 
-	for _, v := range configuration.GlobalVariable.Variable {
+	for _, v := range configuration.SceneVariable.Variable {
 		if _, ok := globalVar.Load(v.Key); ok {
 			continue
 		}
