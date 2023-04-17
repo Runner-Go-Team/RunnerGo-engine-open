@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
-	"github.com/thedevsaddam/gojsonq"
+	"github.com/tidwall/gjson"
 	"os"
 	"regexp"
 	"runtime"
@@ -143,9 +143,9 @@ func GetGid() (gid string) {
 }
 
 // JsonPath json格式提取数据
-func JsonPath(source, expression string) (district interface{}) {
-	gq := gojsonq.New().FromString(source)
-	district = gq.Find(expression)
+func JsonPath(source, expression string) (value interface{}) {
+	gq := gjson.Get(source, expression)
+	value = gq.String()
 	return
 }
 
