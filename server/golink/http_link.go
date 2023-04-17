@@ -45,7 +45,7 @@ func HttpSend(event model.Event, api model.Api, globalVar *sync.Map, requestColl
 			regex = append(regex, reg)
 		}
 	}
-
+	//log.Logger.Debug("api:::::     ", api.Name, "\nbody:      ", string(resp.Body()), "\nREGEX:    ", regex)
 	if err != nil {
 		isSucceed = false
 		errMsg = err.Error()

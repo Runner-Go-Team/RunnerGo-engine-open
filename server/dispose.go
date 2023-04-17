@@ -79,7 +79,6 @@ func DisposeTask(plan *model.Plan, c *gin.Context) {
 		global.ReturnMsg(c, http.StatusBadRequest, "执行计划失败：", fmt.Sprintf("机器ip:%s, 连接mongo错误：%s", middlewares.LocalIp, err.Error()))
 		return
 	}
-	defer mongoClient.Disconnect(context.TODO())
 
 	go func() {
 		ExecutionPlan(plan, kafkaProducer, mongoClient)
@@ -103,7 +102,7 @@ func ExecutionPlan(plan *model.Plan, kafkaProducer sarama.SyncProducer, mongoCli
 	go model.SendKafkaMsg(kafkaProducer, resultDataMsgCh, topic, partition, middlewares.LocalIp)
 
 	requestCollection := model.NewCollection(config.Conf.Mongo.DataBase, config.Conf.Mongo.StressDebugTable, mongoClient)
-	debugCollection := model.NewCollection(config.Conf.Mongo.DataBase, config.Conf.Mongo.DebugStatusTable, mongoClient)
+	//debugCollection := model.NewCollection(config.Conf.Mongo.DataBase, config.Conf.Mongo.DebugStatusTable, mongoClient)
 	scene := plan.Scene
 
 	// 如果场景中的任务配置勾选了全局任务配置，那么使用全局任务配置
@@ -153,12 +152,13 @@ func ExecutionPlan(plan *model.Plan, kafkaProducer sarama.SyncProducer, mongoCli
 	scene.Configuration.GlobalVariable.InitReplace()
 
 	// 分解任务
-	TaskDecomposition(plan, wg, resultDataMsgCh, debugCollection, requestCollection)
+	TaskDecomposition(plan, wg, resultDataMsgCh, mongoClient, requestCollection)
 }
 
 // TaskDecomposition 分解任务
-func TaskDecomposition(plan *model.Plan, wg *sync.WaitGroup, resultDataMsgCh chan *model.ResultDataMsg, debugCollection, mongoCollection *mongo.Collection) {
+func TaskDecomposition(plan *model.Plan, wg *sync.WaitGroup, resultDataMsgCh chan *model.ResultDataMsg, mongoClient *mongo.Client, mongoCollection *mongo.Collection) {
 	defer close(resultDataMsgCh)
+	defer mongoClient.Disconnect(context.TODO())
 	scene := plan.Scene
 	scene.TeamId = plan.TeamId
 	scene.ReportId = plan.ReportId
