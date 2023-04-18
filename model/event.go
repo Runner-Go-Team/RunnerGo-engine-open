@@ -1,6 +1,9 @@
 package model
 
-import uuid "github.com/satori/go.uuid"
+import (
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
+	uuid "github.com/satori/go.uuid"
+)
 
 type Event struct {
 	Id                string    `json:"id" bson:"id"`
@@ -38,29 +41,76 @@ type EventStatus struct {
 	Status    bool   `json:"status" bson:"status"`
 }
 
-//
-//func GrpcReplaceParameterizes(r *pb.Request, globalVariable *sync.Map) {
-//	for k, v := range r.Parameterizes {
-//		// 查找header的key中是否存在变量{{****}}
-//		keys := tools.FindAllDestStr(k, "{{(.*?)}}")
-//		if keys != nil {
-//			delete(r.Parameterizes, k)
-//			for _, realKey := range keys {
-//				if value, ok := globalVariable.Load(realKey[1]); ok {
-//					k = strings.Replace(k, realKey[0], value.(string), -1)
-//				}
-//			}
-//			r.Parameterizes[k] = v
-//		}
-//
-//		values := tools.FindAllDestStr(v.String(), "{{(.*?)}}")
-//		if values != nil {
-//			for _, realValue := range values {
-//				if value, ok := globalVariable.Load(realValue[1]); ok {
-//					v.Value = []byte(strings.Replace(v.String(), realValue[0], value.(string), -1))
-//				}
-//			}
-//			r.Parameterizes[k] = v
-//		}
-//	}
-//}
+func (api Api) GlobalToRequest() {
+	if len(api.GlobalVariable.Cookie.Parameter) > 0 {
+		if api.Request.Cookie == nil {
+			api.Request.Cookie = new(Cookie)
+		}
+		if api.Request.Cookie.Parameter == nil {
+			api.Request.Cookie.Parameter = []*VarForm{}
+		}
+		for _, parameter := range api.GlobalVariable.Cookie.Parameter {
+			if parameter.IsChecked != Open {
+				continue
+			}
+			var isExist bool
+			for _, value := range api.Request.Cookie.Parameter {
+				if value.IsChecked == Open && parameter.Key == value.Key && parameter.Value == value.Value {
+					isExist = true
+				}
+			}
+			if isExist {
+				continue
+			}
+			api.Request.Cookie.Parameter = append(api.Request.Cookie.Parameter, parameter)
+		}
+	}
+	log.Logger.Debug("API.:     ", api.Request.Cookie.Parameter[0].IsChecked)
+	if len(api.GlobalVariable.Header.Parameter) > 0 {
+		if api.Request.Header == nil {
+			api.Request.Header = new(Header)
+		}
+		if api.Request.Header.Parameter == nil {
+			api.Request.Header.Parameter = []*VarForm{}
+		}
+		for _, parameter := range api.GlobalVariable.Header.Parameter {
+			if parameter.IsChecked != Open {
+				continue
+			}
+			var isExist bool
+			for _, value := range api.Request.Header.Parameter {
+				if value.IsChecked == Open && parameter.Key == value.Key && parameter.Value == parameter.Value {
+					isExist = true
+				}
+			}
+			if isExist {
+				continue
+			}
+			api.Request.Header.Parameter = append(api.Request.Header.Parameter, parameter)
+
+		}
+	}
+
+	if len(api.GlobalVariable.Assert) > 0 {
+		if api.Assert == nil {
+			api.Assert = []*AssertionText{}
+		}
+		for _, parameter := range api.GlobalVariable.Assert {
+			if parameter.IsChecked != Open {
+				continue
+			}
+			var isExist bool
+			for _, asser := range api.Assert {
+				if asser.IsChecked == Open && parameter.ResponseType == asser.ResponseType && parameter.Compare == asser.Compare && parameter.Val == asser.Val && parameter.Var == asser.Var {
+					isExist = true
+				}
+			}
+			if isExist {
+				continue
+			}
+			api.Assert = append(api.Assert, parameter)
+
+		}
+	}
+
+}
