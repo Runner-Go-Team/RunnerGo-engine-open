@@ -222,7 +222,7 @@ func (r *Api) SetQuery() {
 }
 
 type Cookie struct {
-	Parameter []*VarForm
+	Parameter []*VarForm `json:"parameter"`
 }
 
 type RegularExpression struct {
