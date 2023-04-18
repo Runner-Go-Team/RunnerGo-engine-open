@@ -72,6 +72,7 @@ func VariablesMatch(str string) (value string) {
 
 // FindDestStr 匹配规则
 func FindDestStr(str string, rex string) (result string) {
+	defer DeferPanic(fmt.Sprintf("正则表达式书写错误： %s", rex))
 	if strings.Contains(rex, "(.*?)") {
 		compileRegex := regexp.MustCompile(rex)
 		matchArr := compileRegex.FindStringSubmatch(str)
@@ -93,8 +94,13 @@ func FindDestStr(str string, rex string) (result string) {
 		}
 		return
 	}
-
 	return
+}
+
+func DeferPanic(msg string) {
+	if err := recover(); err != nil {
+		log.Logger.Error(msg)
+	}
 }
 
 // FindAllDestStr 匹配所有的
