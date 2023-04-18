@@ -202,9 +202,6 @@ func disposePlanNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.Ma
 		eventResult.Status = model.NotRun
 		eventResult.Weight = event.Weight
 		if event.NextList != nil && len(event.NextList) >= 1 {
-			//for _, _ = range event.NextList {
-			//	nodeCh <- eventResult
-			//}
 			preNodeMap.Store(event.Id, eventResult)
 		}
 		return
