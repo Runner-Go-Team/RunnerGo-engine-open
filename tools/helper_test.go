@@ -2,7 +2,6 @@ package tools
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 	"time"
 )
@@ -11,16 +10,10 @@ func TestFindDestStr(t *testing.T) {
 	//str := "{\"code\":0,\"data\":123, \"abc\": {\"token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtb2JpbGUiOiIxNTM3Mjg3NjA5MiIsInZlcl9jb2RlIjoiMTIzNCIsImV4cCI6MTY2MDY1MTY4OCwiaXNzIjoicHJvOTExIn0.D73rBvMuFiM030UyF5Mveayhe1ahpAHOtEMMwsmfN78\"},\"msg\":\"success\"}"
 	//rex := "{\"code\": 0,{\"data\":[0-9]+,"
 	//rex := "\"data\":[0-9]+,"
-	str := "{\"big\": 248963637882912768}"
-	rex := "\"big\": [0-9]+"
+	str := "https://iam-int.hualife.cc:8081/#/dashboard?code=5512057844"
+	rex := "https://iam-int.hualife.cc:8081/#/dashboard?code=[0-9]+"
 	//re := regexp.MustCompile(rex)
-	compileRegex := regexp.MustCompile(rex)
-	var result string
-	matchArr := compileRegex.FindStringSubmatch(str)
-	if len(matchArr) > 0 {
-		result = matchArr[len(matchArr)-1]
-	}
-
+	result := FindAllDestStr(str, rex)
 	fmt.Println(result)
 	//buf := "abc azc a7c aac 888 a9c  tac"
 	//compileRegex = regexp.MustCompile(`a[]0-9]c`)
@@ -49,7 +42,8 @@ func TestHtmlPath(t *testing.T) {
 }
 
 func TestJsonPath(t *testing.T) {
-	str := "{\n\t\"code\": 200,\n\t\"message\": \"操作成功\",\n\t\"data\": {\n\t\t\"page\": 1,\n\t\t\"limit\": 10,\n\t\t\"totalPage\": 1,\n\t\t\"total\": 2,\n\t\t\"list\": [\n\t\t\t{\n\t\t\t\t\"id\": 1646.6920,\n\t\t\t\t\"mergeBoxNo\": \"MB83312168171280158677330\",\n\t\t\t\t\"status\": 0,\n\t\t\t\t\"proTotalNum\": 2,\n\t\t\t\t\"freightFee\": null,\n\t\t\t\t\"estimatedPrice\": \"0.20\",\n\t\t\t\t\"imagesList\": [\n\t\t\t\t\t\"image/m90146731624_1.jpg\",\n\t\t\t\t\t\"image/m90146731624_1.jpg\"\n\t\t\t\t]\n\t\t\t},\n\t\t\t{\n\t\t\t\t\"id\": 1646692072641560577,\n\t\t\t\t\"mergeBoxNo\": \"MB66705168143695883362148\",\n\t\t\t\t\"status\": 0,\n\t\t\t\t\"proTotalNum\": 1,\n\t\t\t\t\"freightFee\": null,\n\t\t\t\t\"estimatedPrice\": \"0.00\",\n\t\t\t\t\"imagesList\": [\n\t\t\t\t\t\"image/m95245867744_1.jpg\"\n\t\t\t\t]\n\t\t\t}\n\t\t]\n\t}\n}"
-	value := JsonPath(str, "data.list.1")
+	//str := "{\n\t\"code\": 200,\n\t\"message\": \"操作成功\",\n\t\"data\": {\n\t\t\"page\": 1,\n\t\t\"limit\": 10,\n\t\t\"totalPage\": 1,\n\t\t\"total\": 2,\n\t\t\"list\": [\n\t\t\t{\n\t\t\t\t\"id\": 1646.6920,\n\t\t\t\t\"mergeBoxNo\": \"MB83312168171280158677330\",\n\t\t\t\t\"status\": 0,\n\t\t\t\t\"proTotalNum\": 2,\n\t\t\t\t\"freightFee\": null,\n\t\t\t\t\"estimatedPrice\": \"0.20\",\n\t\t\t\t\"imagesList\": [\n\t\t\t\t\t\"image/m90146731624_1.jpg\",\n\t\t\t\t\t\"image/m90146731624_1.jpg\"\n\t\t\t\t]\n\t\t\t},\n\t\t\t{\n\t\t\t\t\"id\": 1646692072641560577,\n\t\t\t\t\"mergeBoxNo\": \"MB66705168143695883362148\",\n\t\t\t\t\"status\": 0,\n\t\t\t\t\"proTotalNum\": 1,\n\t\t\t\t\"freightFee\": null,\n\t\t\t\t\"estimatedPrice\": \"0.00\",\n\t\t\t\t\"imagesList\": [\n\t\t\t\t\t\"image/m95245867744_1.jpg\"\n\t\t\t\t]\n\t\t\t}\n\t\t]\n\t}\n}"
+	str := "{\n \"data\": {\n  \"result\": \"不支持当前浏览器版本，目前终端只支持：[\\\"ie8\\\",\\\"谷歌\\\",\\\"ie10\\\",\\\"ie9\\\",\\\"ie11\\\"],您当前的浏览器版本为：Unknown\",\n  \"url\": \"https://iam-int.hualife.cc:8081/#/dashboard?code=5512057844\"\n },\n \"result_code\": \"200\",\n \"global_request_id\": \"9588775566asa5444444\",\n \"current_request_id\": \"a55554445sd554555455s\",\n \"result_message\": \"成功\"\n\n}"
+	value := JsonPath(str, "data.url")
 	fmt.Println(value)
 }

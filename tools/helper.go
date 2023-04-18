@@ -132,36 +132,6 @@ func PathExists(path string) bool {
 }
 
 // JsonPath json格式提取数据
-//func JsonPath(source, expression string) string {
-//	gq := gojsonq.New().FromString(source)
-//	district, _ := gq.FindR(expression)
-//	a, _ := district.Int64Slice()
-//
-//	fmt.Println("dis::::    ", a)
-//	value := ""
-//	//if district != nil {
-//	//	switch fmt.Sprintf("%T", district) {
-//	//	case "string":
-//	//		value = district.String
-//	//	case "float64":
-//	//		value = fmt.Sprintf("%f", district)
-//	//		fmt.Println("dis:     ", value)
-//	//	default:
-//	//
-//	//		by, err := json.Marshal(district)
-//	//		if err != nil {
-//	//			value = ""
-//	//		}
-//	//		if by != nil {
-//	//			value = string(by)
-//	//
-//	//		}
-//	//	}
-//	//
-//	//}
-//	return value
-//}
-//
 
 func JsonPath(source, expression string) (value string) {
 	gq := gjson.Get(source, expression)
