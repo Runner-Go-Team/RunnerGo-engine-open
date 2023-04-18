@@ -72,8 +72,8 @@ func DisposeAutoPlan(plan *auto.Plan, c *gin.Context) {
 		if scene.Configuration == nil {
 			scene.Configuration = new(model.Configuration)
 		}
-		if scene.Configuration.SceneVariable != nil && plan.GlobalVariable != nil {
-			plan.GlobalVariable.GlobalToLocal(scene.Configuration.SceneVariable)
+		if plan.GlobalVariable != nil {
+			plan.GlobalVariable.SupToSub(scene.Configuration.SceneVariable)
 			scene.Configuration.SceneVariable.InitReplace()
 		}
 
@@ -117,7 +117,7 @@ func sceneDecomposition(plan *auto.Plan, wg *sync.WaitGroup, reportMsg *model.Re
 	switch plan.ConfigTask.SceneRunMode {
 	case model.AuToOrderMode:
 		for _, scene := range plan.Scenes {
-			key := fmt.Sprintf("StopAutoPlan:%s:%s:%d", scene.TeamId, scene.PlanId, scene.ReportId)
+			key := fmt.Sprintf("StopAutoPlan:%s:%s:%s", scene.TeamId, scene.PlanId, scene.ReportId)
 			err, stop := model.QueryPlanStatus(key)
 			if err == nil && stop == "stop" {
 				return
