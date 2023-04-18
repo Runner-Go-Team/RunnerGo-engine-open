@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/gob"
+	"encoding/json"
 	"fmt"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
@@ -766,30 +767,30 @@ func (r *Api) ReplaceQueryParameterizes(globalVar *sync.Map) {
 	if globalVar == nil {
 		return
 	}
-	if r.GlobalVariable == nil {
-		r.GlobalVariable = new(GlobalVariable)
-	}
 	r.ReplaceUrl(globalVar)
 	r.ReplaceBodyVarForm(globalVar)
 	r.ReplaceQueryVarForm(globalVar)
 	r.ReplaceHeaderVarForm(globalVar)
 	r.ReplaceCookieVarForm(globalVar)
 	r.ReplaceAuthVarForm(globalVar)
-	r.AddAssertion()
 
 }
 
 func (r *Api) AddAssertion() {
-	if r.GlobalVariable == nil || r.GlobalVariable.Assert == nil || len(r.GlobalVariable.Assert) <= 0 {
+	if r.Configuration.SceneVariable == nil || r.Configuration.SceneVariable.Assert == nil || len(r.Configuration.SceneVariable.Assert) <= 0 {
 		return
 	}
 	if r.Assert == nil {
-		r.Assert = r.GlobalVariable.Assert
+		r.Assert = r.Configuration.SceneVariable.Assert
 		return
 	}
-	for _, assert := range r.GlobalVariable.Assert {
+	by1, _ := json.Marshal(r.Assert)
+	log.Logger.Debug("222222:     ", string(by1))
+	for _, assert := range r.Configuration.SceneVariable.Assert {
 		r.Assert = append(r.Assert, assert)
 	}
+	by, _ := json.Marshal(r.Configuration.SceneVariable.Assert)
+	log.Logger.Debug("byLLLLL:     ", string(by))
 }
 
 func (r *Api) ReplaceUrl(globalVar *sync.Map) {
@@ -992,14 +993,6 @@ func (r *Api) ReplaceHeaderVarForm(globalVar *sync.Map) {
 	if r.Request.Header == nil || r.Request.Header.Parameter == nil {
 		return
 	}
-	if r.GlobalVariable.Header != nil && r.GlobalVariable.Header.Parameter != nil && len(r.GlobalVariable.Header.Parameter) > 0 {
-		for _, header := range r.GlobalVariable.Header.Parameter {
-			if header.IsChecked != Open {
-				continue
-			}
-			r.Request.Header.Parameter = append(r.Request.Header.Parameter)
-		}
-	}
 	for _, queryVarForm := range r.Request.Header.Parameter {
 		queryParameterizes := tools.FindAllDestStr(queryVarForm.Key, "{{(.*?)}}")
 		if queryParameterizes != nil {
@@ -1054,14 +1047,6 @@ func (r *Api) ReplaceHeaderVarForm(globalVar *sync.Map) {
 func (r *Api) ReplaceCookieVarForm(globalVar *sync.Map) {
 	if r.Request.Cookie == nil || r.Request.Cookie.Parameter == nil {
 		return
-	}
-	if r.GlobalVariable.Cookie != nil && r.GlobalVariable.Cookie.Parameter != nil && len(r.GlobalVariable.Cookie.Parameter) > 0 {
-		for _, header := range r.GlobalVariable.Cookie.Parameter {
-			if header.IsChecked != Open {
-				continue
-			}
-			r.Request.Cookie.Parameter = append(r.Request.Cookie.Parameter)
-		}
 	}
 	for _, queryVarForm := range r.Request.Header.Parameter {
 		queryParameterizes := tools.FindAllDestStr(queryVarForm.Key, "{{(.*?)}}")

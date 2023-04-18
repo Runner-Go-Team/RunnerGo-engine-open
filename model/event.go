@@ -1,8 +1,6 @@
 package model
 
 import (
-	"encoding/json"
-	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -42,8 +40,8 @@ type EventStatus struct {
 	Status    bool   `json:"status" bson:"status"`
 }
 
-func (api Api) GlobalToRequest() {
-	if len(api.GlobalVariable.Cookie.Parameter) > 0 {
+func (api *Api) GlobalToRequest() {
+	if api.GlobalVariable.Cookie != nil && len(api.GlobalVariable.Cookie.Parameter) > 0 {
 		if api.Request.Cookie == nil {
 			api.Request.Cookie = new(Cookie)
 		}
@@ -66,7 +64,7 @@ func (api Api) GlobalToRequest() {
 			api.Request.Cookie.Parameter = append(api.Request.Cookie.Parameter, parameter)
 		}
 	}
-	if len(api.GlobalVariable.Header.Parameter) > 0 {
+	if api.GlobalVariable.Header != nil && len(api.GlobalVariable.Header.Parameter) > 0 {
 		if api.Request.Header == nil {
 			api.Request.Header = new(Header)
 		}
@@ -91,7 +89,7 @@ func (api Api) GlobalToRequest() {
 		}
 	}
 
-	if len(api.GlobalVariable.Assert) > 0 {
+	if api.GlobalVariable.Assert != nil && len(api.GlobalVariable.Assert) > 0 {
 		if api.Assert == nil {
 			api.Assert = []*AssertionText{}
 		}
@@ -112,8 +110,5 @@ func (api Api) GlobalToRequest() {
 
 		}
 	}
-
-	by, _ := json.Marshal(&api)
-	log.Logger.Debug("by:      ", string(by))
 
 }
