@@ -214,7 +214,7 @@ func disposePlanNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.Ma
 	event.Debug = scene.Debug
 	event.ReportId = scene.ReportId
 	if scene.GlobalVariable != nil {
-		scene.GlobalVariable.SupToSub(event.Api.GlobalVariable)
+		scene.Configuration.SceneVariable.SupToSub(event.Api.GlobalVariable)
 		event.Api.GlobalVariable.InitReplace()
 	}
 
@@ -423,7 +423,7 @@ func disposeDebugNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.M
 	event.ReportId = scene.ReportId
 
 	if scene.GlobalVariable != nil {
-		scene.GlobalVariable.SupToSub(event.Api.GlobalVariable)
+		scene.Configuration.SceneVariable.SupToSub(event.Api.GlobalVariable)
 		event.Api.GlobalVariable.InitReplace()
 	}
 	switch event.Type {
