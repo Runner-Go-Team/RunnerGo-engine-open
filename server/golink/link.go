@@ -557,12 +557,13 @@ func DisposeRequest(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.
 	}
 	api.Request.PreUrl = strings.TrimSpace(api.Request.PreUrl)
 	api.Request.URL = api.Request.PreUrl + api.Request.URL
+
 	if api.GlobalVariable != nil {
 		api.GlobalToRequest()
 	}
+
 	// 请求中所有的变量替换成真正的值
 	api.ReplaceQueryParameterizes(globalVar)
-
 	var (
 		isSucceed          = false
 		errCode            = int64(0)

@@ -320,8 +320,6 @@ func DebugApi(debugApi model.Api) {
 	var globalVar = new(sync.Map)
 
 	if debugApi.GlobalVariable != nil {
-		debugApi.GlobalVariable.SupToSub(debugApi.Configuration.SceneVariable)
-		debugApi.Configuration.SceneVariable.InitReplace()
 		if debugApi.GlobalVariable.Variable != nil {
 			for _, kv := range debugApi.GlobalVariable.Variable {
 				if kv.IsChecked == model.Open {
@@ -333,8 +331,10 @@ func DebugApi(debugApi model.Api) {
 	}
 
 	if debugApi.Configuration != nil {
-		if debugApi.Configuration.SceneVariable != nil && debugApi.Configuration.SceneVariable.Variable != nil {
-			for _, kv := range debugApi.Configuration.SceneVariable.Variable {
+		debugApi.Configuration.SceneVariable.SupToSub(debugApi.GlobalVariable)
+		debugApi.GlobalVariable.InitReplace()
+		if debugApi.GlobalVariable != nil && debugApi.GlobalVariable.Variable != nil {
+			for _, kv := range debugApi.GlobalVariable.Variable {
 				if kv.IsChecked != model.Open {
 					continue
 				}
