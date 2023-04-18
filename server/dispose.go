@@ -295,6 +295,7 @@ func DebugScene(scene model.Scene) {
 	}
 
 	scene.Configuration.SceneVariable.InitReplace()
+
 	configuration := scene.Configuration
 	if configuration.ParameterizedFile != nil {
 		p := scene.Configuration.ParameterizedFile
