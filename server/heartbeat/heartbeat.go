@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
+	"github.com/pkg/errors"
 	gonet "net"
 	"os"
 	"runtime"
@@ -171,6 +172,20 @@ func InitLocalIp() {
 		return
 	}
 
+	if name := os.Getenv("RG_ENGINE_IP_FOR_ETH"); name != "" {
+		log.Logger.Info("通过网卡获取本机ip：", name)
+
+		ip, err := getLocalIpForETH(name)
+
+		if err != nil {
+			log.Logger.Error(fmt.Sprintf("通过网卡获取本机ip：%s", err.Error()))
+		} else {
+			middlewares.LocalIp = ip
+			log.Logger.Info("本机ip：", middlewares.LocalIp)
+			return
+		}
+	}
+
 	conn, err := gonet.Dial("udp", "8.8.8.8:53")
 	if err != nil {
 		log.Logger.Error(fmt.Sprintf("udp服务：%s", err.Error()))
@@ -179,6 +194,32 @@ func InitLocalIp() {
 	localAddr := conn.LocalAddr().(*gonet.UDPAddr)
 	middlewares.LocalIp = strings.Split(localAddr.String(), ":")[0]
 	log.Logger.Info("本机ip：", middlewares.LocalIp)
+}
+
+func getLocalIpForETH(name string) (ip string, err error) {
+	interfaces, err := net.Interfaces()
+
+	if err != nil {
+		return "", err
+	}
+
+	for _, i := range interfaces {
+		if i.Name != name {
+			continue
+		}
+
+		if len(i.Addrs) == 0 {
+			return "", errors.New("网卡不存在 IP")
+		}
+
+		if i.Addrs[0].Addr == "" {
+			return "", errors.New("网卡 IP 为空")
+		}
+
+		return strings.Split(i.Addrs[0].Addr, "/")[0], nil
+	}
+
+	return "", errors.New("网卡不存在")
 }
 
 func SendHeartBeatRedis(field string, duration int64) {
