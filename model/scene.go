@@ -56,7 +56,99 @@ func (c *Configuration) VarToSceneKV() []*KV {
 	return kvList
 }
 
-func (g *GlobalVariable) GlobalToLocal(variable *GlobalVariable) {
+// SupToSub 将上一级的global添加到下一级的global中
+func (g *GlobalVariable) SupToSub(variable *GlobalVariable) {
+	if g.Header != nil && g.Header.Parameter != nil && len(g.Header.Parameter) > 0 {
+		if variable.Header == nil {
+			variable.Header = new(Header)
+		}
+		if variable.Header.Parameter == nil {
+			variable.Header.Parameter = []*VarForm{}
+		}
+		for _, parameter := range g.Header.Parameter {
+			if parameter.IsChecked != Open {
+				continue
+			}
+			var isExist bool
+			for _, header := range variable.Header.Parameter {
+				if header.IsChecked == Open && parameter.Key == header.Key && header.Value == parameter.Value {
+					isExist = true
+				}
+			}
+
+			if !isExist {
+				variable.Header.Parameter = append(variable.Header.Parameter, parameter)
+			}
+		}
+	}
+
+	if g.Cookie != nil && g.Cookie.Parameter != nil && len(g.Cookie.Parameter) > 0 {
+		if variable.Cookie == nil {
+			variable.Cookie = new(Cookie)
+		}
+		if variable.Cookie.Parameter == nil {
+			variable.Cookie.Parameter = []*VarForm{}
+		}
+		for _, parameter := range g.Cookie.Parameter {
+			if parameter.IsChecked != Open {
+				continue
+			}
+			var isExist bool
+			for _, cookie := range variable.Cookie.Parameter {
+				if cookie.IsChecked == Open && parameter.Key == cookie.Key && parameter.Value == cookie.Value {
+					isExist = true
+				}
+			}
+			if !isExist {
+				variable.Cookie.Parameter = append(variable.Cookie.Parameter, parameter)
+			}
+		}
+	}
+
+	if g.Variable != nil && len(g.Variable) > 0 {
+		if variable.Variable == nil {
+			variable.Variable = []*VarForm{}
+		}
+		for _, parameter := range g.Variable {
+			if parameter.IsChecked != Open {
+				continue
+			}
+			var isExist bool
+			for _, v := range variable.Variable {
+				if v.IsChecked == Open && v.Key == parameter.Key && v.Value == parameter.Value {
+					isExist = true
+				}
+			}
+			if !isExist {
+				variable.Variable = append(variable.Variable, parameter)
+			}
+		}
+	}
+
+	if g.Assert != nil && len(g.Assert) > 0 {
+		if variable.Assert == nil {
+			variable.Assert = []*AssertionText{}
+		}
+		for _, parameter := range g.Assert {
+			if parameter.IsChecked != Open {
+				continue
+			}
+			var isExist bool
+			for _, a := range variable.Assert {
+				if a.IsChecked == Open && a.Var == parameter.Var && a.Val == parameter.Val && a.Compare == parameter.Compare {
+					isExist = true
+				}
+			}
+			if !isExist {
+				variable.Assert = append(variable.Assert, parameter)
+			}
+		}
+	}
+
+}
+
+// InitReplace 将公共变量/cookie/header/assert中的公共函数的值初始化
+func (g *GlobalVariable) InitReplace() {
 	if g.Header != nil && g.Header.Parameter != nil && len(g.Header.Parameter) > 0 {
 		for _, parameter := range g.Header.Parameter {
 			if parameter.IsChecked != Open {
@@ -78,16 +170,6 @@ func (g *GlobalVariable) GlobalToLocal(variable *GlobalVariable) {
 					}
 				}
 			}
-			var nonexistence bool
-			for _, header := range g.Header.Parameter {
-				if header.IsChecked == Open && parameter.Key == header.Key {
-					nonexistence = true
-				}
-			}
-			if !nonexistence {
-				variable.Header.Parameter = append(variable.Header.Parameter, parameter)
-			}
-
 		}
 	}
 	if g.Cookie != nil && g.Cookie.Parameter != nil && len(g.Cookie.Parameter) > 0 {
@@ -111,16 +193,6 @@ func (g *GlobalVariable) GlobalToLocal(variable *GlobalVariable) {
 					}
 				}
 			}
-			var nonexistence bool
-			for _, header := range variable.Cookie.Parameter {
-				if header.IsChecked == Open && parameter.Key == header.Key {
-					nonexistence = true
-				}
-			}
-			if !nonexistence {
-				variable.Cookie.Parameter = append(variable.Cookie.Parameter, parameter)
-			}
-
 		}
 	}
 
@@ -145,109 +217,9 @@ func (g *GlobalVariable) GlobalToLocal(variable *GlobalVariable) {
 					}
 				}
 			}
-			var nonexistence bool
-			for _, varKV := range variable.Variable {
-				if varKV.IsChecked == Open && varKV.Key == kv.Key {
-					nonexistence = true
-				}
-			}
-			if !nonexistence {
-				variable.Variable = append(variable.Variable, kv)
-			}
 		}
 	}
-
 	if g.Assert != nil && len(g.Assert) > 0 {
-		for _, asser := range g.Assert {
-			if asser.IsChecked != Open {
-				continue
-			}
-			var nonexistence bool
-			for _, asser2 := range variable.Assert {
-				if asser2.IsChecked == Open && asser.ResponseType == asser2.ResponseType && asser.Compare == asser2.Compare && asser.Var == asser2.Var && asser.Val == asser2.Val {
-					nonexistence = true
-				}
-			}
-			if !nonexistence {
-				variable.Assert = append(variable.Assert, asser)
-			}
-		}
-	}
-
-}
-
-func (g *GlobalVariable) InitReplace() {
-	if len(g.Header.Parameter) > 0 {
-		for _, parameter := range g.Header.Parameter {
-			if parameter.IsChecked != Open {
-				continue
-			}
-			if parameter.Value != nil {
-				values := tools.FindAllDestStr(parameter.Value.(string), "{{(.*?)}}")
-				if values == nil {
-					continue
-				}
-
-				for _, v := range values {
-					if len(v) < 2 {
-						continue
-					}
-					realVar := tools.ParsFunc(v[1])
-					if realVar != v[1] {
-						parameter.Value = strings.Replace(parameter.Value.(string), v[0], realVar, -1)
-					}
-				}
-			}
-		}
-	}
-	if len(g.Cookie.Parameter) > 0 {
-		for _, parameter := range g.Cookie.Parameter {
-			if parameter.IsChecked != Open {
-				continue
-			}
-			if parameter.Value != nil {
-				values := tools.FindAllDestStr(parameter.Value.(string), "{{(.*?)}}")
-				if values == nil {
-					continue
-				}
-
-				for _, v := range values {
-					if len(v) < 2 {
-						continue
-					}
-					realVar := tools.ParsFunc(v[1])
-					if realVar != v[1] {
-						parameter.Value = strings.Replace(parameter.Value.(string), v[0], realVar, -1)
-					}
-				}
-			}
-		}
-	}
-
-	if len(g.Variable) > 0 {
-		for _, kv := range g.Variable {
-			if kv.IsChecked != Open {
-				continue
-			}
-			if kv.Value != nil {
-				values := tools.FindAllDestStr(kv.Value.(string), "{{(.*?)}}")
-				if values == nil {
-					continue
-				}
-
-				for _, v := range values {
-					if len(v) < 2 {
-						continue
-					}
-					realVar := tools.ParsFunc(v[1])
-					if realVar != v[1] {
-						kv.Value = strings.Replace(kv.Value.(string), v[0], realVar, -1)
-					}
-				}
-			}
-		}
-	}
-	if len(g.Assert) > 0 {
 		for _, asser := range g.Assert {
 			if asser.IsChecked != Open {
 				continue
