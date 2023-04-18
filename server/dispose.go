@@ -147,9 +147,9 @@ func ExecutionPlan(plan *model.Plan, kafkaProducer sarama.SyncProducer, mongoCli
 	}
 
 	if plan.GlobalVariable != nil {
-		plan.GlobalVariable.GlobalToLocal(scene.Configuration.SceneVariable)
+		plan.GlobalVariable.SupToSub(scene.Configuration.SceneVariable)
+		scene.Configuration.SceneVariable.InitReplace()
 	}
-	scene.Configuration.SceneVariable.InitReplace()
 
 	// 分解任务
 	TaskDecomposition(plan, wg, resultDataMsgCh, mongoClient, requestCollection)
@@ -290,7 +290,8 @@ func DebugScene(scene model.Scene) {
 	}
 
 	if scene.GlobalVariable != nil {
-		scene.GlobalVariable.GlobalToLocal(scene.Configuration.SceneVariable)
+		scene.GlobalVariable.SupToSub(scene.Configuration.SceneVariable)
+		scene.Configuration.SceneVariable.InitReplace()
 	}
 
 	scene.Configuration.SceneVariable.InitReplace()
@@ -319,6 +320,8 @@ func DebugApi(debugApi model.Api) {
 	var globalVar = new(sync.Map)
 
 	if debugApi.GlobalVariable != nil {
+		debugApi.GlobalVariable.SupToSub(debugApi.Configuration.SceneVariable)
+		debugApi.Configuration.SceneVariable.InitReplace()
 		if debugApi.GlobalVariable.Variable != nil {
 			for _, kv := range debugApi.GlobalVariable.Variable {
 				if kv.IsChecked == model.Open {

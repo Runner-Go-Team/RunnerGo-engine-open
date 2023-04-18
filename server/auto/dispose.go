@@ -72,8 +72,8 @@ func DisposeAutoPlan(plan *auto.Plan, c *gin.Context) {
 		if scene.Configuration == nil {
 			scene.Configuration = new(model.Configuration)
 		}
-		if scene.Configuration.SceneVariable != nil && plan.GlobalVariable != nil {
-			plan.GlobalVariable.GlobalToLocal(scene.Configuration.SceneVariable)
+		if plan.GlobalVariable != nil {
+			plan.GlobalVariable.SupToSub(scene.Configuration.SceneVariable)
 			scene.Configuration.SceneVariable.InitReplace()
 		}
 

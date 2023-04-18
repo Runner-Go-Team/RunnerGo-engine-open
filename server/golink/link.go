@@ -33,6 +33,10 @@ func DisposeScene(wg, sceneWg *sync.WaitGroup, runType string, scene model.Scene
 			}
 		}
 	}
+	if scene.GlobalVariable != nil {
+		scene.GlobalVariable.SupToSub(scene.Configuration.SceneVariable)
+		scene.Configuration.SceneVariable.InitReplace()
+	}
 
 	var globalVar, preNodeMap = new(sync.Map), new(sync.Map)
 	for _, par := range scene.Configuration.SceneVariable.Variable {
@@ -210,7 +214,8 @@ func disposePlanNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.Ma
 	event.Debug = scene.Debug
 	event.ReportId = scene.ReportId
 	if scene.GlobalVariable != nil {
-		scene.GlobalVariable.GlobalToLocal(event.Api.GlobalVariable)
+		scene.GlobalVariable.SupToSub(event.Api.GlobalVariable)
+		event.Api.GlobalVariable.InitReplace()
 	}
 
 	switch event.Type {
@@ -416,6 +421,11 @@ func disposeDebugNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.M
 	event.TeamId = scene.TeamId
 	event.Debug = scene.Debug
 	event.ReportId = scene.ReportId
+
+	if scene.GlobalVariable != nil {
+		scene.GlobalVariable.SupToSub(event.Api.GlobalVariable)
+		event.Api.GlobalVariable.InitReplace()
+	}
 	switch event.Type {
 	case model.RequestType:
 		event.Api.Uuid = scene.Uuid
@@ -519,7 +529,6 @@ func disposeDebugNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.M
 // DisposeRequest 开始对请求进行处理
 func DisposeRequest(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestResults *model.ResultDataMsg, globalVar *sync.Map,
 	event model.Event, mongoCollection *mongo.Collection, options ...int64) {
-	//api := &event.Api
 	api := event.Api
 	api.TeamId = event.TeamId
 
