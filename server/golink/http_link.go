@@ -50,10 +50,10 @@ func HttpSend(event model.Event, api model.Api, globalVar *sync.Map, requestColl
 		isSucceed = false
 		errMsg = err.Error()
 	}
-	if resp.StatusCode() != 200 {
-		isSucceed = false
-		errMsg = string(resp.Body())
-	}
+	//if resp.StatusCode() != 200 {
+	//	isSucceed = false
+	//	errMsg = string(resp.Body())
+	//}
 	var assertionMsgList []model.AssertionMsg
 	// 断言验证
 
