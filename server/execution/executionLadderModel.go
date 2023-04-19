@@ -31,7 +31,7 @@ func LadderModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Con
 	pubSub := model.SubscribeMsg(adjustKey)
 	statusCh := pubSub.Channel()
 	defer pubSub.Close()
-	debug := scene.Debug
+	debug := scene.ConfigTask.Debug
 	concurrentMap := new(sync.Map)
 	// 只要开始时间+持续时长大于当前时间就继续循环
 	switch scene.ConfigTask.ControlMode {
