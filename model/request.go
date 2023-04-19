@@ -255,7 +255,7 @@ func (cookie *Cookie) SetCookie(req *fasthttp.Request) {
 		return
 	}
 	for _, v := range cookie.Parameter {
-		if v.IsChecked != Open || v.Value == nil {
+		if v.IsChecked != Open || v.Value == nil || v.Key == "" {
 			continue
 		}
 		req.Header.SetCookie(v.Key, v.Value.(string))
