@@ -27,7 +27,7 @@ func RPSModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Config
 	pubSub := model.SubscribeMsg(adjustKey)
 	statusCh := pubSub.Channel()
 	defer pubSub.Close()
-	debug := scene.Debug
+	debug := scene.ConfigTask.Debug
 	key := fmt.Sprintf("reportData:%s", reportMsg.ReportId)
 	// 创建es客户端
 	concurrentMap := new(sync.Map)
