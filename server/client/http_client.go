@@ -52,11 +52,7 @@ func HTTPRequest(method, url string, body *model.Body, query *model.Query, heade
 	startTime = time.Now()
 	// 发送请求
 	if httpApiSetup.IsRedirects == 0 {
-		maxRedirectsCount := 3
-		if httpApiSetup.RedirectsNum != maxRedirectsCount {
-			maxRedirectsCount = httpApiSetup.RedirectsNum
-		}
-		err = client.DoRedirects(req, resp, maxRedirectsCount)
+		err = client.DoRedirects(req, resp, httpApiSetup.RedirectsNum)
 	} else {
 		err = client.Do(req, resp)
 	}
