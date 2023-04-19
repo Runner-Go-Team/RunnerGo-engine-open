@@ -74,25 +74,23 @@ func fastClient(httpApiSetup *model.HttpApiSetup, auth *model.Auth) (fc *fasthtt
 	if auth != nil || auth.TLS != nil {
 		switch auth.Type {
 		case model.Bidirectional:
-			if !auth.TLS.InsecureSkipVerify {
-				tr.InsecureSkipVerify = false
-				caCert, err := ioutil.ReadFile(auth.TLS.CaCert)
-				if err != nil {
-					log.Logger.Debug(fmt.Sprintf("读取%s失败： %s", auth.TLS.CaCert, err.Error()))
+			tr.InsecureSkipVerify = false
+			caCert, err := ioutil.ReadFile(auth.TLS.CaCert)
+			if err != nil {
+				log.Logger.Debug(fmt.Sprintf("读取%s失败： %s", auth.TLS.CaCert, err.Error()))
+			}
+			if caCert != nil {
+				caCertPool := x509.NewCertPool()
+				if caCertPool != nil {
+					caCertPool.AppendCertsFromPEM(caCert)
+					tr.ClientCAs = caCertPool
 				}
-				if caCert != nil {
-					caCertPool := x509.NewCertPool()
-					if caCertPool != nil {
-						caCertPool.AppendCertsFromPEM(caCert)
-						tr.ClientCAs = caCertPool
-					}
 
-				}
 			}
 		case model.Unidirectional:
-			if !auth.TLS.InsecureSkipVerify {
-				tr.InsecureSkipVerify = false
-			}
+
+			tr.InsecureSkipVerify = false
+
 		}
 	}
 	fc = &fasthttp.Client{

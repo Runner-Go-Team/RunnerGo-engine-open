@@ -443,8 +443,7 @@ type Auth struct {
 }
 
 type TLS struct {
-	InsecureSkipVerify bool   `json:"insecure_skip_verify"`
-	CaCert             string `json:"ca_cert"`
+	CaCert string `json:"ca_cert"`
 }
 
 type Token struct {
