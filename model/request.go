@@ -478,6 +478,7 @@ type Oauth1 struct {
 }
 type Auth struct {
 	Type     string    `json:"type" bson:"type"`
+	TLS      *TLS      `json:"tls"`
 	KV       *KV       `json:"kv" bson:"kv"`
 	Bearer   *Bearer   `json:"bearer" bson:"bearer"`
 	Basic    *Basic    `json:"basic" bson:"basic"`
@@ -487,6 +488,10 @@ type Auth struct {
 	Ntlm     *Ntlm     `json:"ntlm"`
 	Edgegrid *Edgegrid `json:"edgegrid"`
 	Oauth1   *Oauth1   `json:"oauth1"`
+}
+
+type TLS struct {
+	CaCert string `json:"ca_cert"`
 }
 
 type Token struct {
@@ -505,7 +510,7 @@ type Consumer struct {
 }
 
 func (auth *Auth) SetAuth(req *fasthttp.Request) {
-	if auth == nil || auth.Type == NoAuth {
+	if auth == nil || auth.Type == NoAuth || auth.Type == Unidirectional || auth.Type == Bidirectional {
 		return
 	}
 	switch auth.Type {
