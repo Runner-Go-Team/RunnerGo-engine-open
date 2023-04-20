@@ -36,12 +36,13 @@ type Api struct {
 	TargetType     string               `json:"target_type"` // api/webSocket/tcp/grpc
 	Method         string               `json:"method"`      // 方法 GET/POST/PUT
 	Request        Request              `json:"request"`
-	Assert         []*AssertionText     `json:"assert"`     // 验证的方法(断言)
-	Regex          []*RegularExpression `json:"regex"`      // 正则表达式
-	Debug          string               `json:"debug"`      // 是否开启Debug模式
-	Connection     int64                `json:"connection"` // 0:websocket长连接
-	Configuration  *Configuration       `json:"configuration"`
+	Assert         []*AssertionText     `json:"assert"`          // 验证的方法(断言)
+	Regex          []*RegularExpression `json:"regex"`           // 正则表达式
+	Debug          string               `json:"debug"`           // 是否开启Debug模式
+	Connection     int64                `json:"connection"`      // 0:websocket长连接
+	Configuration  *Configuration       `json:"configuration"`   // 场景设置
 	GlobalVariable *GlobalVariable      `json:"global_variable"` // 全局变量
+	ApiVariable    *GlobalVariable      `json:"api_variable"`
 	HttpApiSetup   *HttpApiSetup        `json:"http_api_setup"`
 }
 
@@ -1005,7 +1006,7 @@ func (r *Api) ReplaceCookieVarForm(globalVar *sync.Map) {
 	if r.Request.Cookie == nil || r.Request.Cookie.Parameter == nil {
 		return
 	}
-	for _, queryVarForm := range r.Request.Header.Parameter {
+	for _, queryVarForm := range r.Request.Cookie.Parameter {
 		queryParameterizes := tools.FindAllDestStr(queryVarForm.Key, "{{(.*?)}}")
 		if queryParameterizes != nil {
 			for _, v := range queryParameterizes {
@@ -1047,6 +1048,11 @@ func (r *Api) ReplaceCookieVarForm(globalVar *sync.Map) {
 					value = fmt.Sprintf("%t", value)
 				case "float64":
 					value = fmt.Sprintf("%f", value)
+				default:
+					by, _ := json.Marshal(value)
+					if by != nil {
+						value = string(by)
+					}
 				}
 				queryVarForm.Value = strings.Replace(queryVarForm.Value.(string), v[0], value.(string), -1)
 			}
