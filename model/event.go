@@ -41,14 +41,14 @@ type EventStatus struct {
 }
 
 func (api *Api) GlobalToRequest() {
-	if api.GlobalVariable.Cookie != nil && len(api.GlobalVariable.Cookie.Parameter) > 0 {
+	if api.ApiVariable.Cookie != nil && len(api.ApiVariable.Cookie.Parameter) > 0 {
 		if api.Request.Cookie == nil {
 			api.Request.Cookie = new(Cookie)
 		}
 		if api.Request.Cookie.Parameter == nil {
 			api.Request.Cookie.Parameter = []*VarForm{}
 		}
-		for _, parameter := range api.GlobalVariable.Cookie.Parameter {
+		for _, parameter := range api.ApiVariable.Cookie.Parameter {
 			if parameter.IsChecked != Open {
 				continue
 			}
@@ -64,14 +64,14 @@ func (api *Api) GlobalToRequest() {
 			api.Request.Cookie.Parameter = append(api.Request.Cookie.Parameter, parameter)
 		}
 	}
-	if api.GlobalVariable.Header != nil && len(api.GlobalVariable.Header.Parameter) > 0 {
+	if api.ApiVariable.Header != nil && len(api.ApiVariable.Header.Parameter) > 0 {
 		if api.Request.Header == nil {
 			api.Request.Header = new(Header)
 		}
 		if api.Request.Header.Parameter == nil {
 			api.Request.Header.Parameter = []*VarForm{}
 		}
-		for _, parameter := range api.GlobalVariable.Header.Parameter {
+		for _, parameter := range api.ApiVariable.Header.Parameter {
 			if parameter.IsChecked != Open {
 				continue
 			}
@@ -89,11 +89,11 @@ func (api *Api) GlobalToRequest() {
 		}
 	}
 
-	if api.GlobalVariable.Assert != nil && len(api.GlobalVariable.Assert) > 0 {
+	if api.ApiVariable.Assert != nil && len(api.ApiVariable.Assert) > 0 {
 		if api.Assert == nil {
 			api.Assert = []*AssertionText{}
 		}
-		for _, parameter := range api.GlobalVariable.Assert {
+		for _, parameter := range api.ApiVariable.Assert {
 			if parameter.IsChecked != Open {
 				continue
 			}
