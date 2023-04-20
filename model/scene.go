@@ -1,8 +1,6 @@
 package model
 
 import (
-	"encoding/json"
-	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/tools"
 	uuid "github.com/satori/go.uuid"
 	"strings"
@@ -107,8 +105,6 @@ func (g *GlobalVariable) SupToSub(variable *GlobalVariable) {
 		}
 	}
 
-	by, _ := json.Marshal(variable.Variable)
-	log.Logger.Debug("by:   ", string(by))
 	if g.Variable != nil && len(g.Variable) > 0 {
 		if variable.Variable == nil {
 			variable.Variable = []*VarForm{}
@@ -128,9 +124,6 @@ func (g *GlobalVariable) SupToSub(variable *GlobalVariable) {
 			}
 		}
 	}
-
-	by, _ = json.Marshal(variable.Variable)
-	log.Logger.Debug("by:   ", string(by))
 
 	if g.Assert != nil && len(g.Assert) > 0 {
 		if variable.Assert == nil {
