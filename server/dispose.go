@@ -147,6 +147,9 @@ func ExecutionPlan(plan *model.Plan, kafkaProducer sarama.SyncProducer, mongoCli
 	}
 
 	if plan.GlobalVariable != nil {
+		if scene.Configuration.SceneVariable == nil {
+			scene.Configuration.SceneVariable = new(model.GlobalVariable)
+		}
 		plan.GlobalVariable.SupToSub(scene.Configuration.SceneVariable)
 		scene.Configuration.SceneVariable.InitReplace()
 	}
