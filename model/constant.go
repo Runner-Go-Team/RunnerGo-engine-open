@@ -1,5 +1,10 @@
 package model
 
+const (
+	NILSTRING = ""
+	NILINT    = 0
+)
+
 // Form 支持协议类型
 const (
 	FormTypeHTTP      = "api"       // http协议

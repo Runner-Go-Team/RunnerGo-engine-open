@@ -45,6 +45,79 @@ type Api struct {
 	HttpApiSetup   *HttpApiSetup        `json:"http_api_setup"`
 }
 
+func (api *Api) GlobalToRequest() {
+	if api.GlobalVariable.Cookie != nil && len(api.GlobalVariable.Cookie.Parameter) > 0 {
+		if api.Request.Cookie == nil {
+			api.Request.Cookie = new(Cookie)
+		}
+		if api.Request.Cookie.Parameter == nil {
+			api.Request.Cookie.Parameter = []*VarForm{}
+		}
+		for _, parameter := range api.GlobalVariable.Cookie.Parameter {
+			if parameter.IsChecked != Open {
+				continue
+			}
+			var isExist bool
+			for _, value := range api.Request.Cookie.Parameter {
+				if value.IsChecked == Open && parameter.Key == value.Key && parameter.Value == value.Value {
+					isExist = true
+				}
+			}
+			if isExist {
+				continue
+			}
+			api.Request.Cookie.Parameter = append(api.Request.Cookie.Parameter, parameter)
+		}
+	}
+	if api.GlobalVariable.Header != nil && len(api.GlobalVariable.Header.Parameter) > 0 {
+		if api.Request.Header == nil {
+			api.Request.Header = new(Header)
+		}
+		if api.Request.Header.Parameter == nil {
+			api.Request.Header.Parameter = []*VarForm{}
+		}
+		for _, parameter := range api.GlobalVariable.Header.Parameter {
+			if parameter.IsChecked != Open {
+				continue
+			}
+			var isExist bool
+			for _, value := range api.Request.Header.Parameter {
+				if value.IsChecked == Open && parameter.Key == value.Key && parameter.Value == parameter.Value {
+					isExist = true
+				}
+			}
+			if isExist {
+				continue
+			}
+			api.Request.Header.Parameter = append(api.Request.Header.Parameter, parameter)
+
+		}
+	}
+
+	if api.GlobalVariable.Assert != nil && len(api.GlobalVariable.Assert) > 0 {
+		if api.Assert == nil {
+			api.Assert = []*AssertionText{}
+		}
+		for _, parameter := range api.GlobalVariable.Assert {
+			if parameter.IsChecked != Open {
+				continue
+			}
+			var isExist bool
+			for _, asser := range api.Assert {
+				if asser.IsChecked == Open && parameter.ResponseType == asser.ResponseType && parameter.Compare == asser.Compare && parameter.Val == asser.Val && parameter.Var == asser.Var {
+					isExist = true
+				}
+			}
+			if isExist {
+				continue
+			}
+			api.Assert = append(api.Assert, parameter)
+
+		}
+	}
+
+}
+
 type HttpApiSetup struct {
 	IsRedirects  int64 `json:"is_redirects"`   // 是否跟随重定向 0: 是   1：否
 	RedirectsNum int   `json:"redirects_num"`  // 重定向次数>= 1; 默认为3
