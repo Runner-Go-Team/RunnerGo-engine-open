@@ -40,6 +40,9 @@ func DisposeScene(wg, sceneWg *sync.WaitGroup, runType string, scene model.Scene
 
 	var globalVar, preNodeMap = new(sync.Map), new(sync.Map)
 	for _, par := range scene.Configuration.SceneVariable.Variable {
+		if par.IsChecked != model.Open {
+			continue
+		}
 		globalVar.Store(par.Key, par.Value)
 	}
 
