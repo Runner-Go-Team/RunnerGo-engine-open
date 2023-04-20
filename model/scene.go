@@ -115,7 +115,7 @@ func (g *GlobalVariable) SupToSub(variable *GlobalVariable) {
 			}
 			var isExist bool
 			for _, v := range variable.Variable {
-				if v.IsChecked == Open && v.Key == parameter.Key && v.Value == parameter.Value {
+				if v.IsChecked == Open && v.Key == parameter.Key {
 					isExist = true
 				}
 			}

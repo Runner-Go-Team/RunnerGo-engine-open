@@ -71,29 +71,41 @@ func VariablesMatch(str string) (value string) {
 }
 
 // FindDestStr 匹配规则
+//func FindDestStr(str string, rex string) (result string) {
+//	defer DeferPanic(fmt.Sprintf("正则表达式书写错误： %s", rex))
+//	if strings.Contains(rex, "(.*?)") {
+//		compileRegex := regexp.MustCompile(rex)
+//		matchArr := compileRegex.FindStringSubmatch(str)
+//		if len(matchArr) > 0 {
+//			result = matchArr[len(matchArr)-1]
+//		}
+//		return
+//	} else if strings.Contains(rex, "[0-9]+") {
+//		compileRegex := regexp.MustCompile(rex)
+//		matchArr := compileRegex.FindStringSubmatch(str)
+//		if len(matchArr) > 0 {
+//			result = matchArr[len(matchArr)-1]
+//		}
+//		rex = "[0-9]+"
+//		compileRegex = regexp.MustCompile(rex)
+//		matchArr = compileRegex.FindStringSubmatch(result)
+//		if len(matchArr) > 0 {
+//			result = matchArr[len(matchArr)-1]
+//		}
+//		return
+//	}
+//	return
+//}
+
+// FindDestStr 匹配规则
 func FindDestStr(str string, rex string) (result string) {
 	defer DeferPanic(fmt.Sprintf("正则表达式书写错误： %s", rex))
-	if strings.Contains(rex, "(.*?)") {
-		compileRegex := regexp.MustCompile(rex)
-		matchArr := compileRegex.FindStringSubmatch(str)
-		if len(matchArr) > 0 {
-			result = matchArr[len(matchArr)-1]
-		}
-		return
-	} else if strings.Contains(rex, "[0-9]+") {
-		compileRegex := regexp.MustCompile(rex)
-		matchArr := compileRegex.FindStringSubmatch(str)
-		if len(matchArr) > 0 {
-			result = matchArr[len(matchArr)-1]
-		}
-		rex = "[0-9]+"
-		compileRegex = regexp.MustCompile(rex)
-		matchArr = compileRegex.FindStringSubmatch(result)
-		if len(matchArr) > 0 {
-			result = matchArr[len(matchArr)-1]
-		}
-		return
+	compileRegex := regexp.MustCompile(rex)
+	matchArr := compileRegex.FindStringSubmatch(str)
+	if len(matchArr) > 0 {
+		result = matchArr[len(matchArr)-1]
 	}
+	fmt.Println("result:::::  ", result)
 	return
 }
 
@@ -142,5 +154,9 @@ func PathExists(path string) bool {
 func JsonPath(source, expression string) (value string) {
 	gq := gjson.Get(source, expression)
 	value = gq.String()
+	return
+}
+
+func Decode(str string) (value string) {
 	return
 }
