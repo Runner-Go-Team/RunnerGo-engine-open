@@ -46,12 +46,6 @@ func DisposeScene(wg, sceneWg *sync.WaitGroup, runType string, scene model.Scene
 		globalVar.Store(par.Key, par.Value)
 	}
 
-	for _, v := range configuration.SceneVariable.Variable {
-		if _, ok := globalVar.Load(v.Key); ok {
-			continue
-		}
-		globalVar.Store(v.Key, v.Value)
-	}
 	globalVar.Range(func(key, value any) bool {
 		if value == nil {
 			return true

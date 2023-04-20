@@ -817,6 +817,7 @@ func (r *Api) ReplaceUrl(globalVar *sync.Map) {
 		if globalVar == nil {
 			continue
 		}
+
 		if value, ok := globalVar.Load(v[1]); ok {
 			if value == nil {
 				continue
