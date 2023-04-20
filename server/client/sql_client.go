@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
+	_ "github.com/go-sql-driver/mysql" //mysql驱动
+	_ "github.com/lib/pq"              //postgres驱动
 	"time"
 )
 
