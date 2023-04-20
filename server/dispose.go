@@ -323,11 +323,13 @@ func DebugApi(debugApi model.Api) {
 	if debugApi.GlobalVariable != nil {
 		debugApi.GlobalVariable.SupToSub(debugApi.Configuration.SceneVariable)
 		debugApi.Configuration.SceneVariable.InitReplace()
-
+		debugApi.ApiVariable = new(model.GlobalVariable)
 		debugApi.Configuration.SceneVariable.SupToSub(debugApi.ApiVariable)
+		log.Logger.Debug("debugapi:     ", debugApi.ApiVariable)
 		debugApi.ApiVariable.InitReplace()
 	} else {
 		if debugApi.Configuration != nil && debugApi.Configuration.SceneVariable != nil {
+			debugApi.ApiVariable = new(model.GlobalVariable)
 			debugApi.Configuration.SceneVariable.SupToSub(debugApi.ApiVariable)
 			debugApi.ApiVariable.InitReplace()
 		}
