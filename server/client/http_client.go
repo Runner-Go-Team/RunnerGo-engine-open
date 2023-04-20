@@ -18,7 +18,7 @@ func HTTPRequest(method, url string, body *model.Body, query *model.Query, heade
 	client := fastClient(httpApiSetup, auth)
 	req = fasthttp.AcquireRequest()
 
-	// set methon
+	// set method
 	req.Header.SetMethod(method)
 	// set header
 	header.SetHeader(req)

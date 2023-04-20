@@ -77,6 +77,7 @@ const (
 	FloatType     = "Float"
 	DoubleType    = "Double"
 	FileType      = "File"
+	FileUrlType   = "FileUrl"
 	DateType      = "Date"
 	DateTimeType  = "DateTime"
 	TimeStampType = "TimeStampType"

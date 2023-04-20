@@ -2,7 +2,7 @@ package client
 
 import (
 	"fmt"
-	"net/url"
+	"math"
 	"testing"
 )
 
@@ -57,7 +57,56 @@ func TestHTTPRequest(t *testing.T) {
 	//ti := time.Now()
 	//
 	//fmt.Println(ti.Format("2006-01-02 15:04:05"))
-	a, b := url.QueryUnescape("md5%E5%8A%A0%E5%AF%86=902fbdd2b1df0c4f70b4a5d23525e932")
-	fmt.Println("a:   ", a)
-	fmt.Println("b:   ", b)
+	//a, b := url.QueryUnescape("md5%E5%8A%A0%E5%AF%86=902fbdd2b1df0c4f70b4a5d23525e932")
+	//fmt.Println("a:   ", a)
+	//fmt.Println("b:   ", b)
+	param := ModeConf{
+		RoundNum:         0,
+		Concurrency:      1,
+		ThresholdValue:   0,
+		StartConcurrency: 1,
+		Step:             5,
+		StepRunTime:      5,
+		MaxConcurrency:   100,
+		Duration:         200,
+		CreatedTimeSec:   0,
+	}
+
+	fmt.Println(111, GetVumTotalNum(param))
+}
+
+type ModeConf struct {
+	RoundNum         int64 `json:"round_num"`         // 轮次
+	Concurrency      int64 `json:"concurrency"`       // 并发数
+	ThresholdValue   int64 `json:"threshold_value"`   // 阈值
+	StartConcurrency int64 `json:"start_concurrency"` // 起始并发数
+	Step             int64 `json:"step"`              // 步长
+	StepRunTime      int64 `json:"step_run_time"`     // 步长执行时长
+	MaxConcurrency   int64 `json:"max_concurrency"`   // 最大并发数
+	Duration         int64 `json:"duration"`          // 稳定持续时长，持续时长
+	CreatedTimeSec   int64 `json:"created_time_sec"`  // 创建时间
+}
+
+func GetVumTotalNum(modeConf ModeConf) int64 {
+	// 把时长转换为分钟，向上取整
+	startConcurrency := modeConf.StartConcurrency
+	maxConcurrency := modeConf.MaxConcurrency
+	stepRunTimeMinute := int64(math.Ceil(float64(modeConf.StepRunTime) / float64(60)))
+	durationMinute := int64(math.Ceil(float64(modeConf.Duration) / float64(60)))
+	step := modeConf.Step
+
+	vumTemp := startConcurrency*stepRunTimeMinute + maxConcurrency*durationMinute
+	for maxConcurrency > startConcurrency {
+
+		startConcurrency = startConcurrency + step
+		if startConcurrency > maxConcurrency {
+			fmt.Println("start:     ", startConcurrency)
+			startConcurrency = maxConcurrency
+		}
+		if startConcurrency < maxConcurrency {
+			vumTemp += startConcurrency * stepRunTimeMinute
+		}
+	}
+
+	return vumTemp
 }

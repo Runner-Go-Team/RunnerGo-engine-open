@@ -169,12 +169,14 @@ func (b *Body) SetBody(req *fasthttp.Request) string {
 				continue
 			}
 
-			if value.Type == FileType {
+			switch value.Type {
+			case FileType:
 				if value.FileBase64 == nil || len(value.FileBase64) < 1 {
 					continue
 				}
 				for _, base64Str := range value.FileBase64 {
 					by, fileType := tools.Base64DeEncode(base64Str, FileType)
+					log.Logger.Debug(fmt.Sprintf("机器ip:%s, fileType:    ", middlewares.LocalIp), fileType)
 					if by == nil {
 						continue
 					}
@@ -195,7 +197,54 @@ func (b *Body) SetBody(req *fasthttp.Request) string {
 						continue
 					}
 				}
-			} else {
+			case FileUrlType:
+				val, ok := value.Value.(string)
+				if !ok {
+					continue
+				}
+				if strings.HasPrefix(val, "https://") || strings.HasPrefix(val, "http://") {
+					strList := strings.Split(val, "/")
+					if len(strList) < 1 {
+						continue
+					}
+					fileTypeList := strings.Split(strList[len(strList)-1], ".")
+					if len(fileTypeList) < 1 {
+						continue
+					}
+					fc := &fasthttp.Client{}
+					loadReq := fasthttp.AcquireRequest()
+					defer loadReq.ConnectionClose()
+					// set url
+					loadReq.Header.SetMethod("GET")
+					loadReq.SetRequestURI(val)
+					loadResp := fasthttp.AcquireResponse()
+					defer loadResp.ConnectionClose()
+					if err := fc.Do(loadReq, loadResp); err != nil {
+						log.Logger.Error(fmt.Sprintf("机器ip:%s, 下载body上传文件错误：", middlewares.LocalIp), err)
+						continue
+					}
+
+					if loadResp.Body() == nil {
+						continue
+					}
+					h := make(textproto.MIMEHeader)
+					h.Set("Content-Type", fileTypeList[len(fileTypeList)-1])
+					h.Set("Content-Disposition",
+						fmt.Sprintf(`form-data; name="%s"; filename="%s"`,
+							value.Key, strList[len(strList)-1]))
+					fileWriter, err := bodyWriter.CreatePart(h)
+					if err != nil {
+						log.Logger.Error(fmt.Sprintf("机器ip:%s, CreateFormFile失败：%s ", middlewares.LocalIp, err.Error()))
+						continue
+					}
+					file := bytes.NewReader(loadResp.Body())
+					_, err = io.Copy(fileWriter, file)
+					if err != nil {
+						continue
+					}
+				}
+
+			default:
 				filedWriter, err := bodyWriter.CreateFormField(value.Key)
 				by := value.toByte()
 				filed := bytes.NewReader(by)
@@ -222,7 +271,6 @@ func (b *Body) SetBody(req *fasthttp.Request) string {
 			if value.IsChecked != Open || value.Key == "" || value.Value == nil {
 				continue
 			}
-			log.Logger.Debug(fmt.Sprintf("value: %s   ", value.Value.(string)))
 			args.Add(value.Key, value.Value.(string))
 
 		}

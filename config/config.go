@@ -122,7 +122,7 @@ func EnvInitConfig() {
 const (
 	LogPath          = "/data/logs/RunnerGo/RunnerGo-engine-info.log"
 	NotifyStopStress = "https://127.0.0.0:30000/management/api/v1/plan/notify_stop_stress"
-	NotifyRunFinish  = "https://127.0.0.0:30000/management/api/v1/plan/notify_run_finish"
+	NotifyRunFinish  = "https://127.0.0.0:30000/management/api/v1/auto_plan/notify_run_finish"
 	Region           = "北京"
 	Port             = 30000
 	MongoData        = "runnergo"
@@ -261,7 +261,7 @@ func initRedis() {
 	runnerGoRedis.Address = reportRedis.Address
 	runnerGoRedis.Password = os.Getenv("RG_REDIS_PASSWORD")
 	reportRedis.Password = runnerGoRedis.Password
-	db, err := strconv.ParseInt(os.Getenv("RG_DB"), 10, 64)
+	db, err := strconv.ParseInt(os.Getenv("RG_REDIS_DB"), 10, 64)
 	if err != nil {
 		db = 0
 	}
