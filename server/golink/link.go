@@ -211,8 +211,8 @@ func disposePlanNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.Ma
 	event.Debug = scene.Debug
 	event.ReportId = scene.ReportId
 	if scene.Configuration.SceneVariable != nil {
-		scene.Configuration.SceneVariable.SupToSub(event.Api.GlobalVariable)
-		event.Api.GlobalVariable.InitReplace()
+		scene.Configuration.SceneVariable.SupToSub(event.Api.ApiVariable)
+		event.Api.ApiVariable.InitReplace()
 	}
 	switch event.Type {
 	case model.RequestType:
@@ -554,7 +554,7 @@ func DisposeRequest(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.
 	api.Request.PreUrl = strings.TrimSpace(api.Request.PreUrl)
 	api.Request.URL = api.Request.PreUrl + api.Request.URL
 
-	if api.GlobalVariable != nil {
+	if api.ApiVariable != nil {
 		api.GlobalToRequest()
 	}
 
