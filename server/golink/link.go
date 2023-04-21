@@ -33,13 +33,6 @@ func DisposeScene(wg, sceneWg *sync.WaitGroup, runType string, scene model.Scene
 			}
 		}
 	}
-	if scene.GlobalVariable != nil {
-		if scene.Configuration.SceneVariable == nil {
-			scene.Configuration.SceneVariable = new(model.GlobalVariable)
-		}
-		scene.GlobalVariable.SupToSub(scene.Configuration.SceneVariable)
-		scene.Configuration.SceneVariable.InitReplace()
-	}
 
 	var globalVar, preNodeMap = new(sync.Map), new(sync.Map)
 	for _, par := range scene.Configuration.SceneVariable.Variable {

@@ -3,6 +3,7 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/config"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/global"
@@ -150,7 +151,12 @@ func ExecutionPlan(plan *model.Plan, kafkaProducer sarama.SyncProducer, mongoCli
 		if scene.Configuration.SceneVariable == nil {
 			scene.Configuration.SceneVariable = new(model.GlobalVariable)
 		}
+		plan.GlobalVariable.InitReplace()
 		plan.GlobalVariable.SupToSub(scene.Configuration.SceneVariable)
+
+	}
+
+	if scene.Configuration != nil && scene.Configuration.SceneVariable != nil {
 		scene.Configuration.SceneVariable.InitReplace()
 	}
 
@@ -293,11 +299,8 @@ func DebugScene(scene model.Scene) {
 	}
 
 	if scene.GlobalVariable != nil {
-		if scene.Configuration.SceneVariable == nil {
-			scene.Configuration.SceneVariable = new(model.GlobalVariable)
-		}
+		scene.GlobalVariable.InitReplace()
 		scene.GlobalVariable.SupToSub(scene.Configuration.SceneVariable)
-		scene.Configuration.SceneVariable.InitReplace()
 	} else {
 		scene.Configuration.SceneVariable.InitReplace()
 	}
@@ -306,10 +309,10 @@ func DebugScene(scene model.Scene) {
 	if configuration.ParameterizedFile != nil {
 		p := scene.Configuration.ParameterizedFile
 		p.VariableNames.Mu = sync.Mutex{}
-		//teamId := strconv.FormatInt(plan.TeamId, 10)
-		//p.DownLoadFile(teamId, plan.ReportId)
 		p.UseFile()
 	}
+	by, err := json.Marshal(scene.Configuration.SceneVariable)
+	log.Logger.Debug("by:     ", string(by))
 	scene.Debug = model.All
 	defer mongoClient.Disconnect(context.TODO())
 	mongoCollection := model.NewCollection(config.Conf.Mongo.DataBase, config.Conf.Mongo.SceneDebugTable, mongoClient)
@@ -327,16 +330,23 @@ func DebugApi(debugApi model.Api) {
 	var globalVar = new(sync.Map)
 
 	if debugApi.GlobalVariable != nil {
+		debugApi.GlobalVariable.InitReplace()
+		if debugApi.Configuration == nil {
+			debugApi.Configuration = new(model.Configuration)
+		}
+		if debugApi.Configuration.SceneVariable == nil {
+			debugApi.Configuration.SceneVariable = new(model.GlobalVariable)
+		}
 		debugApi.GlobalVariable.SupToSub(debugApi.Configuration.SceneVariable)
-		debugApi.Configuration.SceneVariable.InitReplace()
 		debugApi.ApiVariable = new(model.GlobalVariable)
 		debugApi.Configuration.SceneVariable.SupToSub(debugApi.ApiVariable)
 		debugApi.ApiVariable.InitReplace()
 	} else {
 		if debugApi.Configuration != nil && debugApi.Configuration.SceneVariable != nil {
+			debugApi.Configuration.SceneVariable.InitReplace()
 			debugApi.ApiVariable = new(model.GlobalVariable)
 			debugApi.Configuration.SceneVariable.SupToSub(debugApi.ApiVariable)
-			debugApi.ApiVariable.InitReplace()
+
 		}
 	}
 
