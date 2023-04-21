@@ -21,7 +21,7 @@ func ConcurrentModel(wg *sync.WaitGroup, scene model.Scene, configuration *model
 	pubSub := model.SubscribeMsg(adjustKey)
 	statusCh := pubSub.Channel()
 	defer pubSub.Close()
-	debug := scene.ConfigTask.Debug
+	debug := scene.ConfigTask.DebugMode
 	currentWg := &sync.WaitGroup{}
 	// 定义一个map，管理并发
 	concurrentMap := new(sync.Map)

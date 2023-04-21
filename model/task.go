@@ -17,7 +17,7 @@ const (
 
 // ConfigTask 任务配置
 type ConfigTask struct {
-	Debug       string   `json:"debug"`                      // 开启debug模式： all: 所有日志; only_error: 仅错误日志；  only_success：仅成功日志：stop： 停止debug;
+	DebugMode   string   `json:"debug"`                      // 开启debug模式： all: 所有日志; only_error: 仅错误日志；  only_success：仅成功日志：stop： 停止debug;
 	TaskType    int64    `json:"task_type" bson:"task_type"` // 任务类型：0. 普通任务； 1. 定时任务； 2. cicd任务
 	ControlMode int64    `json:"control_mode"`               // 控制模式： 0. 集中模式； 1. 单独模式
 	Mode        int64    `json:"mode" bson:"mode"`           // 压测模式 1:并发模式，2:阶梯模式，3:错误率模式，4:响应时间模式，5:每秒请求数模式
