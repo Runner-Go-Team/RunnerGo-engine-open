@@ -147,6 +147,9 @@ func ExecutionPlan(plan *model.Plan, kafkaProducer sarama.SyncProducer, mongoCli
 	}
 
 	if plan.GlobalVariable != nil {
+		if scene.Configuration.SceneVariable == nil {
+			scene.Configuration.SceneVariable = new(model.GlobalVariable)
+		}
 		plan.GlobalVariable.SupToSub(scene.Configuration.SceneVariable)
 		scene.Configuration.SceneVariable.InitReplace()
 	}
@@ -290,11 +293,14 @@ func DebugScene(scene model.Scene) {
 	}
 
 	if scene.GlobalVariable != nil {
+		if scene.Configuration.SceneVariable == nil {
+			scene.Configuration.SceneVariable = new(model.GlobalVariable)
+		}
 		scene.GlobalVariable.SupToSub(scene.Configuration.SceneVariable)
 		scene.Configuration.SceneVariable.InitReplace()
+	} else {
+		scene.Configuration.SceneVariable.InitReplace()
 	}
-
-	scene.Configuration.SceneVariable.InitReplace()
 
 	configuration := scene.Configuration
 	if configuration.ParameterizedFile != nil {
@@ -321,27 +327,21 @@ func DebugApi(debugApi model.Api) {
 	var globalVar = new(sync.Map)
 
 	if debugApi.GlobalVariable != nil {
-		if debugApi.GlobalVariable.Variable != nil {
-			for _, kv := range debugApi.GlobalVariable.Variable {
-				if kv.IsChecked == model.Open {
-					globalVar.Store(kv.Key, kv.Value)
-				}
-			}
+		debugApi.GlobalVariable.SupToSub(debugApi.Configuration.SceneVariable)
+		debugApi.Configuration.SceneVariable.InitReplace()
+		debugApi.ApiVariable = new(model.GlobalVariable)
+		debugApi.Configuration.SceneVariable.SupToSub(debugApi.ApiVariable)
+		log.Logger.Debug("debugapi:     ", debugApi.ApiVariable)
+		debugApi.ApiVariable.InitReplace()
+	} else {
+		if debugApi.Configuration != nil && debugApi.Configuration.SceneVariable != nil {
+			debugApi.ApiVariable = new(model.GlobalVariable)
+			debugApi.Configuration.SceneVariable.SupToSub(debugApi.ApiVariable)
+			debugApi.ApiVariable.InitReplace()
 		}
-
 	}
 
 	if debugApi.Configuration != nil {
-		debugApi.Configuration.SceneVariable.SupToSub(debugApi.GlobalVariable)
-		debugApi.GlobalVariable.InitReplace()
-		if debugApi.GlobalVariable != nil && debugApi.GlobalVariable.Variable != nil {
-			for _, kv := range debugApi.GlobalVariable.Variable {
-				if kv.IsChecked != model.Open {
-					continue
-				}
-				globalVar.Store(kv.Key, kv.Value)
-			}
-		}
 		if debugApi.Configuration.ParameterizedFile != nil {
 			if debugApi.Configuration.ParameterizedFile.VariableNames == nil {
 				debugApi.Configuration.ParameterizedFile.VariableNames = new(model.VariableNames)
@@ -354,6 +354,16 @@ func DebugApi(debugApi model.Api) {
 				}
 			}
 		}
+	}
+
+	if debugApi.ApiVariable.Variable != nil {
+		for _, variable := range debugApi.Configuration.SceneVariable.Variable {
+			if variable.IsChecked != model.Open {
+				continue
+			}
+			globalVar.Store(variable.Key, variable.Value)
+		}
+
 	}
 
 	event := model.Event{}

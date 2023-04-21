@@ -36,12 +36,13 @@ type Api struct {
 	TargetType     string               `json:"target_type"` // api/webSocket/tcp/grpc
 	Method         string               `json:"method"`      // 方法 GET/POST/PUT
 	Request        Request              `json:"request"`
-	Assert         []*AssertionText     `json:"assert"`     // 验证的方法(断言)
-	Regex          []*RegularExpression `json:"regex"`      // 正则表达式
-	Debug          string               `json:"debug"`      // 是否开启Debug模式
-	Connection     int64                `json:"connection"` // 0:websocket长连接
-	Configuration  *Configuration       `json:"configuration"`
+	Assert         []*AssertionText     `json:"assert"`          // 验证的方法(断言)
+	Regex          []*RegularExpression `json:"regex"`           // 正则表达式
+	Debug          string               `json:"debug"`           // 是否开启Debug模式
+	Connection     int64                `json:"connection"`      // 0:websocket长连接
+	Configuration  *Configuration       `json:"configuration"`   // 场景设置
 	GlobalVariable *GlobalVariable      `json:"global_variable"` // 全局变量
+	ApiVariable    *GlobalVariable      `json:"api_variable"`
 	HttpApiSetup   *HttpApiSetup        `json:"http_api_setup"`
 }
 
@@ -851,6 +852,7 @@ func (r *Api) ReplaceQueryParameterizes(globalVar *sync.Map) {
 	r.ReplaceHeaderVarForm(globalVar)
 	r.ReplaceCookieVarForm(globalVar)
 	r.ReplaceAuthVarForm(globalVar)
+	r.ReplaceAssertionVarForm(globalVar)
 
 }
 
@@ -889,6 +891,7 @@ func (r *Api) ReplaceUrl(globalVar *sync.Map) {
 		if globalVar == nil {
 			continue
 		}
+
 		if value, ok := globalVar.Load(v[1]); ok {
 			if value == nil {
 				continue
@@ -1126,7 +1129,7 @@ func (r *Api) ReplaceCookieVarForm(globalVar *sync.Map) {
 	if r.Request.Cookie == nil || r.Request.Cookie.Parameter == nil {
 		return
 	}
-	for _, queryVarForm := range r.Request.Header.Parameter {
+	for _, queryVarForm := range r.Request.Cookie.Parameter {
 		queryParameterizes := tools.FindAllDestStr(queryVarForm.Key, "{{(.*?)}}")
 		if queryParameterizes != nil {
 			for _, v := range queryParameterizes {
@@ -1168,6 +1171,11 @@ func (r *Api) ReplaceCookieVarForm(globalVar *sync.Map) {
 					value = fmt.Sprintf("%t", value)
 				case "float64":
 					value = fmt.Sprintf("%f", value)
+				default:
+					by, _ := json.Marshal(value)
+					if by != nil {
+						value = string(by)
+					}
 				}
 				queryVarForm.Value = strings.Replace(queryVarForm.Value.(string), v[0], value.(string), -1)
 			}
@@ -1370,6 +1378,62 @@ func (r *Api) ReplaceAuthVarForm(globalVar *sync.Map) {
 				r.Request.Auth.Basic.Password = strings.Replace(r.Request.Auth.Basic.Password, v[0], value.(string), -1)
 			}
 		}
+	}
+}
+
+func (r *Api) ReplaceAssertionVarForm(globalVar *sync.Map) {
+	if r.Assert == nil || len(r.Assert) <= 0 {
+		return
+	}
+	for _, assert := range r.Assert {
+		if assert.Val == "" {
+			continue
+		}
+		keys := tools.FindAllDestStr(assert.Var, "{{(.*?)}}")
+		if keys != nil {
+			for _, v := range keys {
+				if len(v) < 2 {
+					continue
+				}
+				if value, ok := globalVar.Load(v[1]); ok {
+					if value == nil {
+						continue
+					}
+					assert.Var = strings.Replace(assert.Val, v[0], value.(string), -1)
+
+				}
+			}
+		}
+
+		values := tools.FindAllDestStr(assert.Val, "{{(.*?)}}")
+		if values != nil {
+			continue
+		}
+		for _, v := range values {
+			if len(v) < 2 {
+				continue
+			}
+			realVar := tools.ParsFunc(v[1])
+			if realVar != v[1] {
+				assert.Val = strings.Replace(assert.Val, v[0], realVar, -1)
+				continue
+			}
+			if value, ok := globalVar.Load(v[1]); ok {
+				if value == nil {
+					continue
+				}
+				switch fmt.Sprintf("%T", value) {
+				case "int":
+					value = fmt.Sprintf("%d", value)
+				case "bool":
+					value = fmt.Sprintf("%t", value)
+				case "float64":
+					value = fmt.Sprintf("%f", value)
+				}
+				assert.Val = strings.Replace(assert.Val, v[0], value.(string), -1)
+			}
+		}
+
 	}
 }
 

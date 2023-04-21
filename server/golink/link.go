@@ -34,21 +34,21 @@ func DisposeScene(wg, sceneWg *sync.WaitGroup, runType string, scene model.Scene
 		}
 	}
 	if scene.GlobalVariable != nil {
+		if scene.Configuration.SceneVariable == nil {
+			scene.Configuration.SceneVariable = new(model.GlobalVariable)
+		}
 		scene.GlobalVariable.SupToSub(scene.Configuration.SceneVariable)
 		scene.Configuration.SceneVariable.InitReplace()
 	}
 
 	var globalVar, preNodeMap = new(sync.Map), new(sync.Map)
 	for _, par := range scene.Configuration.SceneVariable.Variable {
+		if par.IsChecked != model.Open {
+			continue
+		}
 		globalVar.Store(par.Key, par.Value)
 	}
 
-	for _, v := range configuration.SceneVariable.Variable {
-		if _, ok := globalVar.Load(v.Key); ok {
-			continue
-		}
-		globalVar.Store(v.Key, v.Value)
-	}
 	globalVar.Range(func(key, value any) bool {
 		if value == nil {
 			return true
@@ -211,8 +211,9 @@ func disposePlanNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.Ma
 	event.Debug = scene.Debug
 	event.ReportId = scene.ReportId
 	if scene.Configuration.SceneVariable != nil {
-		scene.Configuration.SceneVariable.SupToSub(event.Api.GlobalVariable)
-		event.Api.GlobalVariable.InitReplace()
+		event.Api.ApiVariable = new(model.GlobalVariable)
+		scene.Configuration.SceneVariable.SupToSub(event.Api.ApiVariable)
+		event.Api.ApiVariable.InitReplace()
 	}
 	switch event.Type {
 	case model.RequestType:
@@ -554,7 +555,7 @@ func DisposeRequest(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.
 	api.Request.PreUrl = strings.TrimSpace(api.Request.PreUrl)
 	api.Request.URL = api.Request.PreUrl + api.Request.URL
 
-	if api.GlobalVariable != nil {
+	if api.ApiVariable != nil {
 		api.GlobalToRequest()
 	}
 
