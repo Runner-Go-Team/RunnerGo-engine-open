@@ -412,10 +412,14 @@ func disposeDebugNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.M
 	event.Debug = scene.Debug
 	event.ReportId = scene.ReportId
 
-	if scene.GlobalVariable != nil {
-		scene.Configuration.SceneVariable.SupToSub(event.Api.GlobalVariable)
-		event.Api.GlobalVariable.InitReplace()
+	if scene.Configuration != nil || scene.Configuration.SceneVariable != nil {
+		if event.Api.ApiVariable == nil {
+			event.Api.ApiVariable = new(model.GlobalVariable)
+		}
+		event.Api.ApiVariable.InitReplace()
+		scene.Configuration.SceneVariable.SupToSub(event.Api.ApiVariable)
 	}
+
 	switch event.Type {
 	case model.RequestType:
 		event.Api.Uuid = scene.Uuid
