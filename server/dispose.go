@@ -300,7 +300,8 @@ func DebugScene(scene model.Scene) {
 	if scene.GlobalVariable != nil {
 		scene.GlobalVariable.InitReplace()
 		scene.GlobalVariable.SupToSub(scene.Configuration.SceneVariable)
-	} else {
+	}
+	if scene.Configuration.SceneVariable != nil {
 		scene.Configuration.SceneVariable.InitReplace()
 	}
 
