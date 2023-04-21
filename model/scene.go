@@ -199,7 +199,7 @@ func (g *GlobalVariable) InitReplace() {
 								continue
 							}
 							if v[1] == variable.Key {
-								parameter.Value = strings.Replace(parameter.Value.(string), variable.Value.(string), realVar, -1)
+								parameter.Value = strings.Replace(parameter.Value.(string), v[0], variable.Value.(string), -1)
 							}
 						}
 					}
@@ -232,8 +232,9 @@ func (g *GlobalVariable) InitReplace() {
 							if variable.IsChecked != Open {
 								continue
 							}
+
 							if v[1] == variable.Key {
-								parameter.Value = strings.Replace(parameter.Value.(string), variable.Value.(string), realVar, -1)
+								parameter.Value = strings.Replace(parameter.Value.(string), v[0], variable.Value.(string), -1)
 							}
 						}
 					}
@@ -267,7 +268,7 @@ func (g *GlobalVariable) InitReplace() {
 							continue
 						}
 						if v[1] == variable.Key {
-							asser.Val = strings.Replace(asser.Val, variable.Value.(string), realVar, -1)
+							asser.Val = strings.Replace(asser.Val, v[0], variable.Value.(string), -1)
 						}
 					}
 				}

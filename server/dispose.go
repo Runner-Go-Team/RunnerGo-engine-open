@@ -3,7 +3,6 @@ package server
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/config"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/global"
@@ -311,8 +310,7 @@ func DebugScene(scene model.Scene) {
 		p.VariableNames.Mu = sync.Mutex{}
 		p.UseFile()
 	}
-	by, err := json.Marshal(scene.Configuration.SceneVariable)
-	log.Logger.Debug("by:     ", string(by))
+
 	scene.Debug = model.All
 	defer mongoClient.Disconnect(context.TODO())
 	mongoCollection := model.NewCollection(config.Conf.Mongo.DataBase, config.Conf.Mongo.SceneDebugTable, mongoClient)
