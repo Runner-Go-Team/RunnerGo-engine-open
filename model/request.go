@@ -1137,7 +1137,7 @@ func (r *Api) ReplaceQueryVarForm(globalVar *sync.Map) {
 		}
 
 		values := tools.FindAllDestStr(queryVarForm.Value.(string), "{{(.*?)}}")
-		if values != nil {
+		if values == nil {
 			continue
 		}
 		for _, v := range values {
@@ -1333,9 +1333,10 @@ func (r *Api) ReplaceAssertionVarForm(globalVar *sync.Map) {
 		}
 
 		values := tools.FindAllDestStr(assert.Val, "{{(.*?)}}")
-		if values != nil {
+		if values == nil {
 			continue
 		}
+
 		for _, v := range values {
 			if len(v) < 2 {
 				continue

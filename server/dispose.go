@@ -331,7 +331,6 @@ func DebugApi(debugApi model.Api) {
 		debugApi.Configuration.SceneVariable.InitReplace()
 		debugApi.ApiVariable = new(model.GlobalVariable)
 		debugApi.Configuration.SceneVariable.SupToSub(debugApi.ApiVariable)
-		log.Logger.Debug("debugapi:     ", debugApi.ApiVariable)
 		debugApi.ApiVariable.InitReplace()
 	} else {
 		if debugApi.Configuration != nil && debugApi.Configuration.SceneVariable != nil {
