@@ -10,8 +10,8 @@ import (
 	"time"
 )
 
-func SqlRequest(sqlInfo model.SqlInfo, action, sql string) (rows *sql.Rows, result sql.Result, err error, startTime, endTime time.Time, requestTime uint64) {
-	db := newMysqlClient(sqlInfo.Type, sqlInfo.User, sqlInfo.Password, sqlInfo.Host, sqlInfo.Port, sqlInfo.DB, sqlInfo.Charset)
+func SqlRequest(sqlInfo model.SqlInfo, action, sqls string) (resultMap map[string][]string, err error, startTime, endTime time.Time, requestTime uint64) {
+	db := newMysqlClient(sqlInfo)
 	if db == nil {
 		return
 	}
@@ -19,20 +19,58 @@ func SqlRequest(sqlInfo model.SqlInfo, action, sql string) (rows *sql.Rows, resu
 	defer db.Close()
 	switch action {
 	case "query":
-		rows, err = db.Query(sql)
+		rows, err := db.Query(sqls)
+		if err != nil || rows == nil {
+			return
+		}
+		defer rows.Close()
+		cols, _ := rows.Columns()
+		values := make([]sql.RawBytes, len(cols))
+		scans := make([]interface{}, len(cols))
+		if cols != nil {
+			for i := range cols {
+				scans[i] = &values[i]
+			}
+		}
+		results := make(map[string][]string)
+		for rows.Next() {
+			if err := rows.Scan(scans...); err != nil {
+				continue
+			}
+			for j, v := range values {
+				results[cols[j]] = append(results[cols[j]], string(v))
+			}
+		}
+		for k, value := range results {
+			fmt.Println(k, "    ", value)
+		}
 	default:
-		result, err = db.Exec(sql)
+		result, err := db.Exec(sqls)
+		if err != nil || result == nil {
+			return
+		}
+		row, err := result.RowsAffected()
+		if err != nil {
+			fmt.Println("row err :   ", err)
+		}
+		last, err := result.LastInsertId()
+		if err != nil {
+			fmt.Println("last err :   ", err)
+		}
+		fmt.Println("row:   ", row)
+		fmt.Println("last:   ", last)
+
 	}
 	endTime = time.Now()
 	requestTime = uint64(time.Since(startTime))
 	return
 }
 
-func newMysqlClient(sqlType, user, password, host, port, dbName, charset string) (db *sql.DB) {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?%s", user, password, host, port, dbName, charset)
-	db, err := sql.Open(sqlType, dsn)
+func newMysqlClient(sqlInfo model.SqlInfo) (db *sql.DB) {
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?%s", sqlInfo.User, sqlInfo.Password, sqlInfo.Host, sqlInfo.Port, sqlInfo.DB, sqlInfo.Charset)
+	db, err := sql.Open(sqlInfo.Type, dsn)
 	if err != nil {
-		log.Logger.Error(fmt.Sprintf("%s数据库连接失败： %s", sqlType, err.Error()))
+		log.Logger.Error(fmt.Sprintf("%s数据库连接失败： %s", sqlInfo.Type, err.Error()))
 		return
 	}
 	return
