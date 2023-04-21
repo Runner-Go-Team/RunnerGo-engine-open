@@ -149,53 +149,6 @@ func (g *GlobalVariable) SupToSub(variable *GlobalVariable) {
 
 // InitReplace 将公共变量/cookie/header/assert中的公共函数的值初始化
 func (g *GlobalVariable) InitReplace() {
-	if g.Header != nil && g.Header.Parameter != nil && len(g.Header.Parameter) > 0 {
-		for _, parameter := range g.Header.Parameter {
-			if parameter.IsChecked != Open {
-				continue
-			}
-			if parameter.Value != nil {
-				values := tools.FindAllDestStr(parameter.Value.(string), "{{(.*?)}}")
-				if values == nil {
-					continue
-				}
-
-				for _, v := range values {
-					if len(v) < 2 {
-						continue
-					}
-					realVar := tools.ParsFunc(v[1])
-					if realVar != v[1] {
-						parameter.Value = strings.Replace(parameter.Value.(string), v[0], realVar, -1)
-					}
-				}
-			}
-		}
-	}
-	if g.Cookie != nil && g.Cookie.Parameter != nil && len(g.Cookie.Parameter) > 0 {
-		for _, parameter := range g.Cookie.Parameter {
-			if parameter.IsChecked != Open {
-				continue
-			}
-			if parameter.Value != nil {
-				values := tools.FindAllDestStr(parameter.Value.(string), "{{(.*?)}}")
-				if values == nil {
-					continue
-				}
-
-				for _, v := range values {
-					if len(v) < 2 {
-						continue
-					}
-					realVar := tools.ParsFunc(v[1])
-					if realVar != v[1] {
-						parameter.Value = strings.Replace(parameter.Value.(string), v[0], realVar, -1)
-					}
-				}
-			}
-		}
-	}
-
 	if g.Variable != nil && len(g.Variable) > 0 {
 		for _, kv := range g.Variable {
 			if kv.IsChecked != Open {
@@ -219,6 +172,77 @@ func (g *GlobalVariable) InitReplace() {
 			}
 		}
 	}
+
+	if g.Header != nil && g.Header.Parameter != nil && len(g.Header.Parameter) > 0 {
+		for _, parameter := range g.Header.Parameter {
+			if parameter.IsChecked != Open {
+				continue
+			}
+			if parameter.Value != nil {
+				values := tools.FindAllDestStr(parameter.Value.(string), "{{(.*?)}}")
+				if values == nil {
+					continue
+				}
+
+				for _, v := range values {
+					if len(v) < 2 {
+						continue
+					}
+					realVar := tools.ParsFunc(v[1])
+					if realVar != v[1] {
+						parameter.Value = strings.Replace(parameter.Value.(string), v[0], realVar, -1)
+						continue
+					}
+					if g.Variable != nil {
+						for _, variable := range g.Variable {
+							if variable.IsChecked != Open {
+								continue
+							}
+							if v[1] == variable.Key {
+								parameter.Value = strings.Replace(parameter.Value.(string), v[0], variable.Value.(string), -1)
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	if g.Cookie != nil && g.Cookie.Parameter != nil && len(g.Cookie.Parameter) > 0 {
+		for _, parameter := range g.Cookie.Parameter {
+			if parameter.IsChecked != Open {
+				continue
+			}
+			if parameter.Value != nil {
+				values := tools.FindAllDestStr(parameter.Value.(string), "{{(.*?)}}")
+				if values == nil {
+					continue
+				}
+
+				for _, v := range values {
+					if len(v) < 2 {
+						continue
+					}
+					realVar := tools.ParsFunc(v[1])
+					if realVar != v[1] {
+						parameter.Value = strings.Replace(parameter.Value.(string), v[0], realVar, -1)
+						continue
+					}
+					if g.Variable != nil {
+						for _, variable := range g.Variable {
+							if variable.IsChecked != Open {
+								continue
+							}
+
+							if v[1] == variable.Key {
+								parameter.Value = strings.Replace(parameter.Value.(string), v[0], variable.Value.(string), -1)
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
 	if g.Assert != nil && len(g.Assert) > 0 {
 		for _, asser := range g.Assert {
 			if asser.IsChecked != Open {
@@ -236,6 +260,17 @@ func (g *GlobalVariable) InitReplace() {
 				realVar := tools.ParsFunc(v[1])
 				if realVar != v[1] {
 					asser.Val = strings.Replace(asser.Val, v[0], realVar, -1)
+					continue
+				}
+				if g.Variable != nil {
+					for _, variable := range g.Variable {
+						if variable.IsChecked != Open {
+							continue
+						}
+						if v[1] == variable.Key {
+							asser.Val = strings.Replace(asser.Val, v[0], variable.Value.(string), -1)
+						}
+					}
 				}
 			}
 		}

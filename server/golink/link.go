@@ -33,13 +33,6 @@ func DisposeScene(wg, sceneWg *sync.WaitGroup, runType string, scene model.Scene
 			}
 		}
 	}
-	if scene.GlobalVariable != nil {
-		if scene.Configuration.SceneVariable == nil {
-			scene.Configuration.SceneVariable = new(model.GlobalVariable)
-		}
-		scene.GlobalVariable.SupToSub(scene.Configuration.SceneVariable)
-		scene.Configuration.SceneVariable.InitReplace()
-	}
 
 	var globalVar, preNodeMap = new(sync.Map), new(sync.Map)
 	for _, par := range scene.Configuration.SceneVariable.Variable {
@@ -419,10 +412,14 @@ func disposeDebugNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.M
 	event.Debug = scene.Debug
 	event.ReportId = scene.ReportId
 
-	if scene.GlobalVariable != nil {
-		scene.Configuration.SceneVariable.SupToSub(event.Api.GlobalVariable)
-		event.Api.GlobalVariable.InitReplace()
+	if scene.Configuration != nil || scene.Configuration.SceneVariable != nil {
+		if event.Api.ApiVariable == nil {
+			event.Api.ApiVariable = new(model.GlobalVariable)
+		}
+		event.Api.ApiVariable.InitReplace()
+		scene.Configuration.SceneVariable.SupToSub(event.Api.ApiVariable)
 	}
+
 	switch event.Type {
 	case model.RequestType:
 		event.Api.Uuid = scene.Uuid

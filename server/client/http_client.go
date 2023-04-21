@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/config"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
 	"github.com/valyala/fasthttp"
-	"io/ioutil"
 	"strings"
 	"time"
 )
@@ -71,26 +71,34 @@ func HTTPRequest(method, url string, body *model.Body, query *model.Query, heade
 // 获取fasthttp客户端
 func fastClient(httpApiSetup *model.HttpApiSetup, auth *model.Auth) (fc *fasthttp.Client) {
 	tr := &tls.Config{InsecureSkipVerify: true}
-	if auth != nil || auth.TLS != nil {
+	if auth != nil || auth.Bidirectional != nil {
 		switch auth.Type {
 		case model.Bidirectional:
 			tr.InsecureSkipVerify = false
-			caCert, err := ioutil.ReadFile(auth.TLS.CaCert)
-			if err != nil {
-				log.Logger.Debug(fmt.Sprintf("读取%s失败： %s", auth.TLS.CaCert, err.Error()))
-			}
-			if caCert != nil {
-				caCertPool := x509.NewCertPool()
-				if caCertPool != nil {
-					caCertPool.AppendCertsFromPEM(caCert)
-					tr.ClientCAs = caCertPool
+			if auth.Bidirectional.CaCert != "" {
+				if strings.HasPrefix(auth.Bidirectional.CaCert, "https://") || strings.HasPrefix(auth.Bidirectional.CaCert, "http://") {
+					client := &fasthttp.Client{}
+					loadReq := fasthttp.AcquireRequest()
+					defer loadReq.ConnectionClose()
+					// set url
+					loadReq.Header.SetMethod("GET")
+					loadReq.SetRequestURI(auth.Bidirectional.CaCert)
+					loadResp := fasthttp.AcquireResponse()
+					defer loadResp.ConnectionClose()
+					if err := client.Do(loadReq, loadResp); err != nil {
+						log.Logger.Error(fmt.Sprintf("机器ip:%s, 下载crt文件失败：", middlewares.LocalIp), err)
+					}
+					if loadResp != nil && loadResp.Body() != nil {
+						caCertPool := x509.NewCertPool()
+						if caCertPool != nil {
+							caCertPool.AppendCertsFromPEM(loadResp.Body())
+							tr.ClientCAs = caCertPool
+						}
+					}
 				}
-
 			}
 		case model.Unidirectional:
-
 			tr.InsecureSkipVerify = false
-
 		}
 	}
 	fc = &fasthttp.Client{

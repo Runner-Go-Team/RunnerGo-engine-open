@@ -551,17 +551,17 @@ type Oauth1 struct {
 	Token                string `json:"token"`
 }
 type Auth struct {
-	Type     string    `json:"type" bson:"type"`
-	TLS      *TLS      `json:"tls"`
-	KV       *KV       `json:"kv" bson:"kv"`
-	Bearer   *Bearer   `json:"bearer" bson:"bearer"`
-	Basic    *Basic    `json:"basic" bson:"basic"`
-	Digest   *Digest   `json:"digest"`
-	Hawk     *Hawk     `json:"hawk"`
-	Awsv4    *AwsV4    `json:"awsv4"`
-	Ntlm     *Ntlm     `json:"ntlm"`
-	Edgegrid *Edgegrid `json:"edgegrid"`
-	Oauth1   *Oauth1   `json:"oauth1"`
+	Type          string    `json:"type" bson:"type"`
+	Bidirectional *TLS      `json:"bidirectional"`
+	KV            *KV       `json:"kv" bson:"kv"`
+	Bearer        *Bearer   `json:"bearer" bson:"bearer"`
+	Basic         *Basic    `json:"basic" bson:"basic"`
+	Digest        *Digest   `json:"digest"`
+	Hawk          *Hawk     `json:"hawk"`
+	Awsv4         *AwsV4    `json:"awsv4"`
+	Ntlm          *Ntlm     `json:"ntlm"`
+	Edgegrid      *Edgegrid `json:"edgegrid"`
+	Oauth1        *Oauth1   `json:"oauth1"`
 }
 
 type TLS struct {
@@ -1210,7 +1210,7 @@ func (r *Api) ReplaceQueryVarForm(globalVar *sync.Map) {
 		}
 
 		values := tools.FindAllDestStr(queryVarForm.Value.(string), "{{(.*?)}}")
-		if values != nil {
+		if values == nil {
 			continue
 		}
 		for _, v := range values {
@@ -1406,9 +1406,10 @@ func (r *Api) ReplaceAssertionVarForm(globalVar *sync.Map) {
 		}
 
 		values := tools.FindAllDestStr(assert.Val, "{{(.*?)}}")
-		if values != nil {
+		if values == nil {
 			continue
 		}
+
 		for _, v := range values {
 			if len(v) < 2 {
 				continue
