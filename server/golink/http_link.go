@@ -129,6 +129,9 @@ func makeDebugMsg(regex []map[string]interface{}, debugMsg map[string]interface{
 	debugMsg["event_id"] = event.Id
 	debugMsg["api_id"] = api.TargetId
 	debugMsg["api_name"] = api.Name
+	if req.Header.Method() != nil {
+		debugMsg["method"] = string(req.Header.Method())
+	}
 	debugMsg["type"] = model.RequestType
 	debugMsg["request_time"] = requestTime / uint64(time.Millisecond)
 	debugMsg["request_code"] = resp.StatusCode()
