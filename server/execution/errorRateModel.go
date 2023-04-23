@@ -36,7 +36,7 @@ func ErrorRateModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.
 	pubSub := model.SubscribeMsg(adjustKey)
 	statusCh := pubSub.Channel()
 	defer pubSub.Close()
-	debug := scene.ConfigTask.Debug
+	debug := scene.ConfigTask.DebugMode
 	// 定义一个chan, 从es中获取当前错误率与阈值分别是多少
 
 	// preConcurrent 是为了回退,此功能后续开发

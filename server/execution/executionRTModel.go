@@ -29,7 +29,7 @@ func RTModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Configu
 	pubSub := model.SubscribeMsg(adjustKey)
 	statusCh := pubSub.Channel()
 	defer pubSub.Close()
-	debug := scene.ConfigTask.Debug
+	debug := scene.ConfigTask.DebugMode
 	key := fmt.Sprintf("reportData:%s", reportMsg.ReportId)
 	currentWg := &sync.WaitGroup{}
 	concurrentMap := new(sync.Map)
