@@ -23,7 +23,8 @@ type Scene struct {
 	Version                 int64           `json:"version"`
 	Debug                   string          `json:"debug"`
 	EnablePlanConfiguration bool            `json:"enable_plan_configuration"` // 是否启用计划的任务配置，默认为true，
-	Leading                 Event           `json:"leading"`
+	Preposition             *Preposition    `json:"preposition"`
+	Leading                 Event           `json:"leading"`         // 前置条件
 	NodesRound              [][]Event       `json:"nodes_round"`     // 事件二元数组
 	ConfigTask              *ConfigTask     `json:"config_task"`     // 任务配置
 	Configuration           *Configuration  `json:"configuration"`   // 场景配置
