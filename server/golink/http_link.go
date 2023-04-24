@@ -2,6 +2,7 @@
 package golink
 
 import (
+	"fmt"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/server/client"
@@ -9,6 +10,7 @@ import (
 	"github.com/valyala/fasthttp"
 	"go.mongodb.org/mongo-driver/mongo"
 	"net/url"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -156,7 +158,7 @@ func makeDebugMsg(regex []map[string]interface{}, debugMsg map[string]interface{
 
 	debugMsg["response_header"] = resp.Header.String()
 
-	debugMsg["response_bytes"] = receivedBytes
+	debugMsg["response_bytes"], _ = strconv.ParseFloat(fmt.Sprintf("%0.2f", receivedBytes), 64)
 	if err != nil {
 		debugMsg["response_body"] = err.Error()
 	} else {
