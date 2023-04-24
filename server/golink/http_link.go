@@ -5,6 +5,7 @@ import (
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/server/client"
+	uuid "github.com/satori/go.uuid"
 	"github.com/valyala/fasthttp"
 	"go.mongodb.org/mongo-driver/mongo"
 	"net/url"
@@ -125,6 +126,9 @@ func makeDebugMsg(regex []map[string]interface{}, debugMsg map[string]interface{
 	debugMsg["scene_id"] = event.SceneId
 	debugMsg["parent_id"] = event.ParentId
 	debugMsg["case_id"] = event.CaseId
+	if api.Uuid.String() == "00000000-0000-0000-0000-000000000000" {
+		api.Uuid = uuid.NewV4()
+	}
 	debugMsg["uuid"] = api.Uuid.String()
 	debugMsg["event_id"] = event.Id
 	debugMsg["api_id"] = api.TargetId
