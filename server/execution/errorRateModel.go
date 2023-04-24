@@ -25,7 +25,7 @@ type Apis struct {
 }
 
 // ErrorRateModel 错误率模式
-func ErrorRateModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Configuration, reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, debugCollection, requestCollection *mongo.Collection) string {
+func ErrorRateModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Configuration, reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestCollection *mongo.Collection) string {
 	startConcurrent := scene.ConfigTask.ModeConf.StartConcurrency
 	step := scene.ConfigTask.ModeConf.Step
 	maxConcurrent := scene.ConfigTask.ModeConf.MaxConcurrency
@@ -36,7 +36,7 @@ func ErrorRateModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.
 	pubSub := model.SubscribeMsg(adjustKey)
 	statusCh := pubSub.Channel()
 	defer pubSub.Close()
-	debug := scene.Debug
+	debug := scene.ConfigTask.DebugMode
 	// 定义一个chan, 从es中获取当前错误率与阈值分别是多少
 
 	// preConcurrent 是为了回退,此功能后续开发
@@ -75,6 +75,7 @@ func ErrorRateModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.
 
 			select {
 			case c := <-statusCh:
+				log.Logger.Debug("接收到manage消息：  ", c.String())
 				var subscriptionStressPlanStatusChange = new(model.SubscriptionStressPlanStatusChange)
 				_ = json.Unmarshal([]byte(c.Payload), subscriptionStressPlanStatusChange)
 				if subscriptionStressPlanStatusChange.MachineModeConf == nil {
@@ -122,11 +123,12 @@ func ErrorRateModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.
 					currentWg.Add(1)
 					go func(concurrentId, concurrent int64, useConfiguration *model.Configuration, currentScene model.Scene) {
 						var sceneWg = &sync.WaitGroup{}
-						golink.DisposeScene(wg, currentWg, sceneWg, model.PlanType, currentScene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
+						golink.DisposeScene(wg, sceneWg, model.PlanType, currentScene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
 						sceneWg.Wait()
 						concurrentMap.Delete(concurrentId)
 						currentWg.Done()
 						wg.Done()
+
 					}(i, concurrent, configuration, scene)
 				}
 				currentWg.Wait()
@@ -189,6 +191,7 @@ func ErrorRateModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.
 
 			select {
 			case c := <-statusCh:
+				log.Logger.Debug("接收到manage消息：  ", c.String())
 				var subscriptionStressPlanStatusChange = new(model.SubscriptionStressPlanStatusChange)
 				_ = json.Unmarshal([]byte(c.Payload), subscriptionStressPlanStatusChange)
 				if subscriptionStressPlanStatusChange.MachineModeConf == nil {
@@ -255,12 +258,12 @@ func ErrorRateModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.
 							}
 							currentScene.Debug = debug
 							var sceneWg = &sync.WaitGroup{}
-							golink.DisposeScene(wg, currentWg, sceneWg, model.PlanType, currentScene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
+							golink.DisposeScene(wg, sceneWg, model.PlanType, currentScene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
 							sceneWg.Wait()
 						}
 						concurrentMap.Delete(concurrentId)
-						currentWg.Done()
 						wg.Done()
+						currentWg.Done()
 
 					}(i, configuration, scene)
 				}

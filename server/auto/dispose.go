@@ -14,7 +14,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
 	"net/http"
-	"strings"
 	"sync"
 	"time"
 )
@@ -43,65 +42,8 @@ func DisposeAutoPlan(plan *auto.Plan, c *gin.Context) {
 		return
 	}
 
-	if plan.Variable != nil {
-		for _, value := range plan.Variable {
-			values := tools.FindAllDestStr(value.Val, "{{(.*?)}}")
-			if values == nil {
-				continue
-			}
-
-			for _, v := range values {
-				if len(v) < 2 {
-					continue
-				}
-				realVar := tools.ParsFunc(v[1])
-				if realVar != v[1] {
-					value.Val = strings.Replace(value.Val, v[0], realVar, -1)
-				}
-			}
-		}
-	}
-
-	// 循环读全局变量，如果场景变量不存在则将添加到场景变量中，如果有参数化数据则，将其替换
-
-	for _, scene := range plan.Scenes {
-		if scene.Configuration == nil {
-			scene.Configuration = new(model.Configuration)
-		}
-		if scene.Configuration.Variable == nil {
-			scene.Configuration.Variable = []*model.KV{}
-		}
-		if plan.Variable != nil {
-			for _, value := range plan.Variable {
-				var target = false
-				for _, kv := range scene.Configuration.Variable {
-					if value.Var == kv.Key {
-						target = true
-						continue
-					}
-				}
-				if !target {
-					var variable = new(model.KV)
-					variable.Key = value.Var
-					variable.Value = value.Val
-					scene.Configuration.Variable = append(scene.Configuration.Variable, variable)
-				}
-			}
-		}
-		if scene.Configuration.ParameterizedFile == nil {
-			scene.Configuration.ParameterizedFile = new(model.ParameterizedFile)
-		}
-		if scene.Configuration.ParameterizedFile.VariableNames == nil {
-			scene.Configuration.ParameterizedFile.VariableNames = new(model.VariableNames)
-		}
-		if scene.Configuration.ParameterizedFile.VariableNames.VarMapList == nil {
-			scene.Configuration.ParameterizedFile.VariableNames.VarMapList = make(map[string][]string)
-		}
-		if scene.Configuration.ParameterizedFile != nil {
-			p := scene.Configuration.ParameterizedFile
-			p.VariableNames.Mu = sync.Mutex{}
-			p.UseFile()
-		}
+	if plan.GlobalVariable != nil {
+		plan.GlobalVariable.InitReplace()
 	}
 
 	if plan.ConfigTask == nil {
@@ -118,12 +60,45 @@ func DisposeAutoPlan(plan *auto.Plan, c *gin.Context) {
 		return
 	}
 
-	// 设置接收数据缓存
-	//resultDataMsgCh := make(chan *model.ResultDataMsg, 10000)
-
 	var wg = &sync.WaitGroup{}
 	collection := model.NewCollection(config.Conf.Mongo.DataBase, config.Conf.Mongo.AutoTable, mongoClient)
 
+	if collection == nil {
+		log.Logger.Error(fmt.Sprintf("机器ip:%s, mongo创建失败：%s", middlewares.LocalIp, err))
+		return
+	}
+	// 循环读全局变量，如果场景变量不存在则将添加到场景变量中，如果有参数化数据则，将其替换
+	for _, scene := range plan.Scenes {
+		if scene.Configuration == nil {
+			scene.Configuration = new(model.Configuration)
+		}
+		if plan.GlobalVariable != nil {
+			plan.GlobalVariable.SupToSub(scene.Configuration.SceneVariable)
+			scene.Configuration.SceneVariable.InitReplace()
+		}
+
+		if scene.Configuration.SceneVariable == nil && plan.GlobalVariable != nil {
+			scene.Configuration.SceneVariable = plan.GlobalVariable
+		}
+
+		if scene.Configuration.ParameterizedFile == nil {
+			scene.Configuration.ParameterizedFile = new(model.ParameterizedFile)
+		}
+		if scene.Configuration.ParameterizedFile.VariableNames == nil {
+			scene.Configuration.ParameterizedFile.VariableNames = new(model.VariableNames)
+		}
+		if scene.Configuration.ParameterizedFile.VariableNames.VarMapList == nil {
+			scene.Configuration.ParameterizedFile.VariableNames.VarMapList = make(map[string][]string)
+		}
+		if scene.Configuration.ParameterizedFile != nil {
+			p := scene.Configuration.ParameterizedFile
+			p.VariableNames.Mu = sync.Mutex{}
+			p.UseFile()
+		}
+	}
+
+	// 设置接收数据缓存
+	//resultDataMsgCh := make(chan *model.ResultDataMsg, 10000)
 	var reportMsg = new(model.ResultDataMsg)
 	reportMsg.TeamId = plan.TeamId
 	reportMsg.PlanId = plan.PlanId
@@ -172,7 +147,7 @@ func sceneDecomposition(plan *auto.Plan, wg *sync.WaitGroup, reportMsg *model.Re
 	}
 	wg.Wait()
 	tools.SendStopAutoReport(plan.TeamId, plan.PlanId, plan.ReportId, time.Now().UnixMilli()-startTime)
-	log.Logger.Info(fmt.Sprintf("机器ip:%s, 团队: %s, 自动化计划: %s, 报告: %s  已完成, 运行：%d", middlewares.LocalIp, plan.TeamId, plan.PlanId, plan.ReportId, time.Now().UnixMilli()-startTime))
+	log.Logger.Info(fmt.Sprintf("机器ip:%s, 团队: %s, 自动化计划: %s, 报告: %s  已完成, 运行：%d毫秒", middlewares.LocalIp, plan.TeamId, plan.PlanId, plan.ReportId, time.Now().UnixMilli()-startTime))
 
 }
 
@@ -198,20 +173,14 @@ func disposeCase(scene model.Scene, sceneRunMode, caseMode int64, wg *sync.WaitG
 		c.ReportId = scene.ReportId
 		c.ParentId = scene.SceneId
 		c.Debug = model.All
-		if c.Configuration == nil {
-			c.Configuration = new(model.Configuration)
+		if scene.Configuration != nil {
+			c.Configuration = scene.Configuration
 		}
-		if c.Configuration.Variable == nil {
-			c.Configuration.Variable = []*model.KV{}
-		}
-		var currentWg = new(sync.WaitGroup)
 		switch caseMode {
 		case model.AuToOrderMode:
 			var sceneWg = &sync.WaitGroup{}
-			golink.DisposeScene(wg, currentWg, sceneWg, model.SceneType, c, configuration, reportMsg, resultDataMsgCh, collection)
+			golink.DisposeScene(wg, sceneWg, model.SceneType, c, configuration, reportMsg, resultDataMsgCh, collection)
 			sceneWg.Wait()
 		}
-		//wg.Wait()
-		currentWg.Wait()
 	}
 }

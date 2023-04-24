@@ -2,12 +2,15 @@
 package golink
 
 import (
+	"fmt"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/server/client"
+	uuid "github.com/satori/go.uuid"
 	"github.com/valyala/fasthttp"
 	"go.mongodb.org/mongo-driver/mongo"
 	"net/url"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -27,7 +30,7 @@ func HttpSend(event model.Event, api model.Api, globalVar *sync.Map, requestColl
 		api.HttpApiSetup = new(model.HttpApiSetup)
 	}
 	resp, req, requestTime, sendBytes, err, str, startTime, endTime := client.HTTPRequest(api.Method, api.Request.URL, api.Request.Body, api.Request.Query,
-		api.Request.Header, api.Request.Auth, api.HttpApiSetup)
+		api.Request.Header, api.Request.Cookie, api.Request.Auth, api.HttpApiSetup)
 	defer fasthttp.ReleaseResponse(resp) // 用完需要释放资源
 	defer fasthttp.ReleaseRequest(req)
 	var regex []map[string]interface{}
@@ -45,15 +48,15 @@ func HttpSend(event model.Event, api model.Api, globalVar *sync.Map, requestColl
 			regex = append(regex, reg)
 		}
 	}
-
+	//log.Logger.Debug("api:::::     ", api.Name, "\nbody:      ", string(resp.Body()), "\nREGEX:    ", regex)
 	if err != nil {
 		isSucceed = false
 		errMsg = err.Error()
 	}
-	if resp.StatusCode() != 200 {
-		isSucceed = false
-		errMsg = string(resp.Body())
-	}
+	//if resp.StatusCode() != 200 {
+	//	isSucceed = false
+	//	errMsg = string(resp.Body())
+	//}
 	var assertionMsgList []model.AssertionMsg
 	// 断言验证
 
@@ -125,10 +128,16 @@ func makeDebugMsg(regex []map[string]interface{}, debugMsg map[string]interface{
 	debugMsg["scene_id"] = event.SceneId
 	debugMsg["parent_id"] = event.ParentId
 	debugMsg["case_id"] = event.CaseId
+	if api.Uuid.String() == "00000000-0000-0000-0000-000000000000" {
+		api.Uuid = uuid.NewV4()
+	}
 	debugMsg["uuid"] = api.Uuid.String()
 	debugMsg["event_id"] = event.Id
 	debugMsg["api_id"] = api.TargetId
 	debugMsg["api_name"] = api.Name
+	if req.Header.Method() != nil {
+		debugMsg["method"] = string(req.Header.Method())
+	}
 	debugMsg["type"] = model.RequestType
 	debugMsg["request_time"] = requestTime / uint64(time.Millisecond)
 	debugMsg["request_code"] = resp.StatusCode()
@@ -149,7 +158,7 @@ func makeDebugMsg(regex []map[string]interface{}, debugMsg map[string]interface{
 
 	debugMsg["response_header"] = resp.Header.String()
 
-	debugMsg["response_bytes"] = receivedBytes
+	debugMsg["response_bytes"], _ = strconv.ParseFloat(fmt.Sprintf("%0.2f", receivedBytes), 64)
 	if err != nil {
 		debugMsg["response_body"] = err.Error()
 	} else {

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/gob"
+	"encoding/json"
 	"fmt"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
@@ -28,20 +29,21 @@ import (
 
 // Api 请求数据
 type Api struct {
-	TargetId      string               `json:"target_id" bson:"target_id"`
-	Uuid          uuid.UUID            `json:"uuid" bson:"uuid"`
-	Name          string               `json:"name" bson:"name"`
-	TeamId        string               `json:"team_id" bson:"team_id"`
-	TargetType    string               `json:"target_type" bson:"target_type"` // api/webSocket/tcp/grpc
-	Method        string               `json:"method" bson:"method"`           // 方法 GET/POST/PUT
-	Request       Request              `json:"request" bson:"request"`
-	Assert        []*AssertionText     `json:"assert" bson:"assert"`         // 验证的方法(断言)
-	Regex         []*RegularExpression `json:"regex" bson:"regex"`           // 正则表达式
-	Debug         string               `json:"debug" bson:"debug"`           // 是否开启Debug模式
-	Connection    int64                `json:"connection" bson:"connection"` // 0:websocket长连接
-	Configuration *Configuration       `json:"configuration" bson:"configuration"`
-	Variable      []*KV                `json:"variable" bson:"variable"` // 全局变量
-	HttpApiSetup  *HttpApiSetup        `json:"http_api_setup" bson:"http_api_setup"`
+	TargetId       string               `json:"target_id"`
+	Uuid           uuid.UUID            `json:"uuid"`
+	Name           string               `json:"name"`
+	TeamId         string               `json:"team_id"`
+	TargetType     string               `json:"target_type"` // api/webSocket/tcp/grpc
+	Method         string               `json:"method"`      // 方法 GET/POST/PUT
+	Request        Request              `json:"request"`
+	Assert         []*AssertionText     `json:"assert"`          // 验证的方法(断言)
+	Regex          []*RegularExpression `json:"regex"`           // 正则表达式
+	Debug          string               `json:"debug"`           // 是否开启Debug模式
+	Connection     int64                `json:"connection"`      // 0:websocket长连接
+	Configuration  *Configuration       `json:"configuration"`   // 场景设置
+	GlobalVariable *GlobalVariable      `json:"global_variable"` // 全局变量
+	ApiVariable    *GlobalVariable      `json:"api_variable"`
+	HttpApiSetup   *HttpApiSetup        `json:"http_api_setup"`
 }
 
 type HttpApiSetup struct {
@@ -53,19 +55,19 @@ type HttpApiSetup struct {
 
 type Request struct {
 	PreUrl    string     `json:"pre_url"`
-	URL       string     `json:"url" bson:"url"`
-	Parameter []*VarForm `json:"parameter" bson:"parameter"`
-	Header    *Header    `json:"header" bson:"header"` // Headers
-	Query     *Query     `json:"query" bson:"query"`
-	Body      *Body      `json:"body" bson:"body"`
-	Auth      *Auth      `json:"auth" bson:"auth"`
-	Cookie    *Cookie    `json:"cookie" bson:"cookie"`
+	URL       string     `json:"url"`
+	Parameter []*VarForm `json:"parameter"`
+	Header    *Header    `json:"header"` // Headers
+	Query     *Query     `json:"query"`
+	Body      *Body      `json:"body"`
+	Auth      *Auth      `json:"auth"`
+	Cookie    *Cookie    `json:"cookie"`
 }
 
 type Body struct {
-	Mode      string     `json:"mode" bson:"mode"`
-	Raw       string     `json:"raw" bson:"raw"`
-	Parameter []*VarForm `json:"parameter" bson:"parameter"`
+	Mode      string     `json:"mode"`
+	Raw       string     `json:"raw"`
+	Parameter []*VarForm `json:"parameter"`
 }
 
 func (b *Body) SetBody(req *fasthttp.Request) string {
@@ -228,11 +230,11 @@ func (b *Body) SetBody(req *fasthttp.Request) string {
 }
 
 type Header struct {
-	Parameter []*VarForm `json:"parameter" bson:"parameter"`
+	Parameter []*VarForm `json:"parameter"`
 }
 
 func (header *Header) SetHeader(req *fasthttp.Request) {
-	if header.Parameter == nil {
+	if header == nil || header.Parameter == nil {
 		return
 	}
 	for _, v := range header.Parameter {
@@ -249,8 +251,20 @@ func (header *Header) SetHeader(req *fasthttp.Request) {
 	}
 }
 
+func (cookie *Cookie) SetCookie(req *fasthttp.Request) {
+	if cookie == nil || cookie.Parameter == nil {
+		return
+	}
+	for _, v := range cookie.Parameter {
+		if v.IsChecked != Open || v.Value == nil || v.Key == "" {
+			continue
+		}
+		req.Header.SetCookie(v.Key, v.Value.(string))
+	}
+}
+
 type Query struct {
-	Parameter []*VarForm `json:"parameter" bson:"parameter"`
+	Parameter []*VarForm `json:"parameter"`
 }
 
 func (r *Api) SetQuery() {
@@ -258,7 +272,7 @@ func (r *Api) SetQuery() {
 }
 
 type Cookie struct {
-	Parameter []*VarForm
+	Parameter []*VarForm `json:"parameter"`
 }
 
 type RegularExpression struct {
@@ -376,8 +390,9 @@ type KV struct {
 }
 
 type PlanKv struct {
-	Var string `json:"Var"`
-	Val string `json:"Val"`
+	IsCheck int32  `json:"is_check"`
+	Var     string `json:"Var"`
+	Val     string `json:"Val"`
 }
 
 type Form struct {
@@ -463,16 +478,21 @@ type Oauth1 struct {
 	Token                string `json:"token"`
 }
 type Auth struct {
-	Type     string    `json:"type" bson:"type"`
-	KV       *KV       `json:"kv" bson:"kv"`
-	Bearer   *Bearer   `json:"bearer" bson:"bearer"`
-	Basic    *Basic    `json:"basic" bson:"basic"`
-	Digest   *Digest   `json:"digest"`
-	Hawk     *Hawk     `json:"hawk"`
-	Awsv4    *AwsV4    `json:"awsv4"`
-	Ntlm     *Ntlm     `json:"ntlm"`
-	Edgegrid *Edgegrid `json:"edgegrid"`
-	Oauth1   *Oauth1   `json:"oauth1"`
+	Type          string    `json:"type" bson:"type"`
+	Bidirectional *TLS      `json:"bidirectional"`
+	KV            *KV       `json:"kv" bson:"kv"`
+	Bearer        *Bearer   `json:"bearer" bson:"bearer"`
+	Basic         *Basic    `json:"basic" bson:"basic"`
+	Digest        *Digest   `json:"digest"`
+	Hawk          *Hawk     `json:"hawk"`
+	Awsv4         *AwsV4    `json:"awsv4"`
+	Ntlm          *Ntlm     `json:"ntlm"`
+	Edgegrid      *Edgegrid `json:"edgegrid"`
+	Oauth1        *Oauth1   `json:"oauth1"`
+}
+
+type TLS struct {
+	CaCert string `json:"ca_cert"`
 }
 
 type Token struct {
@@ -491,7 +511,7 @@ type Consumer struct {
 }
 
 func (auth *Auth) SetAuth(req *fasthttp.Request) {
-	if auth == nil || auth.Type == NoAuth {
+	if auth == nil || auth.Type == NoAuth || auth.Type == Unidirectional || auth.Type == Bidirectional {
 		return
 	}
 	switch auth.Type {
@@ -749,15 +769,35 @@ func (v *VarForm) Conversion() {
 
 // ReplaceQueryParameterizes 替换query中的变量
 func (r *Api) ReplaceQueryParameterizes(globalVar *sync.Map) {
+	// 将全局函数等，添加到api请求中
+	if globalVar == nil {
+		return
+	}
 	r.ReplaceUrl(globalVar)
-
 	r.ReplaceBodyVarForm(globalVar)
 	r.ReplaceQueryVarForm(globalVar)
-
 	r.ReplaceHeaderVarForm(globalVar)
-
+	r.ReplaceCookieVarForm(globalVar)
 	r.ReplaceAuthVarForm(globalVar)
+	r.ReplaceAssertionVarForm(globalVar)
 
+}
+
+func (r *Api) AddAssertion() {
+	if r.Configuration.SceneVariable == nil || r.Configuration.SceneVariable.Assert == nil || len(r.Configuration.SceneVariable.Assert) <= 0 {
+		return
+	}
+	if r.Assert == nil {
+		r.Assert = r.Configuration.SceneVariable.Assert
+		return
+	}
+	by1, _ := json.Marshal(r.Assert)
+	log.Logger.Debug("222222:     ", string(by1))
+	for _, assert := range r.Configuration.SceneVariable.Assert {
+		r.Assert = append(r.Assert, assert)
+	}
+	by, _ := json.Marshal(r.Configuration.SceneVariable.Assert)
+	log.Logger.Debug("byLLLLL:     ", string(by))
 }
 
 func (r *Api) ReplaceUrl(globalVar *sync.Map) {
@@ -778,6 +818,7 @@ func (r *Api) ReplaceUrl(globalVar *sync.Map) {
 		if globalVar == nil {
 			continue
 		}
+
 		if value, ok := globalVar.Load(v[1]); ok {
 			if value == nil {
 				continue
@@ -797,7 +838,7 @@ func (r *Api) ReplaceUrl(globalVar *sync.Map) {
 }
 
 func (r *Api) ReplaceBodyVarForm(globalVar *sync.Map) {
-	if globalVar == nil {
+	if r.Request.Body == nil {
 		return
 	}
 	switch r.Request.Body.Mode {
@@ -957,7 +998,7 @@ func (r *Api) ReplaceBodyVarForm(globalVar *sync.Map) {
 }
 
 func (r *Api) ReplaceHeaderVarForm(globalVar *sync.Map) {
-	if r.Request.Header.Parameter == nil {
+	if r.Request.Header == nil || r.Request.Header.Parameter == nil {
 		return
 	}
 	for _, queryVarForm := range r.Request.Header.Parameter {
@@ -1011,8 +1052,68 @@ func (r *Api) ReplaceHeaderVarForm(globalVar *sync.Map) {
 	}
 }
 
+func (r *Api) ReplaceCookieVarForm(globalVar *sync.Map) {
+	if r.Request.Cookie == nil || r.Request.Cookie.Parameter == nil {
+		return
+	}
+	for _, queryVarForm := range r.Request.Cookie.Parameter {
+		queryParameterizes := tools.FindAllDestStr(queryVarForm.Key, "{{(.*?)}}")
+		if queryParameterizes != nil {
+			for _, v := range queryParameterizes {
+				if len(v) < 2 {
+					continue
+				}
+				if value, ok := globalVar.Load(v[1]); ok {
+					if value == nil {
+						continue
+					}
+					queryVarForm.Key = strings.Replace(queryVarForm.Key, v[0], value.(string), -1)
+				}
+			}
+		}
+		if queryVarForm.Value == nil {
+			continue
+		}
+		queryParameterizes = tools.FindAllDestStr(queryVarForm.Value.(string), "{{(.*?)}}")
+		if queryParameterizes == nil {
+			continue
+		}
+		for _, v := range queryParameterizes {
+			if len(v) < 2 {
+				continue
+			}
+			realVar := tools.ParsFunc(v[1])
+			if realVar != v[1] {
+				queryVarForm.Value = strings.Replace(queryVarForm.Value.(string), v[0], realVar, -1)
+				continue
+			}
+			if value, ok := globalVar.Load(v[1]); ok {
+				if value == nil {
+					continue
+				}
+				switch fmt.Sprintf("%T", value) {
+				case "int":
+					value = fmt.Sprintf("%d", value)
+				case "bool":
+					value = fmt.Sprintf("%t", value)
+				case "float64":
+					value = fmt.Sprintf("%f", value)
+				default:
+					by, _ := json.Marshal(value)
+					if by != nil {
+						value = string(by)
+					}
+				}
+				queryVarForm.Value = strings.Replace(queryVarForm.Value.(string), v[0], value.(string), -1)
+			}
+
+		}
+		queryVarForm.Conversion()
+	}
+}
+
 func (r *Api) ReplaceQueryVarForm(globalVar *sync.Map) {
-	if r.Request.Query.Parameter == nil {
+	if r.Request.Query == nil || r.Request.Query.Parameter == nil {
 		return
 	}
 	for _, queryVarForm := range r.Request.Query.Parameter {
@@ -1036,7 +1137,7 @@ func (r *Api) ReplaceQueryVarForm(globalVar *sync.Map) {
 		}
 
 		values := tools.FindAllDestStr(queryVarForm.Value.(string), "{{(.*?)}}")
-		if values != nil {
+		if values == nil {
 			continue
 		}
 		for _, v := range values {
@@ -1071,12 +1172,12 @@ func (r *Api) ReplaceQueryVarForm(globalVar *sync.Map) {
 
 func (r *Api) ReplaceAuthVarForm(globalVar *sync.Map) {
 
-	if r.Request.Auth.KV.Value == nil {
+	if r.Request.Auth == nil {
 		return
 	}
 	switch r.Request.Auth.Type {
 	case Kv:
-		if r.Request.Auth.KV == nil || r.Request.Auth.KV.Key == "" {
+		if r.Request.Auth.KV == nil || r.Request.Auth.KV.Key == "" || r.Request.Auth.KV.Value == nil {
 			return
 		}
 		values := tools.FindAllDestStr(r.Request.Auth.KV.Value.(string), "{{(.*?)}}")
@@ -1204,6 +1305,63 @@ func (r *Api) ReplaceAuthVarForm(globalVar *sync.Map) {
 				r.Request.Auth.Basic.Password = strings.Replace(r.Request.Auth.Basic.Password, v[0], value.(string), -1)
 			}
 		}
+	}
+}
+
+func (r *Api) ReplaceAssertionVarForm(globalVar *sync.Map) {
+	if r.Assert == nil || len(r.Assert) <= 0 {
+		return
+	}
+	for _, assert := range r.Assert {
+		if assert.Val == "" {
+			continue
+		}
+		keys := tools.FindAllDestStr(assert.Var, "{{(.*?)}}")
+		if keys != nil {
+			for _, v := range keys {
+				if len(v) < 2 {
+					continue
+				}
+				if value, ok := globalVar.Load(v[1]); ok {
+					if value == nil {
+						continue
+					}
+					assert.Var = strings.Replace(assert.Val, v[0], value.(string), -1)
+
+				}
+			}
+		}
+
+		values := tools.FindAllDestStr(assert.Val, "{{(.*?)}}")
+		if values == nil {
+			continue
+		}
+
+		for _, v := range values {
+			if len(v) < 2 {
+				continue
+			}
+			realVar := tools.ParsFunc(v[1])
+			if realVar != v[1] {
+				assert.Val = strings.Replace(assert.Val, v[0], realVar, -1)
+				continue
+			}
+			if value, ok := globalVar.Load(v[1]); ok {
+				if value == nil {
+					continue
+				}
+				switch fmt.Sprintf("%T", value) {
+				case "int":
+					value = fmt.Sprintf("%d", value)
+				case "bool":
+					value = fmt.Sprintf("%t", value)
+				case "float64":
+					value = fmt.Sprintf("%f", value)
+				}
+				assert.Val = strings.Replace(assert.Val, v[0], value.(string), -1)
+			}
+		}
+
 	}
 }
 

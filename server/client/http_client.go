@@ -2,26 +2,27 @@ package client
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/config"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
 	"github.com/valyala/fasthttp"
 	"strings"
 	"time"
 )
 
-func HTTPRequest(method, url string, body *model.Body, query *model.Query, header *model.Header, auth *model.Auth, httpApiSetup *model.HttpApiSetup) (resp *fasthttp.Response, req *fasthttp.Request, requestTime uint64, sendBytes float64, err error, str string, startTime, endTime time.Time) {
+func HTTPRequest(method, url string, body *model.Body, query *model.Query, header *model.Header, cookie *model.Cookie, auth *model.Auth, httpApiSetup *model.HttpApiSetup) (resp *fasthttp.Response, req *fasthttp.Request, requestTime uint64, sendBytes float64, err error, str string, startTime, endTime time.Time) {
 
-	client := fastClient(httpApiSetup.ReadTimeOut, httpApiSetup.WriteTimeOut)
+	client := fastClient(httpApiSetup, auth)
 	req = fasthttp.AcquireRequest()
 
 	// set method
 	req.Header.SetMethod(method)
-
 	// set header
 	header.SetHeader(req)
-
+	cookie.SetCookie(req)
 	urls := strings.Split(url, "//")
 	if !strings.EqualFold(urls[0], model.HTTP) && !strings.EqualFold(urls[0], model.HTTPS) {
 		url = model.HTTP + "//" + url
@@ -54,13 +55,7 @@ func HTTPRequest(method, url string, body *model.Body, query *model.Query, heade
 	startTime = time.Now()
 	// 发送请求
 	if httpApiSetup.IsRedirects == 0 {
-		maxRedirectsCount := 3
-		if httpApiSetup.RedirectsNum != maxRedirectsCount {
-			maxRedirectsCount = httpApiSetup.RedirectsNum
-		}
-		err = client.DoRedirects(req, resp, maxRedirectsCount)
-		log.Logger.Debug("请求错误： ", err)
-		log.Logger.Debug("重定向：     ", string(resp.Body()))
+		err = client.DoRedirects(req, resp, httpApiSetup.RedirectsNum)
 	} else {
 		err = client.Do(req, resp)
 	}
@@ -74,21 +69,52 @@ func HTTPRequest(method, url string, body *model.Body, query *model.Query, heade
 }
 
 // 获取fasthttp客户端
-func fastClient(readTimeOut, writeTimeOut int64) (fc *fasthttp.Client) {
+func fastClient(httpApiSetup *model.HttpApiSetup, auth *model.Auth) (fc *fasthttp.Client) {
+	tr := &tls.Config{InsecureSkipVerify: true}
+	if auth != nil || auth.Bidirectional != nil {
+		switch auth.Type {
+		case model.Bidirectional:
+			tr.InsecureSkipVerify = false
+			if auth.Bidirectional.CaCert != "" {
+				if strings.HasPrefix(auth.Bidirectional.CaCert, "https://") || strings.HasPrefix(auth.Bidirectional.CaCert, "http://") {
+					client := &fasthttp.Client{}
+					loadReq := fasthttp.AcquireRequest()
+					defer loadReq.ConnectionClose()
+					// set url
+					loadReq.Header.SetMethod("GET")
+					loadReq.SetRequestURI(auth.Bidirectional.CaCert)
+					loadResp := fasthttp.AcquireResponse()
+					defer loadResp.ConnectionClose()
+					if err := client.Do(loadReq, loadResp); err != nil {
+						log.Logger.Error(fmt.Sprintf("机器ip:%s, 下载crt文件失败：", middlewares.LocalIp), err)
+					}
+					if loadResp != nil && loadResp.Body() != nil {
+						caCertPool := x509.NewCertPool()
+						if caCertPool != nil {
+							caCertPool.AppendCertsFromPEM(loadResp.Body())
+							tr.ClientCAs = caCertPool
+						}
+					}
+				}
+			}
+		case model.Unidirectional:
+			tr.InsecureSkipVerify = false
+		}
+	}
 	fc = &fasthttp.Client{
 		Name:                     config.Conf.Http.Name,
 		NoDefaultUserAgentHeader: config.Conf.Http.NoDefaultUserAgentHeader,
-		TLSConfig:                &tls.Config{InsecureSkipVerify: true},
+		TLSConfig:                tr,
 		MaxConnsPerHost:          config.Conf.Http.MaxConnPerHost,
 		MaxIdleConnDuration:      config.Conf.Http.MaxIdleConnDuration * time.Millisecond,
 		MaxConnWaitTimeout:       config.Conf.Http.MaxConnWaitTimeout * time.Millisecond,
 	}
-	if writeTimeOut != 0 {
-		fc.WriteTimeout = time.Duration(writeTimeOut) * time.Millisecond
+	if httpApiSetup.WriteTimeOut != 0 {
+		fc.WriteTimeout = time.Duration(httpApiSetup.WriteTimeOut) * time.Millisecond
 	}
 
-	if readTimeOut != 0 {
-		fc.ReadTimeout = time.Duration(readTimeOut) * time.Millisecond
+	if httpApiSetup.ReadTimeOut != 0 {
+		fc.ReadTimeout = time.Duration(httpApiSetup.ReadTimeOut) * time.Millisecond
 	}
 
 	return fc

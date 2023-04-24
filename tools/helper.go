@@ -3,7 +3,6 @@
 package tools
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
@@ -11,7 +10,6 @@ import (
 	"github.com/tidwall/gjson"
 	"os"
 	"regexp"
-	"runtime"
 	"strings"
 	"time"
 )
@@ -95,8 +93,13 @@ func FindDestStr(str string, rex string) (result string) {
 		}
 		return
 	}
-
 	return
+}
+
+func DeferPanic(msg string) {
+	if err := recover(); err != nil {
+		log.Logger.Error(msg)
+	}
 }
 
 // FindAllDestStr 匹配所有的
@@ -133,23 +136,10 @@ func PathExists(path string) bool {
 
 }
 
-func GetGid() (gid string) {
-	b := make([]byte, 64)
-	b = b[:runtime.Stack(b, false)]
-	b = bytes.TrimPrefix(b, []byte("goroutine "))
-	b = b[:bytes.IndexByte(b, ' ')]
-	gid = string(b)
-	return
-}
-
 // JsonPath json格式提取数据
-func JsonPath(source, expression string) (value interface{}) {
+
+func JsonPath(source, expression string) (value string) {
 	gq := gjson.Get(source, expression)
 	value = gq.String()
 	return
-}
-
-//  HtmlPath html格式提取数据
-func HtmlPath() {
-
 }

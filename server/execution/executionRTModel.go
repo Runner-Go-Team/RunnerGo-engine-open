@@ -14,7 +14,7 @@ import (
 )
 
 // RTModel 响应时间模式
-func RTModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Configuration, reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, debugCollection, requestCollection *mongo.Collection) (msg string) {
+func RTModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Configuration, reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestCollection *mongo.Collection) (msg string) {
 	startConcurrent := scene.ConfigTask.ModeConf.StartConcurrency
 	step := scene.ConfigTask.ModeConf.Step
 	maxConcurrent := scene.ConfigTask.ModeConf.MaxConcurrency
@@ -29,7 +29,7 @@ func RTModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Configu
 	pubSub := model.SubscribeMsg(adjustKey)
 	statusCh := pubSub.Channel()
 	defer pubSub.Close()
-	debug := scene.Debug
+	debug := scene.ConfigTask.DebugMode
 	key := fmt.Sprintf("reportData:%s", reportMsg.ReportId)
 	currentWg := &sync.WaitGroup{}
 	concurrentMap := new(sync.Map)
@@ -93,7 +93,7 @@ func RTModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Configu
 
 			select {
 			case c := <-statusCh:
-
+				log.Logger.Debug("接收到manage消息：  ", c.String())
 				var subscriptionStressPlanStatusChange = new(model.SubscriptionStressPlanStatusChange)
 				_ = json.Unmarshal([]byte(c.Payload), subscriptionStressPlanStatusChange)
 				if subscriptionStressPlanStatusChange.MachineModeConf == nil {
@@ -151,7 +151,7 @@ func RTModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Configu
 					currentWg.Add(1)
 					go func(concurrentId, concurrent int64, useConfiguration *model.Configuration) {
 						var sceneWg = &sync.WaitGroup{}
-						golink.DisposeScene(wg, currentWg, sceneWg, model.PlanType, scene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
+						golink.DisposeScene(wg, sceneWg, model.PlanType, scene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
 						sceneWg.Wait()
 						concurrentMap.Delete(concurrentId)
 						currentWg.Done()
@@ -250,7 +250,7 @@ func RTModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Configu
 
 			select {
 			case c := <-statusCh:
-
+				log.Logger.Debug("接收到manage消息：  ", c.String())
 				var subscriptionStressPlanStatusChange = new(model.SubscriptionStressPlanStatusChange)
 				_ = json.Unmarshal([]byte(c.Payload), subscriptionStressPlanStatusChange)
 				if subscriptionStressPlanStatusChange.MachineModeConf == nil {
@@ -317,12 +317,12 @@ func RTModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Configu
 								break
 							}
 							var sceneWg = &sync.WaitGroup{}
-							golink.DisposeScene(wg, currentWg, sceneWg, model.PlanType, scene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
+							golink.DisposeScene(wg, sceneWg, model.PlanType, scene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
 							sceneWg.Wait()
 						}
 						concurrentMap.Delete(concurrentId)
-						currentWg.Done()
 						wg.Done()
+						currentWg.Done()
 
 					}(i, configuration)
 				}

@@ -12,6 +12,7 @@ import (
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/server/execution"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/server/golink"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/tools"
+	"github.com/Shopify/sarama"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
 	"net/http"
@@ -23,10 +24,20 @@ import (
 // DisposeTask 处理任务
 func DisposeTask(plan *model.Plan, c *gin.Context) {
 	// 如果场景为空或者场景中的事件为空，直接结束该方法
-	if plan.Scene.Nodes == nil {
-		global.ReturnMsg(c, http.StatusBadRequest, "执行计划失败：", "计划的场景不能为空 ")
+	if plan.Scene.NodesRound == nil {
+		global.ReturnMsg(c, http.StatusBadRequest, "执行计划失败：", "计划的场景不能为nil ")
 		return
 	}
+
+	if plan.Scene.NodesRound[0] == nil {
+		global.ReturnMsg(c, http.StatusBadRequest, "执行计划失败：", "计划的场景事件列表不能为空")
+		return
+	}
+	if len(plan.Scene.NodesRound[0]) == 0 {
+		global.ReturnMsg(c, http.StatusBadRequest, "执行计划失败：", "计划的场景事件不能为空")
+		return
+	}
+
 	if plan.ReportId == "" {
 		global.ReturnMsg(c, http.StatusBadRequest, "执行计划失败：", "reportId 不能为空 ")
 		return
@@ -52,20 +63,11 @@ func DisposeTask(plan *model.Plan, c *gin.Context) {
 		global.ReturnMsg(c, http.StatusBadRequest, "执行计划失败：", "计划任务不能为空")
 		return
 	}
-	go func() {
-		ExecutionPlan(plan)
-	}()
-
-	global.ReturnMsg(c, http.StatusOK, "开始执行计划", nil)
-}
-
-// ExecutionPlan 执行计划
-func ExecutionPlan(plan *model.Plan) {
 
 	// 设置kafka消费者，目的是像kafka中发送测试结果
 	kafkaProducer, err := model.NewKafkaProducer([]string{config.Conf.Kafka.Address})
 	if err != nil {
-		log.Logger.Error(fmt.Sprintf("机器ip:%s, kafka连接失败: %s", middlewares.LocalIp, err.Error()))
+		global.ReturnMsg(c, http.StatusBadRequest, "执行计划失败：", fmt.Sprintf("机器ip:%s, kafka连接失败: %s", middlewares.LocalIp, err.Error()))
 		return
 	}
 
@@ -74,10 +76,19 @@ func ExecutionPlan(plan *model.Plan) {
 		config.Conf.Mongo.DSN,
 		middlewares.LocalIp)
 	if err != nil {
-		log.Logger.Error(fmt.Sprintf("机器ip:%s, 连接mongo错误：%s", middlewares.LocalIp, err.Error()))
+		global.ReturnMsg(c, http.StatusBadRequest, "执行计划失败：", fmt.Sprintf("机器ip:%s, 连接mongo错误：%s", middlewares.LocalIp, err.Error()))
 		return
 	}
-	defer mongoClient.Disconnect(context.TODO())
+
+	go func() {
+		ExecutionPlan(plan, kafkaProducer, mongoClient)
+	}()
+
+	global.ReturnMsg(c, http.StatusOK, "开始执行计划", nil)
+}
+
+// ExecutionPlan 执行计划
+func ExecutionPlan(plan *model.Plan, kafkaProducer sarama.SyncProducer, mongoClient *mongo.Client) {
 
 	// 设置接收数据缓存
 	resultDataMsgCh := make(chan *model.ResultDataMsg, 500000)
@@ -91,7 +102,7 @@ func ExecutionPlan(plan *model.Plan) {
 	go model.SendKafkaMsg(kafkaProducer, resultDataMsgCh, topic, partition, middlewares.LocalIp)
 
 	requestCollection := model.NewCollection(config.Conf.Mongo.DataBase, config.Conf.Mongo.StressDebugTable, mongoClient)
-	debugCollection := model.NewCollection(config.Conf.Mongo.DataBase, config.Conf.Mongo.DebugStatusTable, mongoClient)
+	//debugCollection := model.NewCollection(config.Conf.Mongo.DataBase, config.Conf.Mongo.DebugStatusTable, mongoClient)
 	scene := plan.Scene
 
 	// 如果场景中的任务配置勾选了全局任务配置，那么使用全局任务配置
@@ -99,61 +110,67 @@ func ExecutionPlan(plan *model.Plan) {
 		scene.ConfigTask = plan.ConfigTask
 	}
 
-	if plan.Variable != nil {
-		for _, value := range plan.Variable {
-			values := tools.FindAllDestStr(value.Val, "{{(.*?)}}")
-			if values == nil {
-				continue
-			}
+	if scene.Configuration == nil {
+		scene.Configuration = new(model.Configuration)
+		scene.Configuration.Mu = sync.Mutex{}
+	}
 
-			for _, v := range values {
-				if len(v) < 2 {
-					continue
-				}
-				realVar := tools.ParsFunc(v[1])
-				if realVar != v[1] {
-					value.Val = strings.Replace(value.Val, v[0], realVar, -1)
-				}
-			}
-		}
+	if scene.Configuration.ParameterizedFile == nil {
+		scene.Configuration.ParameterizedFile = new(model.ParameterizedFile)
 	}
-	// 循环读全局变量，如果场景变量不存在则将添加到场景变量中，如果有参数化数据则，将其替换
-	if plan.Variable != nil {
-		if scene.Configuration.Variable == nil {
-			scene.Configuration.Variable = []*model.KV{}
-		}
-		for _, value := range plan.Variable {
-			var target = false
-			for _, kv := range scene.Configuration.Variable {
-				if value.Var == kv.Key {
-					target = true
-					continue
-				}
-			}
-			if !target {
-				var variable = new(model.KV)
-				variable.Key = value.Var
-				variable.Value = value.Val
-				scene.Configuration.Variable = append(scene.Configuration.Variable, variable)
-			}
-		}
+	if scene.Configuration.ParameterizedFile.VariableNames == nil {
+		scene.Configuration.ParameterizedFile.VariableNames = new(model.VariableNames)
+		scene.Configuration.ParameterizedFile.VariableNames.VarMapList = make(map[string][]string)
 	}
+	if scene.Configuration.SceneVariable == nil {
+		scene.Configuration.SceneVariable = new(model.GlobalVariable)
+	}
+
+	if scene.Configuration.SceneVariable.Variable == nil {
+		scene.Configuration.SceneVariable.Variable = []*model.VarForm{}
+	}
+	if scene.Configuration.SceneVariable.Header == nil {
+		scene.Configuration.SceneVariable.Header = new(model.Header)
+	}
+	if scene.Configuration.SceneVariable.Header.Parameter == nil {
+		scene.Configuration.SceneVariable.Header.Parameter = []*model.VarForm{}
+	}
+	if scene.Configuration.SceneVariable.Cookie == nil {
+		scene.Configuration.SceneVariable.Cookie = new(model.Cookie)
+	}
+	if scene.Configuration.SceneVariable.Cookie.Parameter == nil {
+		scene.Configuration.SceneVariable.Cookie.Parameter = []*model.VarForm{}
+	}
+
+	if scene.Configuration.SceneVariable.Assert == nil {
+		scene.Configuration.SceneVariable.Assert = []*model.AssertionText{}
+	}
+
+	if plan.GlobalVariable != nil {
+		if scene.Configuration.SceneVariable == nil {
+			scene.Configuration.SceneVariable = new(model.GlobalVariable)
+		}
+		plan.GlobalVariable.InitReplace()
+		plan.GlobalVariable.SupToSub(scene.Configuration.SceneVariable)
+
+	}
+
+	if scene.Configuration != nil && scene.Configuration.SceneVariable != nil {
+		scene.Configuration.SceneVariable.InitReplace()
+	}
+
 	// 分解任务
-	TaskDecomposition(plan, wg, resultDataMsgCh, debugCollection, requestCollection)
+	TaskDecomposition(plan, wg, resultDataMsgCh, mongoClient, requestCollection)
 }
 
 // TaskDecomposition 分解任务
-func TaskDecomposition(plan *model.Plan, wg *sync.WaitGroup, resultDataMsgCh chan *model.ResultDataMsg, debugCollection, mongoCollection *mongo.Collection) {
+func TaskDecomposition(plan *model.Plan, wg *sync.WaitGroup, resultDataMsgCh chan *model.ResultDataMsg, mongoClient *mongo.Client, mongoCollection *mongo.Collection) {
 	defer close(resultDataMsgCh)
+	defer mongoClient.Disconnect(context.TODO())
 	scene := plan.Scene
 	scene.TeamId = plan.TeamId
 	scene.ReportId = plan.ReportId
-	if scene.Configuration == nil {
-		scene.Configuration = new(model.Configuration)
-	}
-	if scene.Configuration.Variable == nil {
-		scene.Configuration.Variable = []*model.KV{}
-	}
+
 	if scene.Configuration.ParameterizedFile == nil {
 		scene.Configuration.ParameterizedFile = new(model.ParameterizedFile)
 	}
@@ -202,15 +219,15 @@ func TaskDecomposition(plan *model.Plan, wg *sync.WaitGroup, resultDataMsgCh cha
 	var msg string
 	switch scene.ConfigTask.Mode {
 	case model.ConcurrentModel:
-		msg = execution.ConcurrentModel(wg, scene, configuration, reportMsg, resultDataMsgCh, debugCollection, mongoCollection)
+		msg = execution.ConcurrentModel(wg, scene, configuration, reportMsg, resultDataMsgCh, mongoCollection)
 	case model.ErrorRateModel:
-		msg = execution.ErrorRateModel(wg, scene, configuration, reportMsg, resultDataMsgCh, debugCollection, mongoCollection)
+		msg = execution.ErrorRateModel(wg, scene, configuration, reportMsg, resultDataMsgCh, mongoCollection)
 	case model.LadderModel:
-		msg = execution.LadderModel(wg, scene, configuration, reportMsg, resultDataMsgCh, debugCollection, mongoCollection)
+		msg = execution.LadderModel(wg, scene, configuration, reportMsg, resultDataMsgCh, mongoCollection)
 	case model.RTModel:
-		msg = execution.RTModel(wg, scene, configuration, reportMsg, resultDataMsgCh, debugCollection, mongoCollection)
+		msg = execution.RTModel(wg, scene, configuration, reportMsg, resultDataMsgCh, mongoCollection)
 	case model.RpsModel:
-		msg = execution.RPSModel(wg, scene, configuration, reportMsg, resultDataMsgCh, debugCollection, mongoCollection)
+		msg = execution.RPSModel(wg, scene, configuration, reportMsg, resultDataMsgCh, mongoCollection)
 	default:
 		var machines []string
 		msg = "任务类型不存在"
@@ -236,7 +253,6 @@ func TaskDecomposition(plan *model.Plan, wg *sync.WaitGroup, resultDataMsgCh cha
 // DebugScene 场景调试
 func DebugScene(scene model.Scene) {
 	wg := &sync.WaitGroup{}
-	currentWg := &sync.WaitGroup{}
 	mongoClient, err := model.NewMongoClient(
 		config.Conf.Mongo.DSN,
 		middlewares.LocalIp)
@@ -244,53 +260,63 @@ func DebugScene(scene model.Scene) {
 		log.Logger.Error(fmt.Sprintf("机器ip:%s, 连接mongo错误：%s", middlewares.LocalIp, err))
 		return
 	}
-	if scene.Variable != nil {
-		if scene.Configuration == nil {
-			scene.Configuration = new(model.Configuration)
-		}
-		if scene.Configuration.Variable == nil {
-			scene.Configuration.Variable = []*model.KV{}
-		}
-		for _, v := range scene.Variable {
-			target := false
-			for _, sv := range scene.Configuration.Variable {
-				if v.Key == sv.Key {
-					target = true
-				}
-			}
-			if !target {
-				scene.Configuration.Variable = append(scene.Configuration.Variable, v)
-			}
-		}
-	}
 
 	if scene.Configuration == nil {
-		scene.Configuration.Variable = []*model.KV{}
+		scene.Configuration = new(model.Configuration)
 		scene.Configuration.Mu = sync.Mutex{}
 	}
 
+	if scene.Configuration.ParameterizedFile == nil {
+		scene.Configuration.ParameterizedFile = new(model.ParameterizedFile)
+	}
 	if scene.Configuration.ParameterizedFile.VariableNames == nil {
 		scene.Configuration.ParameterizedFile.VariableNames = new(model.VariableNames)
 		scene.Configuration.ParameterizedFile.VariableNames.VarMapList = make(map[string][]string)
 	}
-	if scene.Configuration.Variable == nil {
-		scene.Configuration.Variable = []*model.KV{}
-		scene.Configuration.Mu = sync.Mutex{}
+	if scene.Configuration.SceneVariable == nil {
+		scene.Configuration.SceneVariable = new(model.GlobalVariable)
 	}
+
+	if scene.Configuration.SceneVariable.Variable == nil {
+		scene.Configuration.SceneVariable.Variable = []*model.VarForm{}
+	}
+	if scene.Configuration.SceneVariable.Header == nil {
+		scene.Configuration.SceneVariable.Header = new(model.Header)
+	}
+	if scene.Configuration.SceneVariable.Header.Parameter == nil {
+		scene.Configuration.SceneVariable.Header.Parameter = []*model.VarForm{}
+	}
+	if scene.Configuration.SceneVariable.Cookie == nil {
+		scene.Configuration.SceneVariable.Cookie = new(model.Cookie)
+	}
+	if scene.Configuration.SceneVariable.Cookie.Parameter == nil {
+		scene.Configuration.SceneVariable.Cookie.Parameter = []*model.VarForm{}
+	}
+
+	if scene.Configuration.SceneVariable.Assert == nil {
+		scene.Configuration.SceneVariable.Assert = []*model.AssertionText{}
+	}
+
+	if scene.GlobalVariable != nil {
+		scene.GlobalVariable.InitReplace()
+		scene.GlobalVariable.SupToSub(scene.Configuration.SceneVariable)
+	}
+	if scene.Configuration.SceneVariable != nil {
+		scene.Configuration.SceneVariable.InitReplace()
+	}
+
 	configuration := scene.Configuration
 	if configuration.ParameterizedFile != nil {
 		p := scene.Configuration.ParameterizedFile
 		p.VariableNames.Mu = sync.Mutex{}
-		//teamId := strconv.FormatInt(plan.TeamId, 10)
-		//p.DownLoadFile(teamId, plan.ReportId)
 		p.UseFile()
 	}
+
 	scene.Debug = model.All
 	defer mongoClient.Disconnect(context.TODO())
 	mongoCollection := model.NewCollection(config.Conf.Mongo.DataBase, config.Conf.Mongo.SceneDebugTable, mongoClient)
 	var sceneWg = &sync.WaitGroup{}
-	golink.DisposeScene(wg, currentWg, sceneWg, model.SceneType, scene, configuration, nil, nil, mongoCollection)
-	currentWg.Wait()
+	golink.DisposeScene(wg, sceneWg, model.SceneType, scene, configuration, nil, nil, mongoCollection)
 	wg.Wait()
 	sceneWg.Wait()
 	log.Logger.Info(fmt.Sprintf("机器ip:%s, 团队: %s, 场景：%s, 调试结束！", middlewares.LocalIp, scene.TeamId, scene.SceneName))
@@ -302,17 +328,28 @@ func DebugApi(debugApi model.Api) {
 
 	var globalVar = new(sync.Map)
 
-	if debugApi.Variable != nil {
-		for _, value := range debugApi.Variable {
-			globalVar.Store(value.Key, value.Value)
+	if debugApi.GlobalVariable != nil {
+		debugApi.GlobalVariable.InitReplace()
+		if debugApi.Configuration == nil {
+			debugApi.Configuration = new(model.Configuration)
+		}
+		if debugApi.Configuration.SceneVariable == nil {
+			debugApi.Configuration.SceneVariable = new(model.GlobalVariable)
+		}
+		debugApi.GlobalVariable.SupToSub(debugApi.Configuration.SceneVariable)
+		debugApi.ApiVariable = new(model.GlobalVariable)
+		debugApi.Configuration.SceneVariable.SupToSub(debugApi.ApiVariable)
+		debugApi.ApiVariable.InitReplace()
+	} else {
+		if debugApi.Configuration != nil && debugApi.Configuration.SceneVariable != nil {
+			debugApi.Configuration.SceneVariable.InitReplace()
+			debugApi.ApiVariable = new(model.GlobalVariable)
+			debugApi.Configuration.SceneVariable.SupToSub(debugApi.ApiVariable)
+
 		}
 	}
+
 	if debugApi.Configuration != nil {
-		if debugApi.Configuration.Variable != nil {
-			for _, value := range debugApi.Configuration.Variable {
-				globalVar.Store(value.Key, value.Value)
-			}
-		}
 		if debugApi.Configuration.ParameterizedFile != nil {
 			if debugApi.Configuration.ParameterizedFile.VariableNames == nil {
 				debugApi.Configuration.ParameterizedFile.VariableNames = new(model.VariableNames)
@@ -325,6 +362,16 @@ func DebugApi(debugApi model.Api) {
 				}
 			}
 		}
+	}
+
+	if debugApi.ApiVariable.Variable != nil {
+		for _, variable := range debugApi.Configuration.SceneVariable.Variable {
+			if variable.IsChecked != model.Open {
+				continue
+			}
+			globalVar.Store(variable.Key, variable.Value)
+		}
+
 	}
 
 	event := model.Event{}

@@ -129,16 +129,18 @@ const (
 
 // 认证类型
 const (
-	NoAuth       = "noauth"
-	Kv           = "kv"
-	BEarer       = "bearer"
-	BAsic        = "basic"
-	DigestType   = "digest"
-	HawkType     = "hawk"
-	Awsv4Type    = "awsv4"
-	NtlmType     = "ntlm"
-	EdgegridType = "edgegrid"
-	Oauth1Type   = "oauth1"
+	NoAuth         = "noauth"
+	Unidirectional = "unidirectional"
+	Bidirectional  = "bidirectional"
+	Kv             = "kv"
+	BEarer         = "bearer"
+	BAsic          = "basic"
+	DigestType     = "digest"
+	HawkType       = "hawk"
+	Awsv4Type      = "awsv4"
+	NtlmType       = "ntlm"
+	EdgegridType   = "edgegrid"
+	Oauth1Type     = "oauth1"
 )
 
 const (
