@@ -111,7 +111,7 @@ func FindDestStr(str string, rex string) (result string) {
 
 func DeferPanic(msg string) {
 	if err := recover(); err != nil {
-		log.Logger.Error(msg)
+		log.Logger.Error(fmt.Sprintf("%s: %s", msg, err))
 	}
 }
 

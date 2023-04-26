@@ -46,7 +46,10 @@ const (
 	RequestType        = "api"                  // 接口请求
 	IfControllerType   = "condition_controller" // if控制器
 	WaitControllerType = "wait_controller"      // 等待控制器
-
+	SqlType            = "sql"                  // sql
+	RedisType          = "redis"
+	MqttType           = "mqtt"
+	KafkaType          = "kafka"
 )
 
 // 逻辑运算符

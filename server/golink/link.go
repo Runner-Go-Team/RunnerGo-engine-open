@@ -307,20 +307,20 @@ func disposePlanNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.Ma
 			eventResult.Status = model.End
 			eventResult.Weight = event.Weight
 		}
-		//for _, _ = range event.NextList {
-		//	nodeCh <- eventResult
-		//}
 		preNodeMap.Store(event.Id, eventResult)
 	case model.WaitControllerType:
 		time.Sleep(time.Duration(event.WaitTime) * time.Millisecond)
 		eventResult.Status = model.End
 		eventResult.Weight = event.Weight
 		if event.NextList != nil && len(event.NextList) >= 1 {
-			//for _, _ = range event.NextList {
-			//	nodeCh <- eventResult
-			//}
 			preNodeMap.Store(event.Id, eventResult)
 		}
+	case model.SqlType:
+
+	case model.MqttType:
+	case model.KafkaType:
+	case model.RedisType:
+
 	}
 }
 
@@ -549,15 +549,7 @@ func DisposeRequest(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.
 		requestResults.Name = api.Name
 		requestResults.MachineNum = reportMsg.MachineNum
 	}
-	api.Request.PreUrl = strings.TrimSpace(api.Request.PreUrl)
-	api.Request.URL = api.Request.PreUrl + api.Request.URL
 
-	if api.ApiVariable != nil {
-		api.GlobalToRequest()
-	}
-
-	// 请求中所有的变量替换成真正的值
-	api.ReplaceQueryParameterizes(globalVar)
 	var (
 		isSucceed          = false
 		errCode            = int64(0)
@@ -567,8 +559,23 @@ func DisposeRequest(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.
 		errMsg             = ""
 		startTime, endTime = time.Time{}, time.Time{}
 	)
+	if event.Prepositions != nil && len(event.Prepositions) > 0 {
+		for _, preposition := range event.Prepositions {
+			preposition.Exec(globalVar, api.GlobalVariable)
+		}
+	}
+
 	switch api.TargetType {
 	case model.FormTypeHTTP:
+		api.Request.PreUrl = strings.TrimSpace(api.Request.PreUrl)
+		api.Request.URL = api.Request.PreUrl + api.Request.URL
+
+		if api.ApiVariable != nil {
+			api.GlobalToRequest()
+		}
+
+		// 请求中所有的变量替换成真正的值
+		api.ReplaceQueryParameterizes(globalVar)
 		isSucceed, errCode, requestTime, sendBytes, receivedBytes, errMsg, startTime, endTime = HttpSend(event, api, globalVar, mongoCollection)
 	case model.FormTypeWebSocket:
 		isSucceed, errCode, requestTime, sendBytes, receivedBytes = webSocketSend(api)
@@ -623,4 +630,9 @@ func setControllerDebugMsg(preNodeMap *sync.Map, eventResult model.EventResult, 
 	//for _, _ = range event.NextList {
 	//	nodeCh <- eventResult
 	//}
+}
+
+func DisposeSql(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestResults *model.ResultDataMsg, globalVar *sync.Map,
+	event model.Event, mongoCollection *mongo.Collection, options ...int64) {
+
 }
