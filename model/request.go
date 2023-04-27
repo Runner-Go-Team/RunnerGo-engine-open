@@ -312,14 +312,13 @@ func (re RegularExpression) Extract(resp *fasthttp.Response, globalVar *sync.Map
 	}
 	switch re.Type {
 	case RegExtract:
-		value = tools.FindDestStr(string(resp.Body()), re.Express)
+		value = tools.FindAllDestStr(string(resp.Body()), re.Express)
 		globalVar.Store(name, value)
 	case JsonExtract:
 		value = tools.JsonPath(string(resp.Body()), re.Express)
 		globalVar.Store(name, value)
 	case HeaderExtract:
-		re.Express = re.Express + "\r"
-		value = tools.FindDestStr(resp.Header.String(), re.Express)
+		value = tools.MatchString(resp.Header.String(), re.Express)
 		globalVar.Store(name, value)
 	case CodeExtract:
 		value = resp.StatusCode()
