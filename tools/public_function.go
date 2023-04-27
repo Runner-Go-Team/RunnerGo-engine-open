@@ -92,7 +92,10 @@ func ToStringLU(str, option string) string {
 }
 
 func GetUUid() string {
-	uid, _ := uuid.NewV4()
+	uid, err := uuid.NewV4()
+	if err != nil {
+		return ""
+	}
 	return uid.String()
 }
 
