@@ -129,8 +129,7 @@ func makeDebugMsg(regex []map[string]interface{}, debugMsg map[string]interface{
 	debugMsg["parent_id"] = event.ParentId
 	debugMsg["case_id"] = event.CaseId
 	if api.Uuid.String() == "00000000-0000-0000-0000-000000000000" {
-		uid, _ := uuid.NewV4()
-		api.Uuid = uid
+		api.Uuid = uuid.NewV4()
 	}
 	debugMsg["uuid"] = api.Uuid.String()
 	debugMsg["event_id"] = event.Id

@@ -53,6 +53,6 @@ func TestJsonPath(t *testing.T) {
 func TestMatchString(t *testing.T) {
 	str := "aab:cccc\n" +
 		"aab:ddd\n"
-	s := MatchString(str, "aab:(.*?)\n, 4")
+	s := MatchString(str, "aab:cccc\naab:(.*?)\n", 0)
 	fmt.Println(s)
 }

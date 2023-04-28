@@ -10,7 +10,6 @@ import (
 	"github.com/tidwall/gjson"
 	"os"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -96,25 +95,10 @@ func FindAllDestStr(str, rex string) (result [][]string) {
 	return
 }
 
-func MatchString(str, rex string) (value string) {
+func MatchString(str, rex string, index int) (value string) {
 	defer DeferPanic(fmt.Sprintf("正则表达式书写错误： %s", rex))
-	exList := strings.Split(rex, ",")
-	var index int
-	if len(exList) > 1 {
-		rex = exList[0]
-		temp, err := strconv.Atoi(strings.TrimSpace(exList[1]))
-		if err != nil {
-			log.Logger.Debug("正则表达式中第几位转数字时发生错误:   ", err)
-		}
-		index = temp
-
-	}
-
 	values := FindAllDestStr(str, rex)
 	if index <= 0 {
-		index = -1
-	}
-	if index == -1 {
 		for _, v := range values {
 			value = value + v[1]
 		}
