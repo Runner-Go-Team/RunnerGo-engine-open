@@ -17,50 +17,50 @@ func SqlRequest(sqlInfo model.SqlInfo, action, sqls string) (resultMap map[strin
 	}
 	startTime = time.Now()
 	defer db.Close()
-	switch action {
-	case "query":
-		rows, err := db.Query(sqls)
-		if err != nil || rows == nil {
-			return
-		}
-		defer rows.Close()
-		cols, _ := rows.Columns()
-		values := make([]sql.RawBytes, len(cols))
-		scans := make([]interface{}, len(cols))
-		if cols != nil {
-			for i := range cols {
-				scans[i] = &values[i]
-			}
-		}
-		results := make(map[string][]string)
-		for rows.Next() {
-			if err := rows.Scan(scans...); err != nil {
-				continue
-			}
-			for j, v := range values {
-				results[cols[j]] = append(results[cols[j]], string(v))
-			}
-		}
-		for k, value := range results {
-			fmt.Println(k, "    ", value)
-		}
-	default:
-		result, err := db.Exec(sqls)
-		if err != nil || result == nil {
-			return
-		}
-		row, err := result.RowsAffected()
-		if err != nil {
-			fmt.Println("row err :   ", err)
-		}
-		last, err := result.LastInsertId()
-		if err != nil {
-			fmt.Println("last err :   ", err)
-		}
-		fmt.Println("row:   ", row)
-		fmt.Println("last:   ", last)
-
-	}
+	//switch action {
+	//case "query":
+	//	rows, err := db.Query(sqls)
+	//	if err != nil || rows == nil {
+	//		return
+	//	}
+	//	defer rows.Close()
+	//	cols, _ := rows.Columns()
+	//	values := make([]sql.RawBytes, len(cols))
+	//	scans := make([]interface{}, len(cols))
+	//	if cols != nil {
+	//		for i := range cols {
+	//			scans[i] = &values[i]
+	//		}
+	//	}
+	//	results := make(map[string][]string)
+	//	for rows.Next() {
+	//		if err := rows.Scan(scans...); err != nil {
+	//			continue
+	//		}
+	//		for j, v := range values {
+	//			results[cols[j]] = append(results[cols[j]], string(v))
+	//		}
+	//	}
+	//	for k, value := range results {
+	//		fmt.Println(k, "    ", value)
+	//	}
+	//default:
+	//	result, err := db.Exec(sqls)
+	//	if err != nil || result == nil {
+	//		return
+	//	}
+	//	row, err := result.RowsAffected()
+	//	if err != nil {
+	//		fmt.Println("row err :   ", err)
+	//	}
+	//	last, err := result.LastInsertId()
+	//	if err != nil {
+	//		fmt.Println("last err :   ", err)
+	//	}
+	//	fmt.Println("row:   ", row)
+	//	fmt.Println("last:   ", last)
+	//
+	//}
 	endTime = time.Now()
 	requestTime = uint64(time.Since(startTime))
 	return
