@@ -314,6 +314,9 @@ func (re RegularExpression) Extract(resp *fasthttp.Response, globalVar *sync.Map
 	switch re.Type {
 	case RegExtract:
 		value = tools.FindAllDestStr(string(resp.Body()), re.Express)
+		if value == nil && len(value.([][]string)) < 1 {
+			value = ""
+		}
 		globalVar.Store(name, value)
 	case JsonExtract:
 		value = tools.JsonPath(string(resp.Body()), re.Express)
