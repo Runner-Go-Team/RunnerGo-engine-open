@@ -386,6 +386,11 @@ func (re RegularExpression) Extract(resp *fasthttp.Response, globalVar *sync.Map
 	}
 	switch re.Type {
 	case RegExtract:
+		if re.Express == "" {
+			value = ""
+			globalVar.Store(name, value)
+			return
+		}
 		value = tools.FindAllDestStr(string(resp.Body()), re.Express)
 		if value == nil && len(value.([][]string)) < 1 {
 			value = ""
@@ -395,6 +400,11 @@ func (re RegularExpression) Extract(resp *fasthttp.Response, globalVar *sync.Map
 		value = tools.JsonPath(string(resp.Body()), re.Express)
 		globalVar.Store(name, value)
 	case HeaderExtract:
+		if re.Express == "" {
+			value = ""
+			globalVar.Store(name, value)
+			return
+		}
 		value = tools.MatchString(resp.Header.String(), re.Express, re.Index)
 		globalVar.Store(name, value)
 	case CodeExtract:
