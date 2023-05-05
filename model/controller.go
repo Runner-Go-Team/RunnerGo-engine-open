@@ -87,10 +87,10 @@ func (ic *Event) PerForm(value string) (result, msg string) {
 	case NotNULL:
 		if value != "" {
 			result = Success
-			msg = ic.Val + " " + NotNULL + " " + value + "  成功"
+			msg = ic.Var + " " + NotNULL + " " + value + "  成功"
 		} else {
 			result = Failed
-			msg = ic.Val + " " + NotNULL + " " + value + "  失败"
+			msg = ic.Var + " " + NotNULL + " " + value + "  失败"
 		}
 	default:
 		result = Failed

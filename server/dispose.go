@@ -189,7 +189,11 @@ func TaskDecomposition(plan *model.Plan, wg *sync.WaitGroup, resultDataMsgCh cha
 		p.UseFile()
 
 	}
-
+	if scene.Prepositions != nil && len(scene.Prepositions) > 0 {
+		for _, preposition := range scene.Prepositions {
+			log.Logger.Debug("preposition:   ", preposition)
+		}
+	}
 	var reportMsg = &model.ResultDataMsg{}
 	if plan.MachineNum <= 0 {
 		plan.MachineNum = 1
