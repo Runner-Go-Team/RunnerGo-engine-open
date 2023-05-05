@@ -7,13 +7,18 @@ import (
 )
 
 func TestFindDestStr(t *testing.T) {
-	str := "\"result_code\": 200,"
-	rex := "\"result_code\": [0-9]{3},"
+	//str := "{\"code\":0,\"data\":123, \"abc\": {\"token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtb2JpbGUiOiIxNTM3Mjg3NjA5MiIsInZlcl9jb2RlIjoiMTIzNCIsImV4cCI6MTY2MDY1MTY4OCwiaXNzIjoicHJvOTExIn0.D73rBvMuFiM030UyF5Mveayhe1ahpAHOtEMMwsmfN78\"},\"msg\":\"success\"}"
+	//rex := "{\"code\": 0,{\"data\":[0-9]+,"
+	//rex := "\"data\":[0-9]+,"
+	str := "code:*5512057844, code:*4444444,"
+	rex := "code:(.+?),"
 	//re := regexp.MustCompile(rex)
-	FindDestStr(str, rex)
+	//result := FindAllDestStr(str, rex)
+	//fmt.Println(result)
 	//buf := "abc azc a7c aac 888 a9c  tac"
-	//compileRegex = regexp.MustCompile(`a[]0-9]c`)
-	//result = compileRegex.FindAllStringSubmatch(buf, -1)
+	compileRegex := regexp.MustCompile(rex)
+	result := compileRegex.FindAllStringSubmatch(str, 3)
+	fmt.Println("result:    ", result)
 	//fmt.Println("111111111111", result)
 }
 
@@ -44,7 +49,9 @@ func TestJsonPath(t *testing.T) {
 	fmt.Println(value)
 }
 
-func TestDecode(t *testing.T) {
-	str := "\\u0031\\u0032\\u0033\\u0031\\u0032\\u0033\\u0031\\u0033"
-	Decode(str)
+func TestMatchString(t *testing.T) {
+	str := "aab:cccc\n" +
+		"aab:ddd\n"
+	s := MatchString(str, "aab:cccc\naab:(.*?)\n", 0)
+	fmt.Println(s)
 }

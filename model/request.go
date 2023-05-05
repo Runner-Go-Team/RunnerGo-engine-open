@@ -353,6 +353,7 @@ type RegularExpression struct {
 	Type      int         `json:"type"`       // 0 正则  1 json 2 header
 	Var       string      `json:"var"`        // 变量
 	Express   string      `json:"express"`    // 表达式
+	Index     int         `json:"index"`      // 正则时提取第几个值
 	Val       interface{} `json:"val"`        // 值
 }
 
@@ -385,14 +386,16 @@ func (re RegularExpression) Extract(resp *fasthttp.Response, globalVar *sync.Map
 	}
 	switch re.Type {
 	case RegExtract:
-		value = tools.FindDestStr(string(resp.Body()), re.Express)
+		value = tools.FindAllDestStr(string(resp.Body()), re.Express)
+		if value == nil && len(value.([][]string)) < 1 {
+			value = ""
+		}
 		globalVar.Store(name, value)
 	case JsonExtract:
 		value = tools.JsonPath(string(resp.Body()), re.Express)
 		globalVar.Store(name, value)
 	case HeaderExtract:
-		re.Express = re.Express + "\r"
-		value = tools.FindDestStr(resp.Header.String(), re.Express)
+		value = tools.MatchString(resp.Header.String(), re.Express, re.Index)
 		globalVar.Store(name, value)
 	case CodeExtract:
 		value = resp.StatusCode()
