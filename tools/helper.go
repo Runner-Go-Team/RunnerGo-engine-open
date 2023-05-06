@@ -72,40 +72,49 @@ func VariablesMatch(str string) (value string) {
 
 // FindDestStr 匹配规则
 func FindDestStr(str string, rex string) (result string) {
-	if strings.Contains(rex, "(.*?)") {
-		compileRegex := regexp.MustCompile(rex)
-		matchArr := compileRegex.FindStringSubmatch(str)
-		if len(matchArr) > 0 {
-			result = matchArr[len(matchArr)-1]
-		}
-		return
-	} else if strings.Contains(rex, "[0-9]+") {
-		compileRegex := regexp.MustCompile(rex)
-		matchArr := compileRegex.FindStringSubmatch(str)
-		if len(matchArr) > 0 {
-			result = matchArr[len(matchArr)-1]
-		}
-		rex = "[0-9]+"
-		compileRegex = regexp.MustCompile(rex)
-		matchArr = compileRegex.FindStringSubmatch(result)
-		if len(matchArr) > 0 {
-			result = matchArr[len(matchArr)-1]
-		}
-		return
+	defer DeferPanic(fmt.Sprintf("正则表达式书写错误： %s", rex))
+	compileRegex := regexp.MustCompile(rex)
+	matchArr := compileRegex.FindStringSubmatch(str)
+	if len(matchArr) > 0 {
+		result = matchArr[len(matchArr)-1]
 	}
 	return
 }
 
 func DeferPanic(msg string) {
 	if err := recover(); err != nil {
-		log.Logger.Error(msg)
+		log.Logger.Error(fmt.Sprintf("%s ：%s", msg, err))
 	}
 }
 
 // FindAllDestStr 匹配所有的
 func FindAllDestStr(str, rex string) (result [][]string) {
+	defer DeferPanic(fmt.Sprintf("正则表达式书写错误： %s", rex))
 	compileRegex := regexp.MustCompile(rex)
 	result = compileRegex.FindAllStringSubmatch(str, -1)
+	return
+}
+
+func MatchString(str, rex string, index int) (value string) {
+	defer DeferPanic(fmt.Sprintf("正则表达式书写错误： %s", rex))
+	values := FindAllDestStr(str, rex)
+	if index <= 0 {
+		for _, v := range values {
+			value = value + v[1]
+		}
+		return
+	}
+
+	index = index - 1
+	if index >= len(values) {
+		index = len(values) - 1
+	}
+
+	if index < 0 {
+		value = ""
+		return
+	}
+	value = values[index][1]
 	return
 }
 

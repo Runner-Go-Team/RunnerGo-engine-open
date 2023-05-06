@@ -44,7 +44,7 @@ mongo:
 
 
 machine:
-  maxGoroutines: 20005
+  maxGoroutines: 5000
   serverType: 1
   netName: ""
   diskName: ""

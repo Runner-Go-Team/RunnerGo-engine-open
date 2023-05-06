@@ -2,6 +2,7 @@ package tools
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 	"time"
 )
@@ -10,14 +11,15 @@ func TestFindDestStr(t *testing.T) {
 	//str := "{\"code\":0,\"data\":123, \"abc\": {\"token\":\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtb2JpbGUiOiIxNTM3Mjg3NjA5MiIsInZlcl9jb2RlIjoiMTIzNCIsImV4cCI6MTY2MDY1MTY4OCwiaXNzIjoicHJvOTExIn0.D73rBvMuFiM030UyF5Mveayhe1ahpAHOtEMMwsmfN78\"},\"msg\":\"success\"}"
 	//rex := "{\"code\": 0,{\"data\":[0-9]+,"
 	//rex := "\"data\":[0-9]+,"
-	str := "https://iam-int.hualife.cc:8081/#/dashboard?code=5512057844"
-	rex := "https://iam-int.hualife.cc:8081/#/dashboard?code=[0-9]+"
+	str := "code:*5512057844, code:*4444444,"
+	rex := "code:(.+?),"
 	//re := regexp.MustCompile(rex)
-	result := FindAllDestStr(str, rex)
-	fmt.Println(result)
+	//result := FindAllDestStr(str, rex)
+	//fmt.Println(result)
 	//buf := "abc azc a7c aac 888 a9c  tac"
-	//compileRegex = regexp.MustCompile(`a[]0-9]c`)
-	//result = compileRegex.FindAllStringSubmatch(buf, -1)
+	compileRegex := regexp.MustCompile(rex)
+	result := compileRegex.FindAllStringSubmatch(str, 3)
+	fmt.Println("result:    ", result)
 	//fmt.Println("111111111111", result)
 }
 
@@ -46,4 +48,11 @@ func TestJsonPath(t *testing.T) {
 	str := "{\n \"data\": {\n  \"result\": \"不支持当前浏览器版本，目前终端只支持：[\\\"ie8\\\",\\\"谷歌\\\",\\\"ie10\\\",\\\"ie9\\\",\\\"ie11\\\"],您当前的浏览器版本为：Unknown\",\n  \"url\": \"https://iam-int.hualife.cc:8081/#/dashboard?code=5512057844\"\n },\n \"result_code\": \"200\",\n \"global_request_id\": \"9588775566asa5444444\",\n \"current_request_id\": \"a55554445sd554555455s\",\n \"result_message\": \"成功\"\n\n}"
 	value := JsonPath(str, "data.url")
 	fmt.Println(value)
+}
+
+func TestMatchString(t *testing.T) {
+	str := "aab:cccc\n" +
+		"aab:ddd\n"
+	s := MatchString(str, "aab:cccc\naab:(.*?)\n", 0)
+	fmt.Println(s)
 }
