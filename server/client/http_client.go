@@ -51,14 +51,14 @@ func HTTPRequest(method, url string, body *model.Body, query *model.Query, heade
 	// set auth
 	auth.SetAuth(req)
 	resp = fasthttp.AcquireResponse()
-
 	startTime = time.Now()
 	// 发送请求
-	if httpApiSetup.IsRedirects == 0 {
-		err = client.DoRedirects(req, resp, httpApiSetup.RedirectsNum)
-	} else {
-		err = client.Do(req, resp)
-	}
+	//if httpApiSetup.IsRedirects == 0 {
+	//	err = client.DoRedirects(req, resp, httpApiSetup.RedirectsNum)
+	//} else {
+	//	err = client.Do(req, resp)
+	//}
+	err = client.Do(req, resp)
 	endTime = time.Now()
 	requestTime = uint64(time.Since(startTime))
 	sendBytes = float64(req.Header.ContentLength()) / 1024
