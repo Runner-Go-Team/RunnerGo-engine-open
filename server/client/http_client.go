@@ -165,7 +165,7 @@ func fastClient(httpApiSetup *model.HttpApiSetup, auth *model.Auth) (fc *fasthtt
 		//	Concurrency:      0,
 		//	DNSCacheDuration: time.Hour,
 		//}).Dial,
-		MaxIdleConnDuration: config.Conf.Http.MaxIdleConnDuration * time.Millisecond,
+		//MaxIdleConnDuration: config.Conf.Http.MaxIdleConnDuration * time.Millisecond,
 		//MaxConnWaitTimeout:  config.Conf.Http.MaxConnWaitTimeout * time.Millisecond,
 	}
 	log.Logger.Debug("空闲等待连接时长：      ", fc.MaxIdleConnDuration, "    ", fc.MaxConnsPerHost)
