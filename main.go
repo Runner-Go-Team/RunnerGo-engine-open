@@ -127,7 +127,7 @@ func main() {
 		pyroscope.Config{
 			ApplicationName: "RunnerGo-engine-open",
 			ServerAddress:   "http://192.168.1.205:4040/",
-			//Logger:          pyroscope.StandardLogger,
+			Logger:          pyroscope.StandardLogger,
 			ProfileTypes: []pyroscope.ProfileType{
 				pyroscope.ProfileCPU,
 				pyroscope.ProfileAllocObjects,
