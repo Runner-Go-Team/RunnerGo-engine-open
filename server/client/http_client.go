@@ -161,6 +161,7 @@ func fastClient(httpApiSetup *model.HttpApiSetup, auth *model.Auth) (fc *fasthtt
 		NoDefaultUserAgentHeader: config.Conf.Http.NoDefaultUserAgentHeader,
 		TLSConfig:                tr,
 		MaxConnsPerHost:          config.Conf.Http.MaxConnPerHost,
+		MaxIdleConnDuration:      0,
 		//Dial: (&fasthttp.TCPDialer{
 		//	Concurrency:      0,
 		//	DNSCacheDuration: time.Hour,
