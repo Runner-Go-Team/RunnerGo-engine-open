@@ -102,10 +102,10 @@ func fastClient(httpApiSetup *model.HttpApiSetup, auth *model.Auth) (fc *fasthtt
 		}
 	}
 	fc = &fasthttp.Client{
-		Name:                     config.Conf.Http.Name,
-		NoDefaultUserAgentHeader: config.Conf.Http.NoDefaultUserAgentHeader,
-		TLSConfig:                tr,
-		MaxConnsPerHost:          config.Conf.Http.MaxConnPerHost,
+		Name: config.Conf.Http.Name,
+		//NoDefaultUserAgentHeader: config.Conf.Http.NoDefaultUserAgentHeader,
+		TLSConfig:       tr,
+		MaxConnsPerHost: config.Conf.Http.MaxConnPerHost,
 		//MaxIdleConnDuration:      config.Conf.Http.MaxIdleConnDuration * time.Millisecond,
 		//MaxConnWaitTimeout:       config.Conf.Http.MaxConnWaitTimeout * time.Millisecond,
 	}
