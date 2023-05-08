@@ -19,12 +19,12 @@ http:
 redis:
   address: "172.17.101.191:6398"
   password: "apipost"
-  db: 1
+  db: 15
 
 reportRedis:
   address: "172.17.101.191:6398"
   password: "apipost"
-  db: 1
+  db: 15
 
 kafka:
   address: "172.17.101.188:9092"
