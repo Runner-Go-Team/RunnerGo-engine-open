@@ -13,9 +13,8 @@ http:
   readTimeout: 5000                                          #fasthttp client完整响应读取(包括正文)的最大持续时间
   writeTimeout: 5000                                         #fasthttp client完整请求写入(包括正文)的最大持续时间
   noDefaultUserAgentHeader: true
-  maxConnPerHost: 10000
+  maxConnPerHost: 100
   MaxIdleConnDuration: 5000                                  #空闲的保持连接将在此持续时间后关闭
-  NoDefaultUserAgentHeader: 30000
 
 redis:
   address: "172.17.101.191:6398"
