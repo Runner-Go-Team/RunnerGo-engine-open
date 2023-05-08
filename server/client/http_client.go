@@ -16,7 +16,7 @@ import (
 func HTTPRequest(method, url string, body *model.Body, query *model.Query, header *model.Header, cookie *model.Cookie, auth *model.Auth, httpApiSetup *model.HttpApiSetup) (resp *fasthttp.Response, req *fasthttp.Request, requestTime uint64, sendBytes float64, err error, str string, startTime, endTime time.Time) {
 
 	client := fastClient(httpApiSetup, auth)
-	req = fasthttp.AcquireRequest()
+	req = &fasthttp.Request{}
 
 	// set method
 	req.Header.SetMethod(method)
@@ -50,7 +50,7 @@ func HTTPRequest(method, url string, body *model.Body, query *model.Query, heade
 
 	// set auth
 	auth.SetAuth(req)
-	resp = fasthttp.AcquireResponse()
+	resp = &fasthttp.Response{}
 	startTime = time.Now()
 	// 发送请求
 	//if httpApiSetup.IsRedirects == 0 {
@@ -67,6 +67,61 @@ func HTTPRequest(method, url string, body *model.Body, query *model.Query, heade
 	}
 	return
 }
+
+//func HTTPRequest(method, url string, body *model.Body, query *model.Query, header *model.Header, cookie *model.Cookie, auth *model.Auth, httpApiSetup *model.HttpApiSetup) (resp *fasthttp.Response, req *fasthttp.Request, requestTime uint64, sendBytes float64, err error, str string, startTime, endTime time.Time) {
+//
+//	client := fastClient(httpApiSetup, auth)
+//	req = fasthttp.AcquireRequest()
+//
+//	// set method
+//	req.Header.SetMethod(method)
+//	// set header
+//	header.SetHeader(req)
+//	cookie.SetCookie(req)
+//	urls := strings.Split(url, "//")
+//	if !strings.EqualFold(urls[0], model.HTTP) && !strings.EqualFold(urls[0], model.HTTPS) {
+//		url = model.HTTP + "//" + url
+//
+//	}
+//
+//	urlQuery := req.URI().QueryArgs()
+//
+//	if query.Parameter != nil {
+//		for _, v := range query.Parameter {
+//			if v.IsChecked != model.Open {
+//				continue
+//			}
+//			if !strings.Contains(url, v.Key) {
+//				by := v.ValueToByte()
+//				urlQuery.AddBytesV(v.Key, by)
+//				url = url + fmt.Sprintf("&%s=%s", v.Key, string(v.ValueToByte()))
+//			}
+//		}
+//	}
+//	// set url
+//	req.SetRequestURI(url)
+//	// set body
+//	str = body.SetBody(req)
+//
+//	// set auth
+//	auth.SetAuth(req)
+//	resp = fasthttp.AcquireResponse()
+//	startTime = time.Now()
+//	// 发送请求
+//	//if httpApiSetup.IsRedirects == 0 {
+//	//	err = client.DoRedirects(req, resp, httpApiSetup.RedirectsNum)
+//	//} else {
+//	//	err = client.Do(req, resp)
+//	//}
+//	err = client.Do(req, resp)
+//	endTime = time.Now()
+//	requestTime = uint64(time.Since(startTime))
+//	sendBytes = float64(req.Header.ContentLength()) / 1024
+//	if sendBytes <= 0 {
+//		sendBytes = float64(len(req.Body())) / 1024
+//	}
+//	return
+//}
 
 // 获取fasthttp客户端
 func fastClient(httpApiSetup *model.HttpApiSetup, auth *model.Auth) (fc *fasthttp.Client) {
