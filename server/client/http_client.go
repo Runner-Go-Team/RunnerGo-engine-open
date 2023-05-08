@@ -109,6 +109,9 @@ func fastClient(httpApiSetup *model.HttpApiSetup, auth *model.Auth) (fc *fasthtt
 		//MaxIdleConnDuration:      config.Conf.Http.MaxIdleConnDuration * time.Millisecond,
 		//MaxConnWaitTimeout:       config.Conf.Http.MaxConnWaitTimeout * time.Millisecond,
 	}
+	//fc2 := &fasthttp.PipelineClient{
+	//
+	//}
 	if httpApiSetup.WriteTimeOut != 0 {
 		fc.WriteTimeout = time.Duration(httpApiSetup.WriteTimeOut) * time.Millisecond
 	}
