@@ -8,6 +8,7 @@ import (
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/tools"
 	"github.com/gin-gonic/gin"
+	"github.com/pyroscope-io/client/pyroscope"
 	"go.uber.org/zap"
 	"net/http"
 	"os"
@@ -74,8 +75,6 @@ func initService() {
 	kpRunnerService := &http.Server{
 		Addr:           config.Conf.Http.Address,
 		Handler:        GinRouter,
-		ReadTimeout:    config.Conf.Http.ReadTimeout * time.Millisecond,
-		WriteTimeout:   config.Conf.Http.WriteTimeout * time.Millisecond,
 		MaxHeaderBytes: 1 << 20,
 	}
 
@@ -121,5 +120,22 @@ func initService() {
 func main() {
 	flag.IntVar(&mode, "m", 0, "读取环境变量还是读取配置文件")
 	flag.Parse()
+	// 性能分析
+	_, err := pyroscope.Start(
+		pyroscope.Config{
+			ApplicationName: "RunnerGo-engine-open",
+			ServerAddress:   "http://192.168.1.205:4040/",
+			Logger:          pyroscope.StandardLogger,
+			ProfileTypes: []pyroscope.ProfileType{
+				pyroscope.ProfileCPU,
+				pyroscope.ProfileAllocObjects,
+				pyroscope.ProfileAllocSpace,
+				pyroscope.ProfileInuseObjects,
+				pyroscope.ProfileInuseSpace,
+			},
+		})
+	if err != nil {
+		log.Logger.Error("监控信息出错：   ", err.Error())
+	}
 	initService()
 }

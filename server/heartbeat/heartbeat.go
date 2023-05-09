@@ -6,7 +6,6 @@ import (
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
 	gonet "net"
-	"runtime"
 	"strings"
 	"time"
 
@@ -36,22 +35,22 @@ func CheckHeartBeat() *HeartBeat {
 	heartbeat.CreateTime = time.Now().Unix()
 	heartbeat.FmtCreateTime = time.Now()
 	heartbeat.ServerType = config.Conf.Machine.ServerType
-	heartbeat.CurrentGoroutines = runtime.NumGoroutine()
+	//heartbeat.CurrentGoroutines = runtime.NumGoroutine()
 	return heartbeat
 }
 
 type HeartBeat struct {
-	Name              string        `json:"name"`
-	CpuUsage          float64       `json:"cpu_usage"`
-	CpuLoad           *load.AvgStat `json:"cpu_load"`
-	MemInfo           []MemInfo     `json:"mem_info"`
-	Networks          []Network     `json:"networks"`
-	DiskInfos         []DiskInfo    `json:"disk_infos"`
-	MaxGoroutines     int           `json:"max_goroutines"`
-	CurrentGoroutines int           `json:"current_goroutines"`
-	ServerType        int           `json:"server_type"`
-	CreateTime        int64         `json:"create_time"`
-	FmtCreateTime     time.Time     `json:"fmt_create_time"`
+	Name          string        `json:"name"`
+	CpuUsage      float64       `json:"cpu_usage"`
+	CpuLoad       *load.AvgStat `json:"cpu_load"`
+	MemInfo       []MemInfo     `json:"mem_info"`
+	Networks      []Network     `json:"networks"`
+	DiskInfos     []DiskInfo    `json:"disk_infos"`
+	MaxGoroutines int           `json:"max_goroutines"`
+	//CurrentGoroutines int           `json:"current_goroutines"`
+	ServerType    int       `json:"server_type"`
+	CreateTime    int64     `json:"create_time"`
+	FmtCreateTime time.Time `json:"fmt_create_time"`
 }
 
 type MemInfo struct {
