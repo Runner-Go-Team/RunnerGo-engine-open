@@ -29,6 +29,7 @@ func HttpSend(event model.Event, api model.Api, globalVar *sync.Map, requestColl
 	if api.HttpApiSetup == nil {
 		api.HttpApiSetup = new(model.HttpApiSetup)
 	}
+
 	resp, req, requestTime, sendBytes, err, str, startTime, endTime := client.HTTPRequest(api.Method, api.Request.URL, api.Request.Body, api.Request.Query,
 		api.Request.Header, api.Request.Cookie, api.Request.Auth, api.HttpApiSetup)
 	defer fasthttp.ReleaseResponse(resp) // 用完需要释放资源
@@ -48,15 +49,10 @@ func HttpSend(event model.Event, api model.Api, globalVar *sync.Map, requestColl
 			regex = append(regex, reg)
 		}
 	}
-	//log.Logger.Debug("api:::::     ", api.Name, "\nbody:      ", string(resp.Body()), "\nREGEX:    ", regex)
 	if err != nil {
 		isSucceed = false
 		errMsg = err.Error()
 	}
-	//if resp.StatusCode() != 200 {
-	//	isSucceed = false
-	//	errMsg = string(resp.Body())
-	//}
 	var assertionMsgList []model.AssertionMsg
 	// 断言验证
 

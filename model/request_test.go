@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/lixiangyun/go-ntlm"
-	"github.com/thedevsaddam/gojsonq"
+	"net/http"
+	"sync"
 	"testing"
+	"time"
 )
 
 func TestInsert(t *testing.T) {
@@ -44,9 +46,56 @@ func TestQueryPlanStatus(t *testing.T) {
 	}
 }
 
+func Current(current int, duration time.Duration, ch chan bool, wg *sync.WaitGroup) {
+	ticker := time.NewTicker(duration * time.Second)
+	for i := 0; i <= current; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for {
+				select {
+				case <-ticker.C:
+					return
+				default:
+					req, _ := http.NewRequest("GET", "http://demo-api.runnergo.cn", nil)
+					var client = new(http.Client)
+					start := time.Now().UnixMilli()
+					_, _ = client.Do(req)
+					requestTime := time.Now().UnixMilli() - start
+					fmt.Println(requestTime)
+					//default:
+					ch <- true
+
+				}
+			}
+		}()
+
+	}
+}
+
 func TestBody_SetBody(t *testing.T) {
-	str := "{\n    \"scene_id\": 1415, \n    \"uuid\": \"0570c324-2bf3-4c33-b92d-8d8d7ab00f66\", \n    \"report_id\": 123, \n    \"team_id\": 158, \n    \"scene_name\": \"主流程\", \n    \"version\": 0, \n    \"debug\": \"\", \n    \"enable_plan_configuration\": false}"
-	a := gojsonq.New().FromString(str)
-	district := a.Find("report_id")
-	fmt.Println(district)
+	//str := "{\n    \"scene_id\": 1415, \n    \"uuid\": \"0570c324-2bf3-4c33-b92d-8d8d7ab00f66\", \n    \"report_id\": 123, \n    \"team_id\": 158, \n    \"scene_name\": \"主流程\", \n    \"version\": 0, \n    \"debug\": \"\", \n    \"enable_plan_configuration\": false}"
+	//a := gojsonq.New().FromString(str)
+	//district := a.Find("report_id")
+	//fmt.Println(district)
+
+	var wg = new(sync.WaitGroup)
+	wg.Add(1)
+	var num = 0
+	str := time.Now().UnixMilli()
+	var ch = make(chan bool, 10000)
+	Current(200, 30, ch, wg)
+	wg.Wait()
+	en := time.Now().UnixMilli() - str
+	fmt.Println("sq : ", en, "    ", num)
+	for {
+		select {
+		case i := <-ch:
+			if i {
+				num++
+				fmt.Println("sq : ", en, "    ", num)
+			}
+		}
+	}
+
 }

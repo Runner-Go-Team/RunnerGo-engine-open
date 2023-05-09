@@ -120,10 +120,16 @@ func (api *Api) GlobalToRequest() {
 }
 
 type HttpApiSetup struct {
-	IsRedirects  int64 `json:"is_redirects"`   // 是否跟随重定向 0: 是   1：否
-	RedirectsNum int   `json:"redirects_num"`  // 重定向次数>= 1; 默认为3
-	ReadTimeOut  int64 `json:"read_time_out"`  // 请求读取超时时间
-	WriteTimeOut int64 `json:"write_time_out"` // 响应读取超时时间
+	ClientName          string `json:"client_name"`
+	IsRedirects         int64  `json:"is_redirects"`   // 是否跟随重定向 0: 是   1：否
+	RedirectsNum        int    `json:"redirects_num"`  // 重定向次数>= 1; 默认为3
+	ReadTimeOut         int64  `json:"read_time_out"`  // 请求读取超时时间
+	WriteTimeOut        int64  `json:"write_time_out"` // 响应读取超时时间
+	KeepAlive           bool   `json:"keep_alive"`
+	MaxIdleConnDuration int64  `json:"max_idle_conn_duration"`
+	MaxConnPerHost      int    `json:"max_conn_per_host"`
+	UserAgent           bool   `json:"user_agent"`
+	MaxConnWaitTimeout  int64  `json:"max_conn_wait_timeout"`
 }
 
 type Request struct {
