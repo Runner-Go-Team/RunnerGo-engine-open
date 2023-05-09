@@ -10,11 +10,6 @@ heartbeat:
 http:
   address: "0.0.0.0:8002"                                    #本服务host
   port: 8002                                               #本服务端口
-  readTimeout: 5000                                          #fasthttp client完整响应读取(包括正文)的最大持续时间
-  writeTimeout: 5000                                         #fasthttp client完整请求写入(包括正文)的最大持续时间
-  noDefaultUserAgentHeader: true
-  maxConnPerHost: 10000
-  MaxIdleConnDuration: 5000                                  #空闲的保持连接将在此持续时间后关闭
 
 redis:
   address: "172.17.101.191:6398"

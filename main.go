@@ -75,8 +75,6 @@ func initService() {
 	kpRunnerService := &http.Server{
 		Addr:           config.Conf.Http.Address,
 		Handler:        GinRouter,
-		ReadTimeout:    config.Conf.Http.ReadTimeout * time.Millisecond,
-		WriteTimeout:   config.Conf.Http.WriteTimeout * time.Millisecond,
 		MaxHeaderBytes: 1 << 20,
 	}
 
@@ -123,7 +121,7 @@ func main() {
 	flag.IntVar(&mode, "m", 0, "读取环境变量还是读取配置文件")
 	flag.Parse()
 	// 性能分析
-	pyroscope.Start(
+	_, err := pyroscope.Start(
 		pyroscope.Config{
 			ApplicationName: "RunnerGo-engine-open",
 			ServerAddress:   "http://192.168.1.205:4040/",
@@ -136,5 +134,8 @@ func main() {
 				pyroscope.ProfileInuseSpace,
 			},
 		})
+	if err != nil {
+		log.Logger.Error("监控信息出错：   ", err.Error())
+	}
 	initService()
 }

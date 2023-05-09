@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"github.com/Runner-Go-Team/RunnerGo-engine-open/config"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
@@ -21,10 +20,14 @@ var (
 
 func HTTPRequest(method, url string, body *model.Body, query *model.Query, header *model.Header, cookie *model.Cookie, auth *model.Auth, httpApiSetup *model.HttpApiSetup) (resp *fasthttp.Response, req *fasthttp.Request, requestTime uint64, sendBytes float64, err error, str string, startTime, endTime time.Time) {
 	var client *fasthttp.Client
-	newKeepAlive(httpApiSetup, auth)
-	//client := fastClient(httpApiSetup, auth)
-	client = KeepAliveClient
 	req = fasthttp.AcquireRequest()
+	if httpApiSetup.KeepAlive {
+		newKeepAlive(httpApiSetup, auth)
+		client = KeepAliveClient
+		req.Header.Set("Connection", "keep-alive")
+	} else {
+		client = fastClient(httpApiSetup, auth)
+	}
 
 	// set method
 	req.Header.SetMethod(method)
@@ -110,23 +113,24 @@ func fastClient(httpApiSetup *model.HttpApiSetup, auth *model.Auth) (fc *fasthtt
 		}
 	}
 	fc = &fasthttp.Client{
-		Name:                     config.Conf.Http.Name,
-		NoDefaultUserAgentHeader: config.Conf.Http.NoDefaultUserAgentHeader,
-		TLSConfig:                tr,
-		MaxConnsPerHost:          config.Conf.Http.MaxConnPerHost,
-		MaxIdleConnDuration:      1 * time.Minute,
-		//Dial: (&fasthttp.TCPDialer{
-		//	Concurrency:      0,
-		//	DNSCacheDuration: time.Hour,
-		//}).Dial,
-		//MaxIdleConnDuration: config.Conf.Http.MaxIdleConnDuration * time.Millisecond,
-		//MaxConnWaitTimeout:  config.Conf.Http.MaxConnWaitTimeout * time.Millisecond,
+		TLSConfig: tr,
 	}
-	log.Logger.Debug("空闲等待连接时长：      ", fc.MaxIdleConnDuration, "    ", fc.MaxConnsPerHost)
+	if httpApiSetup.ClientName != "" {
+		fc.Name = httpApiSetup.ClientName
+	}
+	if httpApiSetup.UserAgent {
+		fc.NoDefaultUserAgentHeader = false
+	}
+	if httpApiSetup.MaxIdleConnDuration != 0 {
+		fc.MaxIdleConnDuration = time.Duration(httpApiSetup.MaxIdleConnDuration) * time.Second
+	}
+	if httpApiSetup.MaxConnPerHost != 0 {
+		fc.MaxConnsPerHost = httpApiSetup.MaxConnPerHost
+	}
 
-	//fc2 := &fasthttp.PipelineClient{
-	//
-	//}
+	if httpApiSetup.MaxConnWaitTimeout != 0 {
+		fc.MaxConnWaitTimeout = time.Duration(httpApiSetup.MaxConnWaitTimeout) * time.Second
+	}
 	if httpApiSetup.WriteTimeOut != 0 {
 		fc.WriteTimeout = time.Duration(httpApiSetup.WriteTimeOut) * time.Millisecond
 	}
@@ -141,7 +145,7 @@ func fastClient(httpApiSetup *model.HttpApiSetup, auth *model.Auth) (fc *fasthtt
 func newKeepAlive(httpApiSetup *model.HttpApiSetup, auth *model.Auth) {
 	once.Do(func() {
 		tr := &tls.Config{InsecureSkipVerify: true}
-		if auth != nil || auth.Bidirectional != nil {
+		if auth != nil && auth.Bidirectional != nil {
 			switch auth.Type {
 			case model.Bidirectional:
 				tr.InsecureSkipVerify = false
@@ -172,23 +176,24 @@ func newKeepAlive(httpApiSetup *model.HttpApiSetup, auth *model.Auth) {
 			}
 		}
 		KeepAliveClient = &fasthttp.Client{
-			Name:                     config.Conf.Http.Name,
-			NoDefaultUserAgentHeader: config.Conf.Http.NoDefaultUserAgentHeader,
-			TLSConfig:                tr,
-			MaxConnsPerHost:          config.Conf.Http.MaxConnPerHost,
-			MaxIdleConnDuration:      5 * time.Minute,
-			//Dial: (&fasthttp.TCPDialer{
-			//	Concurrency:      0,
-			//	DNSCacheDuration: time.Hour,
-			//}).Dial,
-			//MaxIdleConnDuration: config.Conf.Http.MaxIdleConnDuration * time.Millisecond,
-			//MaxConnWaitTimeout:  config.Conf.Http.MaxConnWaitTimeout * time.Millisecond,
+			TLSConfig: tr,
 		}
-		log.Logger.Debug("空闲等待连接时长：      ", KeepAliveClient.MaxIdleConnDuration, "    ", KeepAliveClient.MaxConnsPerHost)
+		if httpApiSetup.ClientName != "" {
+			KeepAliveClient.Name = httpApiSetup.ClientName
+		}
+		if httpApiSetup.UserAgent {
+			KeepAliveClient.NoDefaultUserAgentHeader = false
+		}
+		if httpApiSetup.MaxIdleConnDuration != 0 {
+			KeepAliveClient.MaxIdleConnDuration = time.Duration(httpApiSetup.MaxIdleConnDuration) * time.Second
+		}
+		if httpApiSetup.MaxConnPerHost != 0 {
+			KeepAliveClient.MaxConnsPerHost = httpApiSetup.MaxConnPerHost
+		}
 
-		//fc2 := &fasthttp.PipelineClient{
-		//
-		//}
+		if httpApiSetup.MaxConnWaitTimeout != 0 {
+			KeepAliveClient.MaxConnWaitTimeout = time.Duration(httpApiSetup.MaxConnWaitTimeout) * time.Second
+		}
 		if httpApiSetup.WriteTimeOut != 0 {
 			KeepAliveClient.WriteTimeout = time.Duration(httpApiSetup.WriteTimeOut) * time.Millisecond
 		}

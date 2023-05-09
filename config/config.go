@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/viper"
 	"os"
 	"strconv"
-	"time"
 )
 
 var Conf Config
@@ -45,15 +44,7 @@ type Heartbeat struct {
 	Resources int64  `yaml:"resources"`
 }
 type Http struct {
-	Name                     string        `yaml:"name"`
-	Address                  string        `yaml:"address"`
-	Version                  string        `yaml:"version"`
-	ReadTimeout              time.Duration `yaml:"readTimeout"`
-	WriteTimeout             time.Duration `yaml:"writeTimeout"`
-	MaxConnPerHost           int           `yaml:"maxConnPerHost"`
-	MaxIdleConnDuration      time.Duration
-	MaxConnWaitTimeout       time.Duration
-	NoDefaultUserAgentHeader bool `yaml:"noDefaultUserAgentHeader"`
+	Address string `yaml:"address"`
 }
 
 type Kafka struct {
@@ -291,46 +282,11 @@ func initKafka() {
 
 func initHttp() {
 	var http Http
-	http.Name = os.Getenv("RG_ENGINE_HTTP_NAME")
 	address := os.Getenv("RG_ENGINE_HTTP_ADDRESS")
 	if address == "" {
 		address = HttpAddress
 	}
 	http.Address = address
-	http.Version = os.Getenv("HTTP_VERSION")
-	readTimeout, err := strconv.ParseInt(os.Getenv("HTTP_READ_TIMEOUT"), 10, 64)
-	if err != nil {
-		readTimeout = 0
-	}
-	http.ReadTimeout = time.Duration(readTimeout)
 
-	writeTimeout, err := strconv.ParseInt(os.Getenv("HTTP_WRITE_TIMEOUT"), 10, 64)
-	if err != nil {
-		writeTimeout = 0
-	}
-	http.WriteTimeout = time.Duration(writeTimeout)
-
-	maxConnPerHost, err := strconv.Atoi(os.Getenv("HTTP_MAX_CONN_PER_HOST"))
-	if err != nil {
-		maxConnPerHost = 0
-	}
-	http.MaxConnPerHost = maxConnPerHost
-
-	httpMaxIdleConnDuration, err := strconv.ParseInt(os.Getenv("HTTP_MAX_IDLE_CONN_DURATION"), 10, 64)
-	if err != nil {
-		httpMaxIdleConnDuration = 0
-	}
-	http.MaxIdleConnDuration = time.Duration(httpMaxIdleConnDuration)
-
-	httpMaxConnWaitTimeout, err := strconv.ParseInt(os.Getenv("HTTP_MAX_CONN_WAIT_TIMEOUT"), 10, 64)
-	if err != nil {
-		httpMaxConnWaitTimeout = 0
-	}
-	http.MaxConnWaitTimeout = time.Duration(httpMaxConnWaitTimeout)
-	if os.Getenv("HTTP_NO_DEFAULT_USER_AGENT_HEADER") == "true" {
-		http.NoDefaultUserAgentHeader = true
-	} else {
-		http.NoDefaultUserAgentHeader = false
-	}
 	Conf.Http = http
 }
