@@ -79,12 +79,15 @@ func ConcurrentModel(wg *sync.WaitGroup, scene model.Scene, configuration *model
 						concurrentMap.Store(j, true)
 						wg.Add(1)
 						currentWg.Add(1)
+						scene.Debug = debug
 						go func(concurrentId, concurrent int64, useConfiguration *model.Configuration, currentScene model.Scene) {
 							var sceneWg = &sync.WaitGroup{}
 							golink.DisposeScene(wg, sceneWg, model.PlanType, currentScene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent, currentTime)
 							sceneWg.Wait()
 							concurrentMap.Delete(concurrentId)
+							currentWg.Done()
 							wg.Done()
+
 						}(j, concurrent, configuration, scene)
 					}
 					currentWg.Wait()
@@ -150,13 +153,14 @@ func ConcurrentModel(wg *sync.WaitGroup, scene model.Scene, configuration *model
 										break
 									}
 								}
+								currentScene.Debug = debug
 								var sceneWg = &sync.WaitGroup{}
 								golink.DisposeScene(wg, sceneWg, model.PlanType, currentScene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent, currentTime)
 								sceneWg.Wait()
-
 							}
 							concurrentMap.Store(concurrentId, false)
 							wg.Done()
+							currentWg.Done()
 						}(i, configuration, scene)
 					}
 				}
