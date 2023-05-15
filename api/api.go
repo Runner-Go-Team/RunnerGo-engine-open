@@ -94,3 +94,23 @@ func RunApi(c *gin.Context) {
 	go server.DebugApi(runApi)
 	global.ReturnMsg(c, http.StatusOK, "调试接口", uid)
 }
+
+func RunSql(c *gin.Context) {
+	var runSql = model.SQL{}
+	err := c.ShouldBindJSON(&runSql)
+
+	if err != nil {
+		global.ReturnMsg(c, http.StatusBadRequest, "数据格式不正确", err.Error())
+		return
+	}
+
+	uid := uuid.NewV4()
+	runSql.Uuid = uid
+	runSql.Debug = model.All
+
+	requestJson, _ := json.Marshal(&runSql)
+
+	log.Logger.Info(fmt.Sprintf("机器ip:%s, 调试sql：    ", middlewares.LocalIp), string(requestJson))
+	go server.DebugSql(runSql)
+	global.ReturnMsg(c, http.StatusOK, "调试接口", uid)
+}

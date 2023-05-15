@@ -6,7 +6,7 @@ import (
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/server/client"
 )
 
-func SqlSend(action, sqls string, sqlInfo model.SqlInfo) {
+func SqlSend(action, sqls string, sqlInfo model.MysqlDatabaseInfo) {
 	//var (
 	//	isSucceed       = true
 	//	errCode         = model.NoError

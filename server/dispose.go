@@ -416,3 +416,93 @@ func DebugApi(debugApi model.Api) {
 	log.Logger.Info(fmt.Sprintf("机器ip:%s, 团队：%s, 接口：%s, 调试结束！", middlewares.LocalIp, debugApi.TeamId, debugApi.Name))
 
 }
+
+// DebugSql sql调试
+func DebugSql(debugSql model.SQL) {
+
+	var globalVar = new(sync.Map)
+
+	if debugSql.GlobalVariable != nil {
+		debugSql.GlobalVariable.InitReplace()
+		if debugSql.Configuration == nil {
+			debugSql.Configuration = new(model.Configuration)
+		}
+		if debugSql.Configuration.SceneVariable == nil {
+			debugSql.Configuration.SceneVariable = new(model.GlobalVariable)
+		}
+		debugSql.GlobalVariable.SupToSub(debugSql.Configuration.SceneVariable)
+		debugSql.SqlVariable = new(model.GlobalVariable)
+		debugSql.Configuration.SceneVariable.SupToSub(debugSql.SqlVariable)
+		debugSql.SqlVariable.InitReplace()
+	} else {
+		if debugSql.Configuration != nil && debugSql.Configuration.SceneVariable != nil {
+			debugSql.Configuration.SceneVariable.InitReplace()
+			debugSql.SqlVariable = new(model.GlobalVariable)
+			debugSql.Configuration.SceneVariable.SupToSub(debugSql.SqlVariable)
+
+		}
+	}
+
+	if debugSql.Configuration != nil {
+		if debugSql.Configuration.ParameterizedFile != nil {
+			if debugSql.Configuration.ParameterizedFile.VariableNames == nil {
+				debugSql.Configuration.ParameterizedFile.VariableNames = new(model.VariableNames)
+			}
+			debugSql.Configuration.ParameterizedFile.UseFile()
+
+			if debugSql.Configuration.ParameterizedFile.VariableNames.VarMapList != nil {
+				for k, v := range debugSql.Configuration.ParameterizedFile.VariableNames.VarMapList {
+					globalVar.Store(k, v[0])
+				}
+			}
+		}
+	}
+
+	if debugSql.SqlVariable.Variable != nil {
+		for _, variable := range debugSql.Configuration.SceneVariable.Variable {
+			if variable.IsChecked != model.Open {
+				continue
+			}
+			globalVar.Store(variable.Key, variable.Value)
+		}
+
+	}
+
+	event := model.Event{}
+	event.SQL = debugSql
+	event.TeamId = debugSql.TeamId
+	event.Weight = 100
+	event.Id = "接口调试"
+	event.Debug = model.All
+	// 新建mongo客户端连接，用于发送debug数据
+	mongoClient, err := model.NewMongoClient(
+		config.Conf.Mongo.DSN,
+		middlewares.LocalIp)
+	if err != nil {
+		log.Logger.Error(fmt.Sprintf("机器ip:%s, 连接mongo错误：%s", middlewares.LocalIp, err.Error()))
+		return
+	}
+	globalVar.Range(func(key, value any) bool {
+		values := tools.FindAllDestStr(value.(string), "{{(.*?)}}")
+		if values == nil {
+			return true
+		}
+		for _, v := range values {
+			if len(v) < 2 {
+				return true
+			}
+			realVar := tools.ParsFunc(v[1])
+			if realVar != v[1] {
+				value = strings.Replace(value.(string), v[0], realVar, -1)
+				globalVar.Store(key, value)
+			}
+		}
+		return true
+	})
+	defer mongoClient.Disconnect(context.TODO())
+	mongoCollection := model.NewCollection(config.Conf.Mongo.DataBase, config.Conf.Mongo.ApiDebugTable, mongoClient)
+
+	golink.DisposeRequest(nil, nil, nil, globalVar, event, mongoCollection)
+	log.Logger.Info(fmt.Sprintf("机器ip:%s, 团队：%s, sql：%s, 调试结束！", middlewares.LocalIp, debugSql.TeamId, debugSql.Name))
+
+}

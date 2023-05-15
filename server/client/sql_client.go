@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func SqlRequest(sqlInfo model.SqlInfo, action, sqls string) (resultMap map[string][]string, err error, startTime, endTime time.Time, requestTime uint64) {
+func SqlRequest(sqlInfo model.MysqlDatabaseInfo, action, sqls string) (resultMap map[string][]string, err error, startTime, endTime time.Time, requestTime uint64) {
 	db := newMysqlClient(sqlInfo)
 	if db == nil {
 		return
@@ -66,7 +66,7 @@ func SqlRequest(sqlInfo model.SqlInfo, action, sqls string) (resultMap map[strin
 	return
 }
 
-func newMysqlClient(sqlInfo model.SqlInfo) (db *sql.DB) {
+func newMysqlClient(sqlInfo model.MysqlDatabaseInfo) (db *sql.DB) {
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?%s", sqlInfo.User, sqlInfo.Password, sqlInfo.Host, sqlInfo.Port, sqlInfo.DB, sqlInfo.Charset)
 	db, err := sql.Open(sqlInfo.Type, dsn)
 	if err != nil {
