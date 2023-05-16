@@ -66,7 +66,7 @@ func SqlRequest(sqlInfo model.MysqlDatabaseInfo, sqls string) (db *sql.DB, resul
 		if errExec != nil {
 			log.Logger.Error("last err :   ", errExec)
 		}
-		result["rows_affected"] = last
+		result["last_insert_id"] = last
 		return
 	}
 
