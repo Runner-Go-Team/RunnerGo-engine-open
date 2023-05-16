@@ -24,7 +24,7 @@ type MysqlDatabaseInfo struct {
 	Host     string `json:"host"`
 	User     string `json:"user"`
 	Password string `json:"password"`
-	Port     string `json:"port"`
+	Port     int32  `json:"port"`
 	DbName   string `json:"db_name"`
 	Charset  string `json:"charset"`
 }
