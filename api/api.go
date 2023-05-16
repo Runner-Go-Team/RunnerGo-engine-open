@@ -113,7 +113,7 @@ func RunSql(c *gin.Context) {
 
 	log.Logger.Info(fmt.Sprintf("机器ip:%s, 调试sql：    ", middlewares.LocalIp), string(requestJson))
 	go server.DebugSql(runSql)
-	global.ReturnMsg(c, http.StatusOK, "调试接口", uid)
+	global.ReturnMsg(c, http.StatusOK, "调试sql", uid)
 }
 
 func RunMysqlConnection(c *gin.Context) {

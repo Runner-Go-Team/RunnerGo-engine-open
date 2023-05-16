@@ -21,14 +21,13 @@ func SqlSend(sql model.SQL, sqlInfo model.MysqlDatabaseInfo, mongoCollection *mo
 
 	db, result, err, startTime, endTime, requestTime := client.SqlRequest(sqlInfo, sql.SqlString)
 	defer db.Close()
-	if result == nil {
-		result = make(map[string]interface{})
-	}
+	results := make(map[string]interface{})
 	if sql.Debug == "all" {
-		result["uuid"] = sql.Uuid.String()
-		result["err"] = err
-		result["request_time"] = requestTime / uint64(time.Millisecond)
+		results["uuid"] = sql.Uuid.String()
+		results["err"] = err
+		results["request_time"] = requestTime / uint64(time.Millisecond)
+		results["sql_result"] = result
 	}
-	model.Insert(mongoCollection, result, middlewares.LocalIp)
+	model.Insert(mongoCollection, results, middlewares.LocalIp)
 	fmt.Println("time:     ", startTime, endTime)
 }
