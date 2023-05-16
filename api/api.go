@@ -7,6 +7,7 @@ import (
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
 	auto2 "github.com/Runner-Go-Team/RunnerGo-engine-open/model/auto"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/server/client"
 
 	"encoding/json"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/server"
@@ -113,4 +114,20 @@ func RunSql(c *gin.Context) {
 	log.Logger.Info(fmt.Sprintf("机器ip:%s, 调试sql：    ", middlewares.LocalIp), string(requestJson))
 	go server.DebugSql(runSql)
 	global.ReturnMsg(c, http.StatusOK, "调试接口", uid)
+}
+
+func RunMysqlConnection(c *gin.Context) {
+
+	var connection = model.MysqlDatabaseInfo{}
+	err := c.ShouldBindJSON(&connection)
+	if err != nil {
+
+	}
+	db, err := client.TestConnection(connection)
+	if db == nil || err != nil {
+		global.ReturnMsg(c, http.StatusBadRequest, "mysql链接数据不挣钱", err.Error())
+		return
+	}
+	db.Close()
+	global.ReturnMsg(c, http.StatusOK, "测试链接成功", err.Error())
 }

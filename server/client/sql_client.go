@@ -11,8 +11,8 @@ import (
 )
 
 func SqlRequest(sqlInfo model.MysqlDatabaseInfo, action, sqls string) (resultMap map[string][]string, err error, startTime, endTime time.Time, requestTime uint64) {
-	db := newMysqlClient(sqlInfo)
-	if db == nil {
+	db, err := newMysqlClient(sqlInfo)
+	if db == nil || err != nil {
 		return
 	}
 	startTime = time.Now()
@@ -66,12 +66,16 @@ func SqlRequest(sqlInfo model.MysqlDatabaseInfo, action, sqls string) (resultMap
 	return
 }
 
-func newMysqlClient(sqlInfo model.MysqlDatabaseInfo) (db *sql.DB) {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?%s", sqlInfo.User, sqlInfo.Password, sqlInfo.Host, sqlInfo.Port, sqlInfo.DB, sqlInfo.Charset)
-	db, err := sql.Open(sqlInfo.Type, dsn)
+func newMysqlClient(sqlInfo model.MysqlDatabaseInfo) (db *sql.DB, err error) {
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?%s", sqlInfo.User, sqlInfo.Password, sqlInfo.Host, sqlInfo.Port, sqlInfo.DbName, sqlInfo.Charset)
+	db, err = sql.Open(sqlInfo.Type, dsn)
 	if err != nil {
 		log.Logger.Error(fmt.Sprintf("%s数据库连接失败： %s", sqlInfo.Type, err.Error()))
 		return
 	}
 	return
+}
+
+func TestConnection(sqlInfo model.MysqlDatabaseInfo) (db *sql.DB, err error) {
+	return newMysqlClient(sqlInfo)
 }
