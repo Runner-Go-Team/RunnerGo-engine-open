@@ -29,15 +29,15 @@ func SqlSend(sql model.SQL, sqlInfo model.MysqlDatabaseInfo, mongoCollection *mo
 		results["request_time"] = requestTime / uint64(time.Millisecond)
 		results["sql_result"] = result
 		if err != nil {
-			results["status"] = "success"
+			results["status"] = []string{"success"}
 		} else {
-			results["status"] = "failed"
+			results["status"] = []string{"failed"}
 		}
 		by, _ := json.Marshal(sqlInfo)
 		if by != nil {
-			results["database"] = string(by)
+			results["database"] = []string{string(by)}
 		}
-		results["sql"] = sql.SqlString
+		results["sql"] = []string{sql.SqlString}
 	}
 	model.Insert(mongoCollection, results, middlewares.LocalIp)
 	fmt.Println("time:     ", startTime, endTime)
