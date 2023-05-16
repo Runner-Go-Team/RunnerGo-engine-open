@@ -11,15 +11,16 @@ import (
 	"time"
 )
 
-func SqlRequest(sqlInfo model.MysqlDatabaseInfo, action, sqls string) (db *sql.DB, resultMap map[string][]string, err error, startTime, endTime time.Time, requestTime uint64) {
+func SqlRequest(sqlInfo model.MysqlDatabaseInfo, sqls string) (db *sql.DB, resultMap map[string][]string, err error, startTime, endTime time.Time, requestTime uint64) {
 	db, err = newMysqlClient(sqlInfo)
 	if db == nil || err != nil {
 		return
 	}
 	startTime = time.Now()
 	if strings.HasPrefix(sqls, "select") {
-		rows, err := db.Query(sqls)
-		if err != nil || rows == nil {
+		rows, errQuery := db.Query(sqls)
+		if errQuery != nil || rows == nil {
+			err = errQuery
 			return
 		}
 		defer rows.Close()
@@ -44,17 +45,18 @@ func SqlRequest(sqlInfo model.MysqlDatabaseInfo, action, sqls string) (db *sql.D
 			fmt.Println(k, "    ", value)
 		}
 	} else {
-		result, err := db.Exec(sqls)
-		if err != nil || result == nil {
+		result, errExec := db.Exec(sqls)
+		if errExec != nil || result == nil {
+			err = errExec
 			return
 		}
-		row, err := result.RowsAffected()
-		if err != nil {
-			fmt.Println("row err :   ", err)
+		row, errExec := result.RowsAffected()
+		if errExec != nil {
+			fmt.Println("row err :   ", errExec)
 		}
-		last, err := result.LastInsertId()
-		if err != nil {
-			fmt.Println("last err :   ", err)
+		last, errExec := result.LastInsertId()
+		if errExec != nil {
+			fmt.Println("last err :   ", errExec)
 		}
 		fmt.Println("row:   ", row)
 		fmt.Println("last:   ", last)

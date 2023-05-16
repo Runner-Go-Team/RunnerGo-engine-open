@@ -6,7 +6,7 @@ import (
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/server/client"
 )
 
-func SqlSend(action, sqls string, sqlInfo model.MysqlDatabaseInfo) {
+func SqlSend(sqls string, sqlInfo model.MysqlDatabaseInfo) {
 	//var (
 	//	isSucceed       = true
 	//	errCode         = model.NoError
@@ -15,10 +15,10 @@ func SqlSend(action, sqls string, sqlInfo model.MysqlDatabaseInfo) {
 	//	assertNum       = 0
 	//	assertFailedNum = 0
 	//)
-	db, result, err, startTime, endTime, requestTime := client.SqlRequest(sqlInfo, action, sqls)
+	db, result, err, startTime, endTime, requestTime := client.SqlRequest(sqlInfo, sqls)
 	defer db.Close()
 	fmt.Println("result:   ", result)
-	fmt.Println("err:   ", err)
+	fmt.Println("err:   ", err.Error())
 	fmt.Println("startTime:   ", startTime)
 	fmt.Println("endTime:   ", endTime)
 	fmt.Println("requestTime:   ", requestTime)
