@@ -1,6 +1,7 @@
 package golink
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
@@ -27,6 +28,16 @@ func SqlSend(sql model.SQL, sqlInfo model.MysqlDatabaseInfo, mongoCollection *mo
 		results["err"] = err
 		results["request_time"] = requestTime / uint64(time.Millisecond)
 		results["sql_result"] = result
+		if err != nil {
+			results["status"] = "success"
+		} else {
+			results["status"] = "failed"
+		}
+		by, _ := json.Marshal(sqlInfo)
+		if by != nil {
+			results["database"] = string(by)
+		}
+		results["sql"] = sql.SqlString
 	}
 	model.Insert(mongoCollection, results, middlewares.LocalIp)
 	fmt.Println("time:     ", startTime, endTime)
