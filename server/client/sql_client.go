@@ -11,14 +11,17 @@ import (
 	"time"
 )
 
-func SqlRequest(sqlInfo model.MysqlDatabaseInfo, sqls string) (db *sql.DB, resultMap map[string][]string, err error, startTime, endTime time.Time, requestTime uint64) {
+func SqlRequest(sqlInfo model.MysqlDatabaseInfo, sqls string) (db *sql.DB, result map[string]interface{}, err error, startTime, endTime time.Time, requestTime uint64) {
 	db, err = newMysqlClient(sqlInfo)
 	if db == nil || err != nil {
 		return
 	}
+
 	startTime = time.Now()
+	result = make(map[string]interface{})
 	if strings.HasPrefix(sqls, "select") {
 		rows, errQuery := db.Query(sqls)
+		requestTime = uint64(time.Since(startTime))
 		if errQuery != nil || rows == nil {
 			err = errQuery
 			return
@@ -32,38 +35,41 @@ func SqlRequest(sqlInfo model.MysqlDatabaseInfo, sqls string) (db *sql.DB, resul
 				scans[i] = &values[i]
 			}
 		}
-		results := make(map[string][]string)
+		resultMap := make(map[string][]string)
 		for rows.Next() {
 			if err := rows.Scan(scans...); err != nil {
 				continue
 			}
 			for j, v := range values {
-				results[cols[j]] = append(results[cols[j]], string(v))
+				resultMap[cols[j]] = append(resultMap[cols[j]], string(v))
 			}
 		}
-		for k, value := range results {
-			fmt.Println(k, "    ", value)
+		for k, v := range resultMap {
+			result[k] = v
 		}
+		return
+
 	} else {
-		result, errExec := db.Exec(sqls)
+		results, errExec := db.Exec(sqls)
+		requestTime = uint64(time.Since(startTime))
 		if errExec != nil || result == nil {
 			err = errExec
 			return
 		}
-		row, errExec := result.RowsAffected()
+
+		row, errExec := results.RowsAffected()
 		if errExec != nil {
-			fmt.Println("row err :   ", errExec)
+			log.Logger.Error("row err :   ", row)
 		}
-		last, errExec := result.LastInsertId()
+		result["rows_affected"] = row
+		last, errExec := results.LastInsertId()
 		if errExec != nil {
-			fmt.Println("last err :   ", errExec)
+			log.Logger.Error("last err :   ", errExec)
 		}
-		fmt.Println("row:   ", row)
-		fmt.Println("last:   ", last)
+		result["rows_affected"] = last
+		return
 	}
-	endTime = time.Now()
-	requestTime = uint64(time.Since(startTime))
-	return
+
 }
 
 func newMysqlClient(sqlInfo model.MysqlDatabaseInfo) (db *sql.DB, err error) {

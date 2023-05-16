@@ -72,6 +72,7 @@ type Mongo struct {
 	SceneDebugTable  string `yaml:"sceneDebugTable"`
 	ApiDebugTable    string `yaml:"apiDebugTable"`
 	AutoTable        string `yaml:"autoTable"`
+	SqlDebugTable    string `yaml:"sqlDebugTable"`
 }
 
 func InitConfig() {
@@ -122,6 +123,7 @@ const (
 	ApiDebugTable    = "api_debug"
 	DebugStatusTable = "debug_status"
 	AutoTable        = "auto_report"
+	SqlDebugTable    = "sql_debug"
 	RedisAddress     = "127.0.0.0:6379"
 	KafkaTopic       = "report"
 	KafkaAddress     = "127.0.0.0:9092"
@@ -237,7 +239,12 @@ func initMongo() {
 	} else {
 		runnerGoMongo.AutoTable = autoTable
 	}
-
+	sqlDebugTable := os.Getenv("RG_MONGO_SQL_DEBUG_TABLE")
+	if apiDebugTable == "" {
+		runnerGoMongo.SqlDebugTable = SqlDebugTable
+	} else {
+		runnerGoMongo.SqlDebugTable = sqlDebugTable
+	}
 	Conf.Mongo = runnerGoMongo
 }
 
