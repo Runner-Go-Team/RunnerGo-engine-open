@@ -132,5 +132,5 @@ func RunMysqlConnection(c *gin.Context) {
 		return
 	}
 	db.Close()
-	global.ReturnMsg(c, http.StatusOK, "测试链接成功", err.Error())
+	global.ReturnMsg(c, http.StatusOK, "测试链接成功", "success")
 }
