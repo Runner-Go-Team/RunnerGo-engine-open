@@ -125,7 +125,7 @@ func RunMysqlConnection(c *gin.Context) {
 		return
 	}
 	connJson, _ := json.Marshal(&connection)
-	log.Logger.Info(fmt.Sprintf("机器ip:%s, 调试sql：    ", middlewares.LocalIp), string(connJson))
+	log.Logger.Info(fmt.Sprintf("机器ip:%s, 数据库测试链接：    ", middlewares.LocalIp), string(connJson))
 	db, err := client.TestConnection(connection)
 	if db == nil || err != nil {
 		global.ReturnMsg(c, http.StatusBadRequest, "mysql链接数据不正确", err.Error())
