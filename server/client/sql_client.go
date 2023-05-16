@@ -10,13 +10,12 @@ import (
 	"time"
 )
 
-func SqlRequest(sqlInfo model.MysqlDatabaseInfo, action, sqls string) (resultMap map[string][]string, err error, startTime, endTime time.Time, requestTime uint64) {
-	db, err := newMysqlClient(sqlInfo)
+func SqlRequest(sqlInfo model.MysqlDatabaseInfo, action, sqls string) (db *sql.DB, resultMap map[string][]string, err error, startTime, endTime time.Time, requestTime uint64) {
+	db, err = newMysqlClient(sqlInfo)
 	if db == nil || err != nil {
 		return
 	}
 	startTime = time.Now()
-	defer db.Close()
 	//switch action {
 	//case "query":
 	//	rows, err := db.Query(sqls)

@@ -15,8 +15,8 @@ func SqlSend(action, sqls string, sqlInfo model.MysqlDatabaseInfo) {
 	//	assertNum       = 0
 	//	assertFailedNum = 0
 	//)
-	result, err, startTime, endTime, requestTime := client.SqlRequest(sqlInfo, action, sqls)
-
+	db, result, err, startTime, endTime, requestTime := client.SqlRequest(sqlInfo, action, sqls)
+	defer db.Close()
 	fmt.Println("result:   ", result)
 	fmt.Println("err:   ", err)
 	fmt.Println("startTime:   ", startTime)

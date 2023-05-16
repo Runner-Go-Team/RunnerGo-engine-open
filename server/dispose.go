@@ -502,7 +502,7 @@ func DebugSql(debugSql model.SQL) {
 	defer mongoClient.Disconnect(context.TODO())
 	mongoCollection := model.NewCollection(config.Conf.Mongo.DataBase, config.Conf.Mongo.ApiDebugTable, mongoClient)
 
-	golink.DisposeRequest(nil, nil, nil, globalVar, event, mongoCollection)
+	golink.DisposeSql(nil, nil, nil, globalVar, event, mongoCollection)
 	log.Logger.Info(fmt.Sprintf("机器ip:%s, 团队：%s, sql：%s, 调试结束！", middlewares.LocalIp, debugSql.TeamId, debugSql.Name))
 
 }
