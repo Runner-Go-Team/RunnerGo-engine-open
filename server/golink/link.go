@@ -648,8 +648,7 @@ func DisposeSql(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.Resu
 
 	sqlInfo := sql.MysqlDatabaseInfo
 
-	//isSucceed, errCode, requestTime, sendBytes, receivedBytes, errMsg, startTime, endTime =
-	SqlSend(sql, sqlInfo, mongoCollection)
+	isSucceed, requestTime, startTime, endTime = SqlSend(sql, sqlInfo, mongoCollection)
 
 	if resultDataMsgCh != nil {
 		requestResults.Name = sql.Name
