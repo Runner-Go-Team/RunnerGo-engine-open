@@ -28,7 +28,7 @@ func SqlSend(sql model.SQL, sqlInfo model.MysqlDatabaseInfo, mongoCollection *mo
 		results["err"] = err
 		results["request_time"] = requestTime / uint64(time.Millisecond)
 		results["sql_result"] = result
-		if err != nil {
+		if err == nil {
 			results["status"] = []string{"success"}
 		} else {
 			results["status"] = []string{"failed"}
