@@ -251,7 +251,8 @@ func (header *Header) SetHeader(req *fasthttp.Request) {
 			req.Header.SetContentType(v.Value.(string))
 		}
 		if strings.EqualFold(v.Key, "host") {
-			req.Header.SetHost(v.Value.(string))
+			req.SetHost(v.Value.(string))
+			req.UseHostHeader = true
 		}
 		req.Header.Set(v.Key, v.Value.(string))
 	}
