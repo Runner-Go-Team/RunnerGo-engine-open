@@ -2,11 +2,61 @@ package client
 
 import (
 	"fmt"
+	"io"
+	"io/ioutil"
 	"math"
+	"net/http"
+	"net/url"
 	"testing"
 )
 
 func TestHTTPRequest(t *testing.T) {
+
+	urls := "http://123.125.118.8/dar"
+	//req, err := http.NewRequest("GET", url, nil)
+	//if err != nil {
+	//	fmt.Println("err:     ", err.Error())
+	//	return
+	//}
+	query, _ := url.Parse(urls)
+	querys := url.Values{}
+
+	querys.Add("_t", "r")
+	querys.Add("type", "imp")
+	querys.Add("v", "1")
+	querys.Add("_inst", "nl")
+	querys.Add("hat_cid", "319557")
+	querys.Add("hat_pid", "5282025")
+	querys.Add("hat_aid", "20230517127")
+	querys.Add("eip", "")
+	querys.Add("_hid", "OS-EePzBtlxqCCp0R1Xu2AA")
+	querys.Add("oaid", "73af65f4-a06c-44a5-8cc6-f72465ac52ac")
+	querys.Add("androidid", "a2948e662f4b4056")
+	querys.Add("imei", "352530080711823")
+	querys.Add("mac", "7ABB1499522E")
+	querys.Add("mac1", "7A:BB:14:99:52:2E")
+	querys.Add("idfa", "__IDFA__22hmm")
+	querys.Add("openudid", "__OPENUDID__")
+	querys.Add("_z", "m")
+	querys.Add("os", "0")
+	querys.Add("_dt", "PHN")
+	querys.Add("_plt", "MBL")
+
+	query.RawQuery = querys.Encode()
+	req, err := http.Get(query.String())
+	if err != nil {
+		fmt.Println("err:   ", err.Error(), err == io.EOF)
+		return
+	}
+	req.Header.Set("Accept", "*/*")
+	req.Header.Set("Host", "t.in-neo.cn")
+	req.Header.Set("Connection", "close")
+	req.Header.Set("Accept-Encoding", "gzip,deflate")
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36")
+	req.Header.Set("X-Forwarded-For", "240e:7a7:10ff:ffff:ffff:ffff:ffff:ffff")
+	content, _ := ioutil.ReadAll(req.Body)
+	fmt.Println(string(content))
+
 	//
 	//method := "POST"
 	//////url := "http://echo.apipost.cn/get.php"

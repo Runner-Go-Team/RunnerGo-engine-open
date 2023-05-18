@@ -123,21 +123,16 @@ func fastClient(httpApiSetup *model.HttpApiSetup, auth *model.Auth) (fc *fasthtt
 	}
 	if httpApiSetup.MaxIdleConnDuration != 0 {
 		fc.MaxIdleConnDuration = time.Duration(httpApiSetup.MaxIdleConnDuration) * time.Second
+	} else {
+		fc.MaxIdleConnDuration = time.Duration(0) * time.Second
 	}
 	if httpApiSetup.MaxConnPerHost != 0 {
 		fc.MaxConnsPerHost = httpApiSetup.MaxConnPerHost
 	}
 
-	if httpApiSetup.MaxConnWaitTimeout != 0 {
-		fc.MaxConnWaitTimeout = time.Duration(httpApiSetup.MaxConnWaitTimeout) * time.Second
-	}
-	if httpApiSetup.WriteTimeOut != 0 {
-		fc.WriteTimeout = time.Duration(httpApiSetup.WriteTimeOut) * time.Millisecond
-	}
-
-	if httpApiSetup.ReadTimeOut != 0 {
-		fc.ReadTimeout = time.Duration(httpApiSetup.ReadTimeOut) * time.Millisecond
-	}
+	fc.MaxConnWaitTimeout = time.Duration(httpApiSetup.MaxConnWaitTimeout) * time.Second
+	fc.WriteTimeout = time.Duration(httpApiSetup.WriteTimeOut) * time.Millisecond
+	fc.ReadTimeout = time.Duration(httpApiSetup.ReadTimeOut) * time.Millisecond
 
 	return fc
 }
@@ -184,22 +179,13 @@ func newKeepAlive(httpApiSetup *model.HttpApiSetup, auth *model.Auth) {
 		if httpApiSetup.UserAgent {
 			KeepAliveClient.NoDefaultUserAgentHeader = false
 		}
-		if httpApiSetup.MaxIdleConnDuration != 0 {
-			KeepAliveClient.MaxIdleConnDuration = time.Duration(httpApiSetup.MaxIdleConnDuration) * time.Second
-		}
+		KeepAliveClient.MaxIdleConnDuration = time.Duration(httpApiSetup.MaxIdleConnDuration) * time.Second
 		if httpApiSetup.MaxConnPerHost != 0 {
 			KeepAliveClient.MaxConnsPerHost = httpApiSetup.MaxConnPerHost
 		}
 
-		if httpApiSetup.MaxConnWaitTimeout != 0 {
-			KeepAliveClient.MaxConnWaitTimeout = time.Duration(httpApiSetup.MaxConnWaitTimeout) * time.Second
-		}
-		if httpApiSetup.WriteTimeOut != 0 {
-			KeepAliveClient.WriteTimeout = time.Duration(httpApiSetup.WriteTimeOut) * time.Millisecond
-		}
-
-		if httpApiSetup.ReadTimeOut != 0 {
-			KeepAliveClient.ReadTimeout = time.Duration(httpApiSetup.ReadTimeOut) * time.Millisecond
-		}
+		KeepAliveClient.WriteTimeout = time.Duration(httpApiSetup.WriteTimeOut) * time.Millisecond
+		KeepAliveClient.ReadTimeout = time.Duration(httpApiSetup.ReadTimeOut) * time.Millisecond
+		KeepAliveClient.MaxConnWaitTimeout = time.Duration(httpApiSetup.MaxConnWaitTimeout) * time.Second
 	})
 }

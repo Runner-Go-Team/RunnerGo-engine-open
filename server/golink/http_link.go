@@ -3,6 +3,7 @@ package golink
 
 import (
 	"fmt"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/server/client"
@@ -145,6 +146,7 @@ func makeDebugMsg(regex []map[string]interface{}, debugMsg map[string]interface{
 		if errBody != nil {
 			debugMsg["request_body"] = string(req.Body())
 		}
+		log.Logger.Debug()
 	} else {
 		debugMsg["request_body"] = str
 	}
