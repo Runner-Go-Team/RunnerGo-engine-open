@@ -83,5 +83,13 @@ func newMysqlClient(sqlInfo model.MysqlDatabaseInfo) (db *sql.DB, err error) {
 }
 
 func TestConnection(sqlInfo model.MysqlDatabaseInfo) (db *sql.DB, err error) {
-	return newMysqlClient(sqlInfo)
+	db, err = newMysqlClient(sqlInfo)
+	if err != nil {
+		return
+	}
+	err = db.Ping()
+	if err != nil {
+		return
+	}
+	return
 }
