@@ -249,13 +249,42 @@ func (sql *SQL) RegexSql(results map[string]interface{}, globalVar *sync.Map) (r
 				globalVar.Store(regex.Var, value)
 				reg[regex.Var] = value
 			default:
-				if len(value.([]interface{})) > regex.Index {
-					globalVar.Store(regex.Var, value.([]interface{})[regex.Index])
-					reg[regex.Var] = value.([]interface{})[regex.Index]
-				} else {
-					globalVar.Store(regex.Var, nil)
-					reg[regex.Var] = nil
+				switch fmt.Sprintf("%T", value) {
+				case "[]string":
+					if len(value.([]string)) > regex.Index {
+						globalVar.Store(regex.Var, value.([]string)[regex.Index])
+						reg[regex.Var] = value.([]string)[regex.Index]
+					} else {
+						globalVar.Store(regex.Var, nil)
+						reg[regex.Var] = nil
+					}
+				case "[]int":
+					if len(value.([]int)) > regex.Index {
+						globalVar.Store(regex.Var, value.([]int)[regex.Index])
+						reg[regex.Var] = value.([]int)[regex.Index]
+					} else {
+						globalVar.Store(regex.Var, nil)
+						reg[regex.Var] = nil
+					}
+				case "[]float64":
+					if len(value.([]float64)) > regex.Index {
+						globalVar.Store(regex.Var, value.([]float64)[regex.Index])
+						reg[regex.Var] = value.([]float64)[regex.Index]
+					} else {
+						globalVar.Store(regex.Var, nil)
+						reg[regex.Var] = nil
+					}
+				case "[]bool":
+					if len(value.([]bool)) > regex.Index {
+						globalVar.Store(regex.Var, value.([]bool)[regex.Index])
+						reg[regex.Var] = value.([]bool)[regex.Index]
+					} else {
+						globalVar.Store(regex.Var, nil)
+						reg[regex.Var] = nil
+					}
+
 				}
+
 			}
 		} else {
 			globalVar.Store(regex.Var, nil)
