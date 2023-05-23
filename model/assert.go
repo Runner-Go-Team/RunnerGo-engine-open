@@ -24,6 +24,7 @@ type AssertionText struct {
 	Compare      string `json:"compare"`       // Includes、UNIncludes、Equal、UNEqual、GreaterThan、GreaterThanOrEqual、LessThan、LessThanOrEqual、Includes、UNIncludes、NULL、NotNULL、OriginatingFrom、EndIn
 	Var          string `json:"var"`           // 变量
 	Val          string `json:"val"`           // 值
+	Index        int    `json:"index"`
 }
 
 // AssertionRegular 正则断言 1
