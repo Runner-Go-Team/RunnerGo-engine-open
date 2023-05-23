@@ -1071,6 +1071,7 @@ func (r *Api) ReplaceBodyVarForm(globalVar *sync.Map) {
 				r.Request.Body.Raw = strings.Replace(r.Request.Body.Raw, v[0], realVar, -1)
 				continue
 			}
+
 			if value, ok := globalVar.Load(v[1]); ok {
 				if value == nil {
 					continue

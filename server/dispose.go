@@ -407,6 +407,7 @@ func DebugApi(debugApi model.Api) {
 				globalVar.Store(key, value)
 			}
 		}
+
 		return true
 	})
 	defer mongoClient.Disconnect(context.TODO())
