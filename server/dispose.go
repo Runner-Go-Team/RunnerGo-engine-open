@@ -353,6 +353,16 @@ func DebugApi(debugApi model.Api) {
 		}
 	}
 
+	if debugApi.ApiVariable.Variable != nil {
+		for _, variable := range debugApi.Configuration.SceneVariable.Variable {
+			if variable.IsChecked != model.Open {
+				continue
+			}
+			globalVar.Store(variable.Key, variable.Value)
+		}
+
+	}
+
 	if debugApi.Configuration != nil {
 		if debugApi.Configuration.ParameterizedFile != nil {
 			if debugApi.Configuration.ParameterizedFile.VariableNames == nil {
@@ -366,16 +376,6 @@ func DebugApi(debugApi model.Api) {
 				}
 			}
 		}
-	}
-
-	if debugApi.ApiVariable.Variable != nil {
-		for _, variable := range debugApi.Configuration.SceneVariable.Variable {
-			if variable.IsChecked != model.Open {
-				continue
-			}
-			globalVar.Store(variable.Key, variable.Value)
-		}
-
 	}
 
 	event := model.Event{}
