@@ -6,10 +6,11 @@ import (
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/server/client"
 	"go.mongodb.org/mongo-driver/mongo"
+	"sync"
 	"time"
 )
 
-func SqlSend(sql model.SQL, sqlInfo model.MysqlDatabaseInfo, mongoCollection *mongo.Collection) (isSucceed bool, requestTime uint64, startTime, endTime time.Time) {
+func SqlSend(sql model.SQL, sqlInfo model.MysqlDatabaseInfo, mongoCollection *mongo.Collection, globalVar *sync.Map) (isSucceed bool, requestTime uint64, startTime, endTime time.Time) {
 	var (
 	//errCode         = model.NoError
 	//receivedBytes   = float64(0)
@@ -21,6 +22,8 @@ func SqlSend(sql model.SQL, sqlInfo model.MysqlDatabaseInfo, mongoCollection *mo
 	db, result, err, startTime, endTime, requestTime := client.SqlRequest(sqlInfo, sql.SqlString)
 	defer db.Close()
 	results := make(map[string]interface{})
+	assertionList := sql.Asser(result)
+	regex := sql.RegexSql(result, globalVar)
 	if sql.Debug == "all" {
 		results["team_id"] = sql.TeamId
 		results["sql_name"] = sql.Name
@@ -29,6 +32,7 @@ func SqlSend(sql model.SQL, sqlInfo model.MysqlDatabaseInfo, mongoCollection *mo
 		results["err"] = err
 		results["request_time"] = requestTime / uint64(time.Millisecond)
 		results["sql_result"] = result
+		results["assertion"] = assertionList
 		if err == nil {
 			isSucceed = true
 			results["status"] = []bool{isSucceed}
@@ -40,6 +44,7 @@ func SqlSend(sql model.SQL, sqlInfo model.MysqlDatabaseInfo, mongoCollection *mo
 			results["database"] = []string{string(by)}
 		}
 		results["sql"] = []string{sql.SqlString}
+		results["regex"] = regex
 	}
 	go model.Insert(mongoCollection, results, middlewares.LocalIp)
 	return
