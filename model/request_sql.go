@@ -51,6 +51,7 @@ func (sql *SQL) Asser(results map[string]interface{}) (assertionList []Assertion
 		}
 		switch assert.Compare {
 		case Equal:
+
 			if value, ok := results[assert.Var]; !ok {
 				assertionMsg.Code = 10001
 				assertionMsg.IsSucceed = false
@@ -58,40 +59,152 @@ func (sql *SQL) Asser(results map[string]interface{}) (assertionList []Assertion
 				assertionList = append(assertionList, assertionMsg)
 				continue
 			} else {
-				if assert.Index == -1 {
-					if value == assert.Val {
-						assertionMsg.Code = 10000
-						assertionMsg.IsSucceed = true
-						assertionMsg.Msg = fmt.Sprintf("%s 的值等于%s, 断言成功！", assert.Var, assert.Val)
-						assertionList = append(assertionList, assertionMsg)
-						continue
+				switch fmt.Sprintf("%T", value) {
+				case "[]string":
+					if assert.Index == -1 {
+						if value == assert.Val {
+							assertionMsg.Code = 10000
+							assertionMsg.IsSucceed = true
+							assertionMsg.Msg = fmt.Sprintf("%s 的值等于%s, 断言成功！", assert.Var, assert.Val)
+							assertionList = append(assertionList, assertionMsg)
+							continue
+						} else {
+							assertionMsg.Code = 10001
+							assertionMsg.IsSucceed = false
+							assertionMsg.Msg = fmt.Sprintf("%s 的值不等于%s, 断言失败！", assert.Var, assert.Val)
+							assertionList = append(assertionList, assertionMsg)
+							continue
+						}
+					} else if len(value.([]string)) > assert.Index {
+						if value.([]string)[assert.Index] == assert.Val {
+							assertionMsg.Code = 10000
+							assertionMsg.IsSucceed = true
+							assertionMsg.Msg = fmt.Sprintf("%s 下标为%d的值等于%s, 断言成功！", assert.Var, assert.Index, assert.Val)
+							assertionList = append(assertionList, assertionMsg)
+							continue
+						} else {
+							assertionMsg.Code = 10001
+							assertionMsg.IsSucceed = false
+							assertionMsg.Msg = fmt.Sprintf("%s 下标为%d的值不等于%s, 断言失败！", assert.Var, assert.Index, assert.Val)
+							assertionList = append(assertionList, assertionMsg)
+							continue
+						}
 					} else {
 						assertionMsg.Code = 10001
 						assertionMsg.IsSucceed = false
-						assertionMsg.Msg = fmt.Sprintf("%s 的值不等于%s, 断言失败！", assert.Var, assert.Val)
+						assertionMsg.Msg = fmt.Sprintf("%s 下标为%d的值不存在, 断言失败！", assert.Var, assert.Index)
 						assertionList = append(assertionList, assertionMsg)
 						continue
 					}
-				} else if len(value.([]interface{})) > assert.Index {
-					if value.([]interface{})[assert.Index] == assert.Val {
-						assertionMsg.Code = 10000
-						assertionMsg.IsSucceed = true
-						assertionMsg.Msg = fmt.Sprintf("%s 下标为%d的值等于%s, 断言成功！", assert.Var, assert.Index, assert.Val)
-						assertionList = append(assertionList, assertionMsg)
-						continue
+				case "[]int":
+					if assert.Index == -1 {
+						if value == assert.Val {
+							assertionMsg.Code = 10000
+							assertionMsg.IsSucceed = true
+							assertionMsg.Msg = fmt.Sprintf("%s 的值等于%s, 断言成功！", assert.Var, assert.Val)
+							assertionList = append(assertionList, assertionMsg)
+							continue
+						} else {
+							assertionMsg.Code = 10001
+							assertionMsg.IsSucceed = false
+							assertionMsg.Msg = fmt.Sprintf("%s 的值不等于%s, 断言失败！", assert.Var, assert.Val)
+							assertionList = append(assertionList, assertionMsg)
+							continue
+						}
+					} else if len(value.([]int)) > assert.Index {
+						if fmt.Sprintf("%d", value.([]int)[assert.Index]) == assert.Val {
+							assertionMsg.Code = 10000
+							assertionMsg.IsSucceed = true
+							assertionMsg.Msg = fmt.Sprintf("%s 下标为%d的值等于%s, 断言成功！", assert.Var, assert.Index, assert.Val)
+							assertionList = append(assertionList, assertionMsg)
+							continue
+						} else {
+							assertionMsg.Code = 10001
+							assertionMsg.IsSucceed = false
+							assertionMsg.Msg = fmt.Sprintf("%s 下标为%d的值不等于%s, 断言失败！", assert.Var, assert.Index, assert.Val)
+							assertionList = append(assertionList, assertionMsg)
+							continue
+						}
 					} else {
 						assertionMsg.Code = 10001
 						assertionMsg.IsSucceed = false
-						assertionMsg.Msg = fmt.Sprintf("%s 下标为%d的值不等于%s, 断言失败！", assert.Var, assert.Index, assert.Val)
+						assertionMsg.Msg = fmt.Sprintf("%s 下标为%d的值不存在, 断言失败！", assert.Var, assert.Index)
 						assertionList = append(assertionList, assertionMsg)
 						continue
 					}
-				} else {
-					assertionMsg.Code = 10001
-					assertionMsg.IsSucceed = false
-					assertionMsg.Msg = fmt.Sprintf("%s 下标为%d的值不存在, 断言失败！", assert.Var, assert.Index)
-					assertionList = append(assertionList, assertionMsg)
-					continue
+				case "[]float64":
+					if assert.Index == -1 {
+						if value == assert.Val {
+							assertionMsg.Code = 10000
+							assertionMsg.IsSucceed = true
+							assertionMsg.Msg = fmt.Sprintf("%s 的值等于%s, 断言成功！", assert.Var, assert.Val)
+							assertionList = append(assertionList, assertionMsg)
+							continue
+						} else {
+							assertionMsg.Code = 10001
+							assertionMsg.IsSucceed = false
+							assertionMsg.Msg = fmt.Sprintf("%s 的值不等于%s, 断言失败！", assert.Var, assert.Val)
+							assertionList = append(assertionList, assertionMsg)
+							continue
+						}
+					} else if len(value.([]float64)) > assert.Index {
+						if fmt.Sprintf("%v", value.([]float64)[assert.Index]) == assert.Val {
+							assertionMsg.Code = 10000
+							assertionMsg.IsSucceed = true
+							assertionMsg.Msg = fmt.Sprintf("%s 下标为%d的值等于%s, 断言成功！", assert.Var, assert.Index, assert.Val)
+							assertionList = append(assertionList, assertionMsg)
+							continue
+						} else {
+							assertionMsg.Code = 10001
+							assertionMsg.IsSucceed = false
+							assertionMsg.Msg = fmt.Sprintf("%s 下标为%d的值不等于%s, 断言失败！", assert.Var, assert.Index, assert.Val)
+							assertionList = append(assertionList, assertionMsg)
+							continue
+						}
+					} else {
+						assertionMsg.Code = 10001
+						assertionMsg.IsSucceed = false
+						assertionMsg.Msg = fmt.Sprintf("%s 下标为%d的值不存在, 断言失败！", assert.Var, assert.Index)
+						assertionList = append(assertionList, assertionMsg)
+						continue
+					}
+				case "[]bool":
+					if assert.Index == -1 {
+						if value == assert.Val {
+							assertionMsg.Code = 10000
+							assertionMsg.IsSucceed = true
+							assertionMsg.Msg = fmt.Sprintf("%s 的值等于%s, 断言成功！", assert.Var, assert.Val)
+							assertionList = append(assertionList, assertionMsg)
+							continue
+						} else {
+							assertionMsg.Code = 10001
+							assertionMsg.IsSucceed = false
+							assertionMsg.Msg = fmt.Sprintf("%s 的值不等于%s, 断言失败！", assert.Var, assert.Val)
+							assertionList = append(assertionList, assertionMsg)
+							continue
+						}
+					} else if len(value.([]bool)) > assert.Index {
+						if fmt.Sprintf("%v", value.([]int)[assert.Index]) == assert.Val {
+							assertionMsg.Code = 10000
+							assertionMsg.IsSucceed = true
+							assertionMsg.Msg = fmt.Sprintf("%s 下标为%d的值等于%s, 断言成功！", assert.Var, assert.Index, assert.Val)
+							assertionList = append(assertionList, assertionMsg)
+							continue
+						} else {
+							assertionMsg.Code = 10001
+							assertionMsg.IsSucceed = false
+							assertionMsg.Msg = fmt.Sprintf("%s 下标为%d的值不等于%s, 断言失败！", assert.Var, assert.Index, assert.Val)
+							assertionList = append(assertionList, assertionMsg)
+							continue
+						}
+					} else {
+						assertionMsg.Code = 10001
+						assertionMsg.IsSucceed = false
+						assertionMsg.Msg = fmt.Sprintf("%s 下标为%d的值不存在, 断言失败！", assert.Var, assert.Index)
+						assertionList = append(assertionList, assertionMsg)
+						continue
+					}
+
 				}
 			}
 		default:

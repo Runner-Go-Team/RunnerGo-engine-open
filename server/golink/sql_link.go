@@ -46,6 +46,6 @@ func SqlSend(sql model.SQL, sqlInfo model.MysqlDatabaseInfo, mongoCollection *mo
 		results["sql"] = []string{sql.SqlString}
 		results["regex"] = regex
 	}
-	go model.Insert(mongoCollection, results, middlewares.LocalIp)
+	model.Insert(mongoCollection, results, middlewares.LocalIp)
 	return
 }
