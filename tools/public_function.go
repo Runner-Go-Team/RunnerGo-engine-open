@@ -116,6 +116,37 @@ func ToTimeStamp(option string) string {
 	}
 }
 
+// ToStandardTime 标准时间
+func ToStandardTime(options int) string {
+	now := time.Now()
+	switch options {
+	case 0:
+		return fmt.Sprintf("%v", now)
+	case 1:
+		return now.Format("2006-01-02 15:04:05")
+	case 2:
+		return now.Format("2006-01-02 15:04")
+	case 3:
+		return now.Format("2006-01-02 15")
+	case 4:
+		return now.Format("2006-01-02")
+	case 5:
+		return now.Format("2006/01/02 15:04:01")
+	case 6:
+		return now.Format("2006/01/02 15:04")
+	case 7:
+		return now.Format("2006/01/02 15")
+	case 8:
+		return now.Format("2006/01/02")
+	case 9:
+		return now.Format("2006")
+	case 10:
+		return now.Format("15:03:04")
+	default:
+		return fmt.Sprintf("%v", now)
+	}
+}
+
 func InitPublicFunc() {
 	ControllerMapsType["RandomFloat0"] = RandomFloat0
 	ControllerMapsType["RandomString"] = RandomString
@@ -132,6 +163,7 @@ func InitPublicFunc() {
 	ControllerMapsType["ToStringLU"] = ToStringLU
 	ControllerMapsType["ToTimeStamp"] = ToTimeStamp
 	ControllerMapsType["GetUUid"] = GetUUid
+	ControllerMapsType["ToStandardTime"] = ToStandardTime
 }
 
 func CallPublicFunc(funcName string, parameters []string) []reflect.Value {
