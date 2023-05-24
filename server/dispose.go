@@ -91,7 +91,7 @@ func DisposeTask(plan *model.Plan, c *gin.Context) {
 func ExecutionPlan(plan *model.Plan, kafkaProducer sarama.SyncProducer, mongoClient *mongo.Client) {
 
 	// 设置接收数据缓存
-	resultDataMsgCh := make(chan *model.ResultDataMsg, 500000)
+	resultDataMsgCh := make(chan *model.ResultDataMsg, 10000)
 
 	var wg = &sync.WaitGroup{}
 

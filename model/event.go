@@ -29,6 +29,7 @@ type Event struct {
 	Api               Api            `json:"api"`
 	SQL               SQL            `json:"sql"`
 	MQTT              MQTT           `json:"mqtt"`
+	TCP               TCP            `json:"tcp_detail"`
 	Var               string         `json:"var"`     // if控制器key，值某个变量
 	Compare           string         `json:"compare"` // 逻辑运算符
 	Val               string         `json:"val"`     // key对应的值
