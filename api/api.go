@@ -116,6 +116,26 @@ func RunSql(c *gin.Context) {
 	global.ReturnMsg(c, http.StatusOK, "调试sql", uid)
 }
 
+func RunTcp(c *gin.Context) {
+	var runTcp = model.TCP{}
+	err := c.ShouldBindJSON(&runTcp)
+
+	if err != nil {
+		global.ReturnMsg(c, http.StatusBadRequest, "数据格式不正确", err.Error())
+		return
+	}
+
+	uid := uuid.NewV4()
+	runTcp.Uuid = uid
+	runTcp.Debug = model.All
+
+	requestJson, _ := json.Marshal(&runTcp)
+
+	log.Logger.Info(fmt.Sprintf("机器ip:%s, 调试tcp：    ", middlewares.LocalIp), string(requestJson))
+	go server.DebugTcp(runTcp)
+	global.ReturnMsg(c, http.StatusOK, "调试tcp", uid)
+}
+
 func RunMysqlConnection(c *gin.Context) {
 
 	var connection = model.MysqlDatabaseInfo{}
