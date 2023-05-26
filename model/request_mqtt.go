@@ -7,22 +7,20 @@ import (
 )
 
 type MQTT struct {
-	TargetId      string               `json:"target_id" bson:"target_id"`
-	Uuid          uuid.UUID            `json:"uuid" bson:"uuid"`
-	Name          string               `json:"name" bson:"name"`
-	TeamId        string               `json:"team_id" bson:"team_id"`
-	TargetType    string               `json:"target_type" bson:"target_type"` // api/webSocket/tcp/grpc
-	Assert        []*AssertionText     `json:"assert" bson:"assert"`           // 验证的方法(断言)
-	Timeout       int64                `json:"timeout" bson:"timeout"`         // 请求超时时间
-	Regex         []*RegularExpression `json:"regex" bson:"regex"`             // 正则表达式
-	Debug         string               `json:"debug" bson:"debug"`             // 是否开启Debug模式
-	Configuration *Configuration       `json:"configuration" bson:"configuration"`
-	Variable      []*KV                `json:"variable" bson:"variable"` // 全局变量
+	TargetId      string         `json:"target_id" bson:"target_id"`
+	Uuid          uuid.UUID      `json:"uuid" bson:"uuid"`
+	Name          string         `json:"name" bson:"name"`
+	TeamId        string         `json:"team_id" bson:"team_id"`
+	TargetType    string         `json:"target_type" bson:"target_type"` // api/webSocket/tcp/grpc
+	Timeout       int64          `json:"timeout" bson:"timeout"`         // 请求超时时间
+	Debug         string         `json:"debug" bson:"debug"`             // 是否开启Debug模式
+	Configuration *Configuration `json:"configuration" bson:"configuration"`
+	Variable      []*KV          `json:"variable" bson:"variable"` // 全局变量
 }
 
 type MQTTConfig struct {
-	Broker           string  `json:"broker"`    // 必填项
 	PortType         string  `json:"port_type"` // 端口类型：tcp\ws\wss\ssl， 默认tcp
+	Broker           string  `json:"broker"`    // 必填项
 	Port             int     `json:"port"`      // 端口
 	Action           string  `json:"action"`
 	Topic            string  `json:"topic"`              // 必填项
