@@ -26,10 +26,10 @@ func TcpConnection(tcp model.TCP) {
 			case <-timeAfter:
 				return
 			default:
-				conn = client.NewTcpClient(tcp.Ulr)
+				conn = client.NewTcpClient(tcp.Url)
 				if conn == nil {
 					for i := 0; i < tcp.TcpConfig.RetryNum; i++ {
-						conn = client.NewTcpClient(tcp.Ulr)
+						conn = client.NewTcpClient(tcp.Url)
 						if conn != nil {
 							break
 						}
