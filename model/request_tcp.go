@@ -10,7 +10,7 @@ type TCP struct {
 	TargetType     string          `json:"target_type"` // api/webSocket/tcp/grpc
 	Timeout        int64           `json:"timeout"`     // 请求超时时间
 	Debug          string          `json:"debug"`       // 是否开启Debug模式
-	Ulr            string          `json:"ulr"`
+	Url            string          `json:"url"`
 	SendMessage    string          `bson:"send_message"`
 	TcpConfig      TcpConfig       `json:"tcp_config"`
 	Configuration  *Configuration  `json:"configuration"`
