@@ -711,7 +711,7 @@ func DisposeTcp(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.Resu
 		}
 	}
 
-	TcpConnection(tcp)
+	TcpConnection(tcp, mongoCollection)
 	//isSucceed, requestTime, startTime, endTime = TcpConnection(tcp)
 
 	if resultDataMsgCh != nil {

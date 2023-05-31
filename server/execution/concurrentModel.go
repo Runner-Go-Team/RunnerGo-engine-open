@@ -266,7 +266,6 @@ func ConcurrentModel(wg *sync.WaitGroup, scene model.Scene, configuration *model
 			for startTime+duration >= time.Now().Unix() {
 				select {
 				case c := <-statusCh:
-					log.Logger.Debug("接收到manage消息：  ", c.String())
 					var subscriptionStressPlanStatusChange = new(model.SubscriptionStressPlanStatusChange)
 					_ = json.Unmarshal([]byte(c.Payload), subscriptionStressPlanStatusChange)
 					if subscriptionStressPlanStatusChange.MachineModeConf == nil {
@@ -308,7 +307,6 @@ func ConcurrentModel(wg *sync.WaitGroup, scene model.Scene, configuration *model
 								}
 							}
 							concurrent = modeConf.Concurrency
-							log.Logger.Debug("当前并发数是：    ", concurrent)
 						}
 					}
 
@@ -322,6 +320,7 @@ func ConcurrentModel(wg *sync.WaitGroup, scene model.Scene, configuration *model
 						currentWg.Add(1)
 						go func(concurrentId int64, useConfiguration *model.Configuration, currentScene model.Scene) {
 							for startTime+duration >= time.Now().Unix() {
+
 								// 如果当前并发的id不在map中，那么就停止该goroutine
 								if _, isOk := concurrentMap.Load(concurrentId); !isOk {
 									break
@@ -333,6 +332,7 @@ func ConcurrentModel(wg *sync.WaitGroup, scene model.Scene, configuration *model
 								sceneWg.Wait()
 							}
 							concurrentMap.Delete(concurrentId)
+
 							wg.Done()
 							currentWg.Done()
 
@@ -350,8 +350,9 @@ func ConcurrentModel(wg *sync.WaitGroup, scene model.Scene, configuration *model
 
 				}
 			}
+			fmt.Println(11111111111111)
 			currentWg.Wait()
-
+			fmt.Println(2222222222222222)
 		}
 		return fmt.Sprintf("并发数：%d, 总运行时长%ds, 任务正常结束!", concurrent, time.Now().Unix()-targetTime)
 	}
