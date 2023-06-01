@@ -1,6 +1,7 @@
 package golink
 
 import (
+	"fmt"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
@@ -37,8 +38,8 @@ func TcpConnection(tcp model.TCP, mongoCollection *mongo.Collection) {
 	tcp.TcpConfig.Init()
 
 	timeAfter := time.After(time.Duration(tcp.TcpConfig.ConnectDurationTime) * time.Second)
-	ticker := time.NewTicker(time.Duration(tcp.TcpConfig.SendMsgDurationTime) * time.Millisecond)
-	buf := []byte{}
+	ticker := time.NewTicker(time.Duration(tcp.TcpConfig.SendMsgDurationTime) * time.Second)
+	buf := make([]byte, 1024)
 	results := make(map[string]interface{})
 	results["uuid"] = tcp.Uuid.String()
 	results["name"] = tcp.Name
@@ -47,11 +48,12 @@ func TcpConnection(tcp model.TCP, mongoCollection *mongo.Collection) {
 
 	switch tcp.TcpConfig.ConnectType {
 	case 1:
+
 		wg := new(sync.WaitGroup)
 		wg.Add(1)
-		go Write(wg, timeAfter, ticker, conn, tcp, results, mongoCollection)
+		Read(wg, timeAfter, buf, conn, tcp, results, mongoCollection)
 		wg.Add(1)
-		go Read(wg, timeAfter, buf, conn, tcp, results, mongoCollection)
+		Write(wg, timeAfter, ticker, conn, tcp, results, mongoCollection)
 		wg.Wait()
 	case 2:
 		conn = client.NewTcpClient(tcp.Url)
@@ -66,37 +68,44 @@ func TcpConnection(tcp model.TCP, mongoCollection *mongo.Collection) {
 				return
 			}
 		}
-		for {
-			msg := []byte(tcp.SendMessage)
-			_, err := conn.Write(msg)
-			results["request_body"] = msg
-			if err != nil {
-				results["send_status"] = false
-				results["send_err"] = err.Error()
-			} else {
-				results["send_status"] = true
-				results["send_err"] = err
-			}
-			n, err := conn.Read(buf[:])
-			if err != nil {
-				results["recv_status"] = false
-				results["recv_err"] = err.Error()
-			} else {
-				results["recv_status"] = true
-				results["recv_err"] = err
-			}
-			results["response_body"] = string(buf[n])
-			model.Insert(mongoCollection, results, middlewares.LocalIp)
-			return
+		msg := []byte(tcp.SendMessage)
+		_, err := conn.Write(msg)
+		results["request_body"] = msg
+		if err != nil {
+			results["send_status"] = false
+			results["send_err"] = err.Error()
+		} else {
+			results["send_status"] = true
+			results["send_err"] = err
 		}
+		n, err := conn.Read(buf)
+		if err != nil {
+			results["recv_status"] = false
+			results["recv_err"] = err.Error()
+		} else {
+			results["recv_status"] = true
+			results["recv_err"] = err
+		}
+		var result string
+		if n != 0 {
+			result = string(buf[:n])
+		}
+		results["response_body"] = result
+		model.Insert(mongoCollection, results, middlewares.LocalIp)
+		log.Logger.Debug("接收到数据: %s", result)
+		return
 	}
 }
 
 func Write(wg *sync.WaitGroup, timeAfter <-chan time.Time, ticker *time.Ticker, conn net.Conn, tcp model.TCP, results map[string]interface{}, mongoCollection *mongo.Collection) {
 	defer wg.Done()
+
+	log.Logger.Debug("conn:    ", conn)
 	for {
 		select {
 		case <-timeAfter:
+			results["is_stop"] = true
+			model.Insert(mongoCollection, results, middlewares.LocalIp)
 			return
 		case <-ticker.C:
 			msg := []byte(tcp.SendMessage)
@@ -114,6 +123,8 @@ func Write(wg *sync.WaitGroup, timeAfter <-chan time.Time, ticker *time.Ticker, 
 					}
 				}
 				if conn == nil {
+					results["is_stop"] = true
+					model.Insert(mongoCollection, results, middlewares.LocalIp)
 					return
 				}
 			}
@@ -130,8 +141,9 @@ func Write(wg *sync.WaitGroup, timeAfter <-chan time.Time, ticker *time.Ticker, 
 				results["send_err"] = err
 			}
 			results["type"] = "send"
+			results["is_stop"] = false
 			model.Insert(mongoCollection, results, middlewares.LocalIp)
-			log.Logger.Debug("tcp写入消息: %s", tcp.SendMessage)
+			log.Logger.Debug(fmt.Sprintf("tcp写入消息: %s", tcp.SendMessage))
 
 		}
 	}
@@ -140,10 +152,12 @@ func Write(wg *sync.WaitGroup, timeAfter <-chan time.Time, ticker *time.Ticker, 
 
 func Read(wg *sync.WaitGroup, timeAfter <-chan time.Time, buf []byte, conn net.Conn, tcp model.TCP, results map[string]interface{}, mongoCollection *mongo.Collection) {
 	defer wg.Done()
+	log.Logger.Debug("conn:    ", len(buf), cap(buf))
 	for {
-		log.Logger.Debug("开始读。。。。。。。。。。。。。。。。。")
 		select {
 		case <-timeAfter:
+			results["is_stop"] = true
+			model.Insert(mongoCollection, results, middlewares.LocalIp)
 			return
 		default:
 			if conn == nil {
@@ -154,10 +168,14 @@ func Read(wg *sync.WaitGroup, timeAfter <-chan time.Time, buf []byte, conn net.C
 					}
 				}
 				if conn == nil {
+					results["is_stop"] = true
+					model.Insert(mongoCollection, results, middlewares.LocalIp)
 					return
 				}
 			}
-			n, err := conn.Read(buf[:])
+			log.Logger.Debug("connnnnnnn:     ", conn)
+			n, err := conn.Read(buf)
+			log.Logger.Debug("开始读。。。。。。。。。。。。。。。。。11111111111111111111", err)
 			if err != nil {
 				results["recv_status"] = false
 				results["recv_err"] = err.Error()
@@ -166,13 +184,14 @@ func Read(wg *sync.WaitGroup, timeAfter <-chan time.Time, buf []byte, conn net.C
 				results["recv_err"] = err
 			}
 			results["type"] = "recv"
-			if n == 0 {
-				results["response_body"] = ""
-			} else {
-				results["response_body"] = string(buf[n])
+			var msg string
+			if n != 0 {
+				msg = string(buf[:n])
 			}
-
+			results["response_body"] = msg
+			results["is_stop"] = false
 			model.Insert(mongoCollection, results, middlewares.LocalIp)
+			log.Logger.Debug(fmt.Sprintf("tcp读消息: %s", msg))
 		}
 	}
 }
