@@ -12,7 +12,7 @@ type TCP struct {
 	Debug          string          `json:"debug"`       // 是否开启Debug模式
 	Url            string          `json:"url"`
 	SendMessage    string          `json:"send_message"`
-	TcpConfig      TcpConfig       `json:"tcp_config"`
+	TcpConfig      *TcpConfig      `json:"tcp_config"`
 	Configuration  *Configuration  `json:"configuration"`
 	SqlVariable    *GlobalVariable `json:"sql_variable"`    // 全局变量
 	GlobalVariable *GlobalVariable `json:"global_variable"` // 全局变量
@@ -25,4 +25,25 @@ type TcpConfig struct {
 	RetryInterval       int `json:"retry_interval"`         // 重连间隔时间，单位：毫秒
 	ConnectDurationTime int `json:"connect_duration_time"`  // 连接持续时长
 	SendMsgDurationTime int `json:"send_msg_duration_time"` // 发送消息间隔时长
+}
+
+func (tcpConfig *TcpConfig) Init() {
+	if tcpConfig.RetryInterval == 0 {
+		tcpConfig.RetryInterval = 1
+	}
+	if tcpConfig.ConnectTimeoutTime == 0 {
+		tcpConfig.ConnectTimeoutTime = 1
+	}
+	if tcpConfig.RetryNum == 0 {
+		tcpConfig.RetryNum = 1
+	}
+	if tcpConfig.ConnectDurationTime == 0 {
+		tcpConfig.ConnectDurationTime = 1
+	}
+	if tcpConfig.SendMsgDurationTime == 0 {
+		tcpConfig.SendMsgDurationTime = 1
+	}
+	if tcpConfig.RetryInterval == 0 {
+		tcpConfig.RetryInterval = 1
+	}
 }
