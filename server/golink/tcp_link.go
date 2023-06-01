@@ -51,9 +51,9 @@ func TcpConnection(tcp model.TCP, mongoCollection *mongo.Collection) {
 
 		wg := new(sync.WaitGroup)
 		wg.Add(1)
-		Read(wg, timeAfter, buf, conn, tcp, results, mongoCollection)
+		go Read(wg, timeAfter, buf, conn, tcp, results, mongoCollection)
 		wg.Add(1)
-		Write(wg, timeAfter, ticker, conn, tcp, results, mongoCollection)
+		go Write(wg, timeAfter, ticker, conn, tcp, results, mongoCollection)
 		wg.Wait()
 	case 2:
 		conn = client.NewTcpClient(tcp.Url)
