@@ -121,7 +121,7 @@ func Write(wg *sync.WaitGroup, timeAfter <-chan time.Time, ticker *time.Ticker, 
 			if err != nil {
 				log.Logger.Debug("tcp 写入消息失败:", err.Error())
 			}
-			results["request_body"] = msg
+			results["request_body"] = tcp.SendMessage
 			if err != nil {
 				results["send_status"] = false
 				results["send_err"] = err.Error()
@@ -141,6 +141,7 @@ func Write(wg *sync.WaitGroup, timeAfter <-chan time.Time, ticker *time.Ticker, 
 func Read(wg *sync.WaitGroup, timeAfter <-chan time.Time, buf []byte, conn net.Conn, tcp model.TCP, results map[string]interface{}, mongoCollection *mongo.Collection) {
 	defer wg.Done()
 	for {
+		log.Logger.Debug("开始读。。。。。。。。。。。。。。。。。")
 		select {
 		case <-timeAfter:
 			return
