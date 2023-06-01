@@ -591,7 +591,7 @@ func DebugTcp(debugTcp model.TCP) {
 		return true
 	})
 	defer mongoClient.Disconnect(context.TODO())
-	mongoCollection := model.NewCollection(config.Conf.Mongo.DataBase, config.Conf.Mongo.SqlDebugTable, mongoClient)
+	mongoCollection := model.NewCollection(config.Conf.Mongo.DataBase, config.Conf.Mongo.TcpDebugTable, mongoClient)
 
 	golink.DisposeTcp(nil, nil, nil, globalVar, event, mongoCollection)
 	log.Logger.Info(fmt.Sprintf("机器ip:%s, 团队：%s, sql：%s, 调试结束！", middlewares.LocalIp, debugTcp.TeamId, debugTcp.Name))
