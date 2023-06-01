@@ -26,18 +26,13 @@ func TcpConnection(tcp model.TCP, mongoCollection *mongo.Collection) {
 			return
 		}
 	}
-	defer func() {
-		if conn != nil {
-			conn.Close()
-		}
-	}()
 
 	if tcp.TcpConfig == nil {
 		return
 	}
 	tcp.TcpConfig.Init()
 
-	timeAfter := time.After(time.Duration(tcp.TcpConfig.ConnectDurationTime) * time.Second)
+	readTimeAfter, writeTimeAfter := time.After(time.Duration(tcp.TcpConfig.ConnectDurationTime)*time.Second), time.After(time.Duration(tcp.TcpConfig.ConnectDurationTime)*time.Second)
 	ticker := time.NewTicker(time.Duration(tcp.TcpConfig.SendMsgDurationTime) * time.Second)
 	buf := make([]byte, 1024)
 	results := make(map[string]interface{})
@@ -48,12 +43,12 @@ func TcpConnection(tcp model.TCP, mongoCollection *mongo.Collection) {
 
 	switch tcp.TcpConfig.ConnectType {
 	case 1:
-
+		connChan := make(chan net.Conn, 2)
 		wg := new(sync.WaitGroup)
 		wg.Add(1)
-		go Read(wg, timeAfter, buf, conn, tcp, results, mongoCollection)
+		go Read(wg, readTimeAfter, connChan, buf, conn, tcp, results, mongoCollection)
 		wg.Add(1)
-		go Write(wg, timeAfter, ticker, conn, tcp, results, mongoCollection)
+		go Write(wg, writeTimeAfter, connChan, ticker, conn, tcp, results, mongoCollection)
 		wg.Wait()
 	case 2:
 		conn = client.NewTcpClient(tcp.Url)
@@ -97,101 +92,149 @@ func TcpConnection(tcp model.TCP, mongoCollection *mongo.Collection) {
 	}
 }
 
-func Write(wg *sync.WaitGroup, timeAfter <-chan time.Time, ticker *time.Ticker, conn net.Conn, tcp model.TCP, results map[string]interface{}, mongoCollection *mongo.Collection) {
-	defer wg.Done()
+func ReConnection(conn net.Conn, tcp model.TCP, connChan chan net.Conn) {
+	for i := 0; i < tcp.TcpConfig.RetryNum; i++ {
+		conn = client.NewTcpClient(tcp.Url)
+		if conn != nil {
+			for j := 0; j < 2; j++ {
+				connChan <- conn
+			}
 
-	log.Logger.Debug("conn:    ", conn)
+			break
+		}
+	}
+}
+
+func Write(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Conn, ticker *time.Ticker, conn net.Conn, tcp model.TCP, results map[string]interface{}, mongoCollection *mongo.Collection) {
+	defer wg.Done()
+	defer func() {
+		if conn != nil {
+			conn.Close()
+		}
+	}()
 	for {
 		select {
 		case <-timeAfter:
 			results["is_stop"] = true
 			model.Insert(mongoCollection, results, middlewares.LocalIp)
+			log.Logger.Debug("停止写")
 			return
 		case <-ticker.C:
 			msg := []byte(tcp.SendMessage)
-			for i := 0; i < tcp.TcpConfig.RetryNum; i++ {
-				conn = client.NewTcpClient(tcp.Url)
-				if conn != nil {
-					break
-				}
-			}
 			if conn == nil {
-				for i := 0; i < tcp.TcpConfig.RetryNum; i++ {
-					conn = client.NewTcpClient(tcp.Url)
-					if conn != nil {
-						break
-					}
+				ReConnection(conn, tcp, connChan)
+			}
+			select {
+			case conn = <-connChan:
+				_, err := conn.Write(msg)
+				if err != nil {
+					log.Logger.Debug("tcp 写入消息失败:", err.Error())
 				}
-				if conn == nil {
-					results["is_stop"] = true
-					model.Insert(mongoCollection, results, middlewares.LocalIp)
-					return
+				results["request_body"] = tcp.SendMessage
+				if err != nil {
+					results["send_status"] = false
+					results["send_err"] = err.Error()
+				} else {
+					results["send_status"] = true
+					results["send_err"] = err
 				}
+				results["type"] = "send"
+				results["is_stop"] = false
+				model.Insert(mongoCollection, results, middlewares.LocalIp)
+				log.Logger.Debug(fmt.Sprintf("tcp写入消息: %s", tcp.SendMessage))
+			default:
+				_, err := conn.Write(msg)
+				if err != nil {
+					log.Logger.Debug("tcp 写入消息失败:", err.Error())
+				}
+				results["request_body"] = tcp.SendMessage
+				if err != nil {
+					results["send_status"] = false
+					results["send_err"] = err.Error()
+				} else {
+					results["send_status"] = true
+					results["send_err"] = err
+				}
+				results["type"] = "send"
+				results["is_stop"] = false
+				model.Insert(mongoCollection, results, middlewares.LocalIp)
+				log.Logger.Debug(fmt.Sprintf("tcp写入消息: %s", tcp.SendMessage))
 			}
-			_, err := conn.Write(msg)
-			if err != nil {
-				log.Logger.Debug("tcp 写入消息失败:", err.Error())
-			}
-			results["request_body"] = tcp.SendMessage
-			if err != nil {
-				results["send_status"] = false
-				results["send_err"] = err.Error()
-			} else {
-				results["send_status"] = true
-				results["send_err"] = err
-			}
-			results["type"] = "send"
-			results["is_stop"] = false
-			model.Insert(mongoCollection, results, middlewares.LocalIp)
-			log.Logger.Debug(fmt.Sprintf("tcp写入消息: %s", tcp.SendMessage))
 
 		}
 	}
 
 }
 
-func Read(wg *sync.WaitGroup, timeAfter <-chan time.Time, buf []byte, conn net.Conn, tcp model.TCP, results map[string]interface{}, mongoCollection *mongo.Collection) {
+func Read(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Conn, buf []byte, conn net.Conn, tcp model.TCP, results map[string]interface{}, mongoCollection *mongo.Collection) {
 	defer wg.Done()
+	defer func() {
+		if conn != nil {
+			conn.Close()
+		}
+	}()
 	log.Logger.Debug("conn:    ", len(buf), cap(buf))
 	for {
 		select {
 		case <-timeAfter:
 			results["is_stop"] = true
 			model.Insert(mongoCollection, results, middlewares.LocalIp)
+			log.Logger.Debug("停止读")
 			return
 		default:
 			if conn == nil {
-				for i := 0; i < tcp.TcpConfig.RetryNum; i++ {
-					conn = client.NewTcpClient(tcp.Url)
-					if conn != nil {
-						break
-					}
-				}
+				ReConnection(conn, tcp, connChan)
+			}
+			select {
+			case conn = <-connChan:
+
 				if conn == nil {
 					results["is_stop"] = true
 					model.Insert(mongoCollection, results, middlewares.LocalIp)
 					return
 				}
+				n, err := conn.Read(buf)
+				if err != nil {
+					results["recv_status"] = false
+					results["recv_err"] = err.Error()
+				} else {
+					results["recv_status"] = true
+					results["recv_err"] = err
+				}
+				results["type"] = "recv"
+				var msg string
+				if n != 0 {
+					msg = string(buf[:n])
+				}
+				results["response_body"] = msg
+				results["is_stop"] = false
+				model.Insert(mongoCollection, results, middlewares.LocalIp)
+				log.Logger.Debug(fmt.Sprintf("tcp读消息: %s", msg))
+			default:
+				if conn == nil {
+					results["is_stop"] = true
+					model.Insert(mongoCollection, results, middlewares.LocalIp)
+					return
+				}
+				n, err := conn.Read(buf)
+				if err != nil {
+					results["recv_status"] = false
+					results["recv_err"] = err.Error()
+				} else {
+					results["recv_status"] = true
+					results["recv_err"] = err
+				}
+				results["type"] = "recv"
+				var msg string
+				if n != 0 {
+					msg = string(buf[:n])
+				}
+				results["response_body"] = msg
+				results["is_stop"] = false
+				model.Insert(mongoCollection, results, middlewares.LocalIp)
+				log.Logger.Debug(fmt.Sprintf("tcp读消息: %s", msg))
 			}
-			log.Logger.Debug("connnnnnnn:     ", conn)
-			n, err := conn.Read(buf)
-			log.Logger.Debug("开始读。。。。。。。。。。。。。。。。。11111111111111111111", err)
-			if err != nil {
-				results["recv_status"] = false
-				results["recv_err"] = err.Error()
-			} else {
-				results["recv_status"] = true
-				results["recv_err"] = err
-			}
-			results["type"] = "recv"
-			var msg string
-			if n != 0 {
-				msg = string(buf[:n])
-			}
-			results["response_body"] = msg
-			results["is_stop"] = false
-			model.Insert(mongoCollection, results, middlewares.LocalIp)
-			log.Logger.Debug(fmt.Sprintf("tcp读消息: %s", msg))
+
 		}
 	}
 }
