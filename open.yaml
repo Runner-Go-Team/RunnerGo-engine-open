@@ -35,6 +35,7 @@ mongo:
   debugTable: "debug_status"
   autoTable: "auto_report"
   sqlDebugTable: "sql_debug"
+  tcpDebugTable: "tcp_debug"
 
 
 
