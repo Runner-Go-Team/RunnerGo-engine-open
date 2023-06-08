@@ -33,7 +33,7 @@ func TcpConnection(tcp model.TCP, mongoCollection *mongo.Collection) {
 	tcp.TcpConfig.Init()
 
 	readTimeAfter, writeTimeAfter := time.After(time.Duration(tcp.TcpConfig.ConnectDurationTime)*time.Second), time.After(time.Duration(tcp.TcpConfig.ConnectDurationTime)*time.Second)
-	ticker := time.NewTicker(time.Duration(tcp.TcpConfig.SendMsgDurationTime) * time.Second)
+	ticker := time.NewTicker(time.Duration(tcp.TcpConfig.SendMsgDurationTime) * time.Millisecond)
 	buf := make([]byte, 1024)
 	results := make(map[string]interface{})
 	results["uuid"] = tcp.Uuid.String()
@@ -173,7 +173,6 @@ func Read(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Conn
 			conn.Close()
 		}
 	}()
-	log.Logger.Debug("conn:    ", len(buf), cap(buf))
 	for {
 		select {
 		case <-timeAfter:

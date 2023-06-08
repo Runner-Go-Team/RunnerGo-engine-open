@@ -136,8 +136,8 @@ func RunTcp(c *gin.Context) {
 	global.ReturnMsg(c, http.StatusOK, "调试tcp", uid)
 }
 func RunWs(c *gin.Context) {
-	var runTcp = model.TCP{}
-	err := c.ShouldBindJSON(&runTcp)
+	var runWs = model.WebsocketDetail{}
+	err := c.ShouldBindJSON(&runWs)
 
 	if err != nil {
 		global.ReturnMsg(c, http.StatusBadRequest, "数据格式不正确", err.Error())
@@ -145,13 +145,13 @@ func RunWs(c *gin.Context) {
 	}
 
 	uid := uuid.NewV4()
-	runTcp.Uuid = uid
-	runTcp.Debug = model.All
+	runWs.Uuid = uid
+	runWs.Debug = model.All
 
-	requestJson, _ := json.Marshal(&runTcp)
+	requestJson, _ := json.Marshal(&runWs)
 
 	log.Logger.Info(fmt.Sprintf("机器ip:%s, 调试tcp：    ", middlewares.LocalIp), string(requestJson))
-	go server.DebugTcp(runTcp)
+	go server.DebugWs(runWs)
 	global.ReturnMsg(c, http.StatusOK, "调试tcp", uid)
 }
 
