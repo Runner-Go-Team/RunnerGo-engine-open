@@ -597,3 +597,93 @@ func DebugTcp(debugTcp model.TCP) {
 	log.Logger.Info(fmt.Sprintf("机器ip:%s, 团队：%s, sql：%s, 调试结束！", middlewares.LocalIp, debugTcp.TeamId, debugTcp.Name))
 
 }
+
+// DebugWs websocket调试
+func DebugWs(debugWs model.WebsocketDetail) {
+
+	var globalVar = new(sync.Map)
+
+	if debugWs.GlobalVariable != nil {
+		debugWs.GlobalVariable.InitReplace()
+		if debugWs.Configuration == nil {
+			debugWs.Configuration = new(model.Configuration)
+		}
+		if debugWs.Configuration.SceneVariable == nil {
+			debugWs.Configuration.SceneVariable = new(model.GlobalVariable)
+		}
+		debugWs.GlobalVariable.SupToSub(debugWs.Configuration.SceneVariable)
+		debugWs.WsVariable = new(model.GlobalVariable)
+		debugWs.Configuration.SceneVariable.SupToSub(debugWs.WsVariable)
+		debugWs.WsVariable.InitReplace()
+	} else {
+		if debugWs.Configuration != nil && debugWs.Configuration.SceneVariable != nil {
+			debugWs.Configuration.SceneVariable.InitReplace()
+			debugWs.WsVariable = new(model.GlobalVariable)
+			debugWs.Configuration.SceneVariable.SupToSub(debugWs.WsVariable)
+
+		}
+	}
+
+	if debugWs.Configuration != nil {
+		if debugWs.Configuration.ParameterizedFile != nil {
+			if debugWs.Configuration.ParameterizedFile.VariableNames == nil {
+				debugWs.Configuration.ParameterizedFile.VariableNames = new(model.VariableNames)
+			}
+			debugWs.Configuration.ParameterizedFile.UseFile()
+
+			if debugWs.Configuration.ParameterizedFile.VariableNames.VarMapList != nil {
+				for k, v := range debugWs.Configuration.ParameterizedFile.VariableNames.VarMapList {
+					globalVar.Store(k, v[0])
+				}
+			}
+		}
+	}
+
+	if debugWs.WsVariable.Variable != nil {
+		for _, variable := range debugWs.Configuration.SceneVariable.Variable {
+			if variable.IsChecked != model.Open {
+				continue
+			}
+			globalVar.Store(variable.Key, variable.Value)
+		}
+
+	}
+
+	event := model.Event{}
+	event.Ws = debugWs
+	event.TeamId = debugWs.TeamId
+	event.Weight = 100
+	event.Id = "接口调试"
+	event.Debug = model.All
+	// 新建mongo客户端连接，用于发送debug数据
+	mongoClient, err := model.NewMongoClient(
+		config.Conf.Mongo.DSN,
+		middlewares.LocalIp)
+	if err != nil {
+		log.Logger.Error(fmt.Sprintf("机器ip:%s, 连接mongo错误：%s", middlewares.LocalIp, err.Error()))
+		return
+	}
+	globalVar.Range(func(key, value any) bool {
+		values := tools.FindAllDestStr(value.(string), "{{(.*?)}}")
+		if values == nil {
+			return true
+		}
+		for _, v := range values {
+			if len(v) < 2 {
+				return true
+			}
+			realVar := tools.ParsFunc(v[1])
+			if realVar != v[1] {
+				value = strings.Replace(value.(string), v[0], realVar, -1)
+				globalVar.Store(key, value)
+			}
+		}
+		return true
+	})
+	defer mongoClient.Disconnect(context.TODO())
+	mongoCollection := model.NewCollection(config.Conf.Mongo.DataBase, config.Conf.Mongo.TcpDebugTable, mongoClient)
+
+	golink.DisposeWs(nil, nil, nil, globalVar, event, mongoCollection)
+	log.Logger.Info(fmt.Sprintf("机器ip:%s, 团队：%s, sql：%s, 调试结束！", middlewares.LocalIp, debugWs.TeamId, debugWs.Name))
+
+}

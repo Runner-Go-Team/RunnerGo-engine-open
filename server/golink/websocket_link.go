@@ -5,9 +5,10 @@ import (
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/server/client"
 	"github.com/shopspring/decimal"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func webSocketSend(api model.Api) (bool, int64, uint64, float64, float64) {
+func webSocketSend(ws model.WebsocketDetail, mongoCollection *mongo.Collection) (bool, int64, uint64, float64, float64) {
 	var (
 		// startTime = time.Now()
 		isSucceed     = true
@@ -15,15 +16,15 @@ func webSocketSend(api model.Api) (bool, int64, uint64, float64, float64) {
 		receivedBytes = float64(0)
 	)
 	headers := map[string][]string{}
-	for _, header := range api.Request.Header.Parameter {
+	for _, header := range ws.WsHeader {
 		if header.IsChecked != model.Open {
 			continue
 		}
-		headers[header.Key] = []string{header.Value.(string)}
+		headers[header.Var] = []string{header.Val}
 	}
 	//  api.Request.Body.ToString()
 
-	resp, requestTime, sendBytes, err := client.WebSocketRequest(api.Request.URL, "api.Request.Body.ToString()", headers, int(api.HttpApiSetup.ReadTimeOut))
+	resp, requestTime, sendBytes, err := client.WebSocketRequest(ws.Url, ws.SendMessage, headers, ws.WsConfig)
 
 	if err != nil {
 		isSucceed = false
