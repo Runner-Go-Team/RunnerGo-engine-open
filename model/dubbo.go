@@ -1,5 +1,7 @@
 package model
 
+import uuid "github.com/satori/go.uuid"
+
 type DubboRequest struct {
 	PreUrl          string      `json:"pre_url"`
 	URL             string      `json:"url"`
@@ -14,15 +16,24 @@ type DubboRequest struct {
 }
 
 type DubboDetail struct {
+	TargetId string    `json:"target_id"`
+	Uuid     uuid.UUID `json:"uuid"`
+	Name     string    `json:"name"`
+	TeamId   string    `json:"team_id"`
+	Debug    string    `json:"debug"`
+
 	DubboProtocol string `json:"dubbo_method"`
 	ApiName       string `json:"api_name"`
 	FunctionName  string `json:"dubbo_iface"`
 	Version       string `json:"version"`
 
-	DubboParam  []DubboParam  `json:"dubbo_param"`
-	DubboAssert []DubboAssert `json:"dubbo_assert"`
-	DubboRegex  []DubboRegex  `json:"dubbo_regex"`
-	DubboConfig DubboConfig   `json:"dubbo_config"`
+	DubboParam     []DubboParam    `json:"dubbo_param"`
+	DubboAssert    []DubboAssert   `json:"dubbo_assert"`
+	DubboRegex     []DubboRegex    `json:"dubbo_regex"`
+	DubboConfig    DubboConfig     `json:"dubbo_config"`
+	Configuration  *Configuration  `json:"configuration"`   // 场景设置
+	GlobalVariable *GlobalVariable `json:"global_variable"` // 全局变量
+	DubboVariable  *GlobalVariable `json:"dubbo_variable"`
 }
 
 type DubboConfig struct {

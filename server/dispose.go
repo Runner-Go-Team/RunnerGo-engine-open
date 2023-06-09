@@ -508,7 +508,7 @@ func DebugSql(debugSql model.SQL) {
 
 }
 
-// DebugTcp sql调试
+// DebugTcp tcp调试
 func DebugTcp(debugTcp model.TCP) {
 
 	var globalVar = new(sync.Map)
@@ -685,5 +685,95 @@ func DebugWs(debugWs model.WebsocketDetail) {
 
 	golink.DisposeWs(nil, nil, nil, globalVar, event, mongoCollection)
 	log.Logger.Info(fmt.Sprintf("机器ip:%s, 团队：%s, sql：%s, 调试结束！", middlewares.LocalIp, debugWs.TeamId, debugWs.Name))
+
+}
+
+// DebugDubbo dubbo调试
+func DebugDubbo(dubbo model.DubboDetail) {
+
+	var globalVar = new(sync.Map)
+
+	if dubbo.GlobalVariable != nil {
+		dubbo.GlobalVariable.InitReplace()
+		if dubbo.Configuration == nil {
+			dubbo.Configuration = new(model.Configuration)
+		}
+		if dubbo.Configuration.SceneVariable == nil {
+			dubbo.Configuration.SceneVariable = new(model.GlobalVariable)
+		}
+		dubbo.GlobalVariable.SupToSub(dubbo.Configuration.SceneVariable)
+		dubbo.DubboVariable = new(model.GlobalVariable)
+		dubbo.Configuration.SceneVariable.SupToSub(dubbo.DubboVariable)
+		dubbo.DubboVariable.InitReplace()
+	} else {
+		if dubbo.Configuration != nil && dubbo.Configuration.SceneVariable != nil {
+			dubbo.Configuration.SceneVariable.InitReplace()
+			dubbo.DubboVariable = new(model.GlobalVariable)
+			dubbo.Configuration.SceneVariable.SupToSub(dubbo.DubboVariable)
+
+		}
+	}
+
+	if dubbo.Configuration != nil {
+		if dubbo.Configuration.ParameterizedFile != nil {
+			if dubbo.Configuration.ParameterizedFile.VariableNames == nil {
+				dubbo.Configuration.ParameterizedFile.VariableNames = new(model.VariableNames)
+			}
+			dubbo.Configuration.ParameterizedFile.UseFile()
+
+			if dubbo.Configuration.ParameterizedFile.VariableNames.VarMapList != nil {
+				for k, v := range dubbo.Configuration.ParameterizedFile.VariableNames.VarMapList {
+					globalVar.Store(k, v[0])
+				}
+			}
+		}
+	}
+
+	if dubbo.DubboVariable.Variable != nil {
+		for _, variable := range dubbo.Configuration.SceneVariable.Variable {
+			if variable.IsChecked != model.Open {
+				continue
+			}
+			globalVar.Store(variable.Key, variable.Value)
+		}
+
+	}
+
+	event := model.Event{}
+	event.DubboDetail = dubbo
+	event.TeamId = dubbo.TeamId
+	event.Weight = 100
+	event.Id = "接口调试"
+	event.Debug = model.All
+	// 新建mongo客户端连接，用于发送debug数据
+	mongoClient, err := model.NewMongoClient(
+		config.Conf.Mongo.DSN,
+		middlewares.LocalIp)
+	if err != nil {
+		log.Logger.Error(fmt.Sprintf("机器ip:%s, 连接mongo错误：%s", middlewares.LocalIp, err.Error()))
+		return
+	}
+	globalVar.Range(func(key, value any) bool {
+		values := tools.FindAllDestStr(value.(string), "{{(.*?)}}")
+		if values == nil {
+			return true
+		}
+		for _, v := range values {
+			if len(v) < 2 {
+				return true
+			}
+			realVar := tools.ParsFunc(v[1])
+			if realVar != v[1] {
+				value = strings.Replace(value.(string), v[0], realVar, -1)
+				globalVar.Store(key, value)
+			}
+		}
+		return true
+	})
+	defer mongoClient.Disconnect(context.TODO())
+	mongoCollection := model.NewCollection(config.Conf.Mongo.DataBase, config.Conf.Mongo.DubboDebugTable, mongoClient)
+
+	golink.DisposeDubbo(nil, nil, nil, globalVar, event, mongoCollection)
+	log.Logger.Info(fmt.Sprintf("机器ip:%s, 团队：%s, sql：%s, 调试结束！", middlewares.LocalIp, dubbo.TeamId, dubbo.Name))
 
 }

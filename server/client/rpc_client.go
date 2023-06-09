@@ -1,47 +1,16 @@
 package client
 
 import (
-	"context"
 	"dubbo.apache.org/dubbo-go/v3/common"
 	dubboConfig "dubbo.apache.org/dubbo-go/v3/config"
-	"dubbo.apache.org/dubbo-go/v3/config/generic"
 	_ "dubbo.apache.org/dubbo-go/v3/imports"
 	_ "dubbo.apache.org/dubbo-go/v3/metadata/service/local"
 	"fmt"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/tools"
-	hessian "github.com/apache/dubbo-go-hessian2"
 )
 
-func NewRpcClient(dubbo model.DubboDetail) {
-	rpcServer, err := newRpcServer(dubbo)
-	if err != nil {
-		return
-	}
-	parameterTypes, parameterValues := []string{}, []hessian.Object{}
-
-	for _, parame := range dubbo.DubboParam {
-		if parame.IsChecked != model.Open {
-			break
-		}
-		parameterTypes = append(parameterTypes, parame.ParamType)
-		parameterValues = append(parameterValues, parame.Val)
-	}
-	resp, err := rpcServer.(*generic.GenericService).Invoke(
-		context.TODO(),
-		dubbo.FunctionName,
-		parameterTypes,
-		parameterValues, // 实参
-	)
-	if err != nil {
-		fmt.Println("请求错误 :   ", err.Error())
-	}
-
-	fmt.Println("resp:    ", resp)
-
-}
-
-func newRpcServer(dubbo model.DubboDetail) (rpcServer common.RPCService, err error) {
+func NewRpcServer(dubbo model.DubboDetail) (rpcServer common.RPCService, err error) {
 	defer tools.DeferPanic("初始化dubbo配置失败")
 	registryConfig := &dubboConfig.RegistryConfig{
 		Protocol: dubbo.DubboConfig.RegistrationCenterName,

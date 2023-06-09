@@ -37,6 +37,7 @@ mongo:
   sqlDebugTable: "sql_debug"
   tcpDebugTable: "tcp_debug"
   wsDebugTable: "ws_debug"
+  dubboDebugTable: "dubbo_debug"
 
 
 

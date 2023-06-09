@@ -75,6 +75,7 @@ type Mongo struct {
 	SqlDebugTable    string `yaml:"sqlDebugTable"`
 	TcpDebugTable    string `yaml:"tcpDebugTable"`
 	WsDebugTable     string `yaml:"wsDebugTable"`
+	DubboDebugTable  string `yaml:"dubboDebugTable"`
 }
 
 func InitConfig() {

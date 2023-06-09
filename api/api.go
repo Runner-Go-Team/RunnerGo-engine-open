@@ -176,7 +176,7 @@ func RunMQTT(c *gin.Context) {
 }
 
 func RunDubbo(c *gin.Context) {
-	var runTcp = model.TCP{}
+	var runTcp = model.DubboDetail{}
 	err := c.ShouldBindJSON(&runTcp)
 
 	if err != nil {
@@ -191,7 +191,7 @@ func RunDubbo(c *gin.Context) {
 	requestJson, _ := json.Marshal(&runTcp)
 
 	log.Logger.Info(fmt.Sprintf("机器ip:%s, 调试tcp：    ", middlewares.LocalIp), string(requestJson))
-	go server.DebugTcp(runTcp)
+	go server.DebugDubbo(runTcp)
 	global.ReturnMsg(c, http.StatusOK, "调试tcp", uid)
 }
 
