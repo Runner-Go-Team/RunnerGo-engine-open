@@ -12,7 +12,6 @@ type DubboDetail struct {
 	DubboProtocol string `json:"dubbo_method"`
 	ApiName       string `json:"api_name"`
 	FunctionName  string `json:"function_name"`
-	Version       string `json:"version"`
 
 	DubboParam     []DubboParam    `json:"dubbo_param"`
 	DubboAssert    []DubboAssert   `json:"dubbo_assert"`
@@ -26,6 +25,7 @@ type DubboDetail struct {
 type DubboConfig struct {
 	RegistrationCenterName    string `json:"registration_center_name"`
 	RegistrationCenterAddress string `json:"registration_center_address"`
+	Version                   string `json:"version"`
 }
 
 type DubboAssert struct {
