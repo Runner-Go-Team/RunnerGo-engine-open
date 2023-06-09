@@ -29,7 +29,7 @@ func NewRpcServer(dubbo model.DubboDetail) (rpcServer common.RPCService, err err
 		RegistryIDs:   []string{zk},        // 注册中心
 		Protocol:      dubbo.DubboProtocol, // dubbo  或 tri（triple）
 		Generic:       "true",
-		Version:       dubbo.Version,
+		Version:       dubbo.DubboConfig.Version,
 	}
 	if dubbo.DubboConfig.RegistrationCenterName != "zookeeper" {
 		refConf.RegistryIDs = append(refConf.RegistryIDs, dubbo.DubboConfig.RegistrationCenterName)
