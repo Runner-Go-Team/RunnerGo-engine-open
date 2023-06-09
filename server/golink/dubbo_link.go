@@ -17,23 +17,25 @@ func SendDubbo(dubbo model.DubboDetail, mongoCollection *mongo.Collection) {
 	results["name"] = dubbo.Name
 	results["team_id"] = dubbo.TeamId
 	results["target_id"] = dubbo.TargetId
-	rpcServer, err := client.NewRpcServer(dubbo)
-	if err != nil {
-		results["err"] = err.Error()
-	} else {
-		parameterTypes, parameterValues := []string{}, []hessian.Object{}
+	parameterTypes, parameterValues := []string{}, []hessian.Object{}
+	requestType, _ := json.Marshal(parameterTypes)
+	results["request_type"] = string(requestType)
+	requestBody, _ := json.Marshal(parameterValues)
+	results["request_body"] = string(requestBody)
 
-		for _, parame := range dubbo.DubboParam {
-			if parame.IsChecked != model.Open {
-				break
-			}
-			parameterTypes = append(parameterTypes, parame.ParamType)
-			parameterValues = append(parameterValues, parame.Val)
+	rpcServer, err := client.NewRpcServer(dubbo)
+
+	for _, parame := range dubbo.DubboParam {
+		if parame.IsChecked != model.Open {
+			break
 		}
-		requestType, _ := json.Marshal(parameterTypes)
-		results["request_type"] = string(requestType)
-		requestBody, _ := json.Marshal(parameterValues)
-		results["request_body"] = string(requestBody)
+		parameterTypes = append(parameterTypes, parame.ParamType)
+		parameterValues = append(parameterValues, parame.Val)
+	}
+	if err != nil {
+		results["response_body"] = err.Error()
+	} else {
+
 		resp, err := rpcServer.(*generic.GenericService).Invoke(
 			context.TODO(),
 			dubbo.FunctionName,
@@ -41,9 +43,7 @@ func SendDubbo(dubbo model.DubboDetail, mongoCollection *mongo.Collection) {
 			parameterValues, // 实参
 		)
 		if err != nil {
-			results["err"] = err.Error()
-		} else {
-			results["err"] = ""
+			results["response_body"] = err.Error()
 		}
 		if resp != nil {
 			response, _ := json.Marshal(resp)
