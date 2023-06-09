@@ -11,7 +11,7 @@ type DubboDetail struct {
 
 	DubboProtocol string `json:"dubbo_method"`
 	ApiName       string `json:"api_name"`
-	FunctionName  string `json:"dubbo_iface"`
+	FunctionName  string `json:"function_name"`
 	Version       string `json:"version"`
 
 	DubboParam     []DubboParam    `json:"dubbo_param"`
