@@ -777,3 +777,93 @@ func DebugDubbo(dubbo model.DubboDetail) {
 	log.Logger.Info(fmt.Sprintf("机器ip:%s, 团队：%s, sql：%s, 调试结束！", middlewares.LocalIp, dubbo.TeamId, dubbo.Name))
 
 }
+
+// DebugMqtt mqtt调试
+func DebugMqtt(mqtt model.MQTT) {
+
+	var globalVar = new(sync.Map)
+
+	if mqtt.GlobalVariable != nil {
+		mqtt.GlobalVariable.InitReplace()
+		if mqtt.Configuration == nil {
+			mqtt.Configuration = new(model.Configuration)
+		}
+		if mqtt.Configuration.SceneVariable == nil {
+			mqtt.Configuration.SceneVariable = new(model.GlobalVariable)
+		}
+		mqtt.GlobalVariable.SupToSub(mqtt.Configuration.SceneVariable)
+		mqtt.MqttVariable = new(model.GlobalVariable)
+		mqtt.Configuration.SceneVariable.SupToSub(mqtt.MqttVariable)
+		mqtt.MqttVariable.InitReplace()
+	} else {
+		if mqtt.Configuration != nil && mqtt.Configuration.SceneVariable != nil {
+			mqtt.Configuration.SceneVariable.InitReplace()
+			mqtt.MqttVariable = new(model.GlobalVariable)
+			mqtt.Configuration.SceneVariable.SupToSub(mqtt.MqttVariable)
+
+		}
+	}
+
+	if mqtt.Configuration != nil {
+		if mqtt.Configuration.ParameterizedFile != nil {
+			if mqtt.Configuration.ParameterizedFile.VariableNames == nil {
+				mqtt.Configuration.ParameterizedFile.VariableNames = new(model.VariableNames)
+			}
+			mqtt.Configuration.ParameterizedFile.UseFile()
+
+			if mqtt.Configuration.ParameterizedFile.VariableNames.VarMapList != nil {
+				for k, v := range mqtt.Configuration.ParameterizedFile.VariableNames.VarMapList {
+					globalVar.Store(k, v[0])
+				}
+			}
+		}
+	}
+
+	if mqtt.MqttVariable.Variable != nil {
+		for _, variable := range mqtt.Configuration.SceneVariable.Variable {
+			if variable.IsChecked != model.Open {
+				continue
+			}
+			globalVar.Store(variable.Key, variable.Value)
+		}
+
+	}
+
+	event := model.Event{}
+	event.MQTT = mqtt
+	event.TeamId = mqtt.TeamId
+	event.Weight = 100
+	event.Id = "接口调试"
+	event.Debug = model.All
+	// 新建mongo客户端连接，用于发送debug数据
+	mongoClient, err := model.NewMongoClient(
+		config.Conf.Mongo.DSN,
+		middlewares.LocalIp)
+	if err != nil {
+		log.Logger.Error(fmt.Sprintf("机器ip:%s, 连接mongo错误：%s", middlewares.LocalIp, err.Error()))
+		return
+	}
+	globalVar.Range(func(key, value any) bool {
+		values := tools.FindAllDestStr(value.(string), "{{(.*?)}}")
+		if values == nil {
+			return true
+		}
+		for _, v := range values {
+			if len(v) < 2 {
+				return true
+			}
+			realVar := tools.ParsFunc(v[1])
+			if realVar != v[1] {
+				value = strings.Replace(value.(string), v[0], realVar, -1)
+				globalVar.Store(key, value)
+			}
+		}
+		return true
+	})
+	defer mongoClient.Disconnect(context.TODO())
+	mongoCollection := model.NewCollection(config.Conf.Mongo.DataBase, config.Conf.Mongo.TcpDebugTable, mongoClient)
+
+	golink.DisposeMqtt(nil, nil, nil, globalVar, event, mongoCollection)
+	log.Logger.Info(fmt.Sprintf("机器ip:%s, 团队：%s, sql：%s, 调试结束！", middlewares.LocalIp, mqtt.TeamId, mqtt.Name))
+
+}

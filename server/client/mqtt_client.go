@@ -12,7 +12,7 @@ import (
 )
 
 // NewMqttClient /**
-func NewMqttClient(config model.MQTTConfig) *model.MQTTClient {
+func NewMqttClient(config model.MQTTConfig) (c *model.MQTTClient, err error) {
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(fmt.Sprintf("%s://%s:%d", config.PortType, config.Broker, config.Port))
 	opts.SetClientID(config.ClientId)
@@ -60,16 +60,16 @@ func NewMqttClient(config model.MQTTConfig) *model.MQTTClient {
 	}
 	opts.SetDefaultPublishHandler(model.MessagePubHandler)
 	client := mqtt.NewClient(opts)
-	c := new(model.MQTTClient)
+	c = new(model.MQTTClient)
 	c.Client = client
 	c.QOS = config.Qos
 	c.Retained = config.Retained
 	c.Topics = make(map[string]mqtt.MessageHandler)
 	if tc := c.Client.Connect(); tc.Wait() && tc.Error() != nil {
-		log.Logger.Debug("mqtt 建立连接失败!")
-		return nil
+		err = tc.Error()
+		return
 	}
-	return c
+	return
 }
 
 func newTlsConfig(caFile *model.CaFile, isClient bool) (tlsConfig *tls.Config) {

@@ -7,15 +7,17 @@ import (
 )
 
 type MQTT struct {
-	TargetId      string         `json:"target_id" bson:"target_id"`
-	Uuid          uuid.UUID      `json:"uuid" bson:"uuid"`
-	Name          string         `json:"name" bson:"name"`
-	TeamId        string         `json:"team_id" bson:"team_id"`
-	TargetType    string         `json:"target_type" bson:"target_type"` // api/webSocket/tcp/grpc
-	Timeout       int64          `json:"timeout" bson:"timeout"`         // 请求超时时间
-	Debug         string         `json:"debug" bson:"debug"`             // 是否开启Debug模式
-	Configuration *Configuration `json:"configuration" bson:"configuration"`
-	Variable      []*KV          `json:"variable" bson:"variable"` // 全局变量
+	TargetId       string          `json:"target_id" bson:"target_id"`
+	Uuid           uuid.UUID       `json:"uuid" bson:"uuid"`
+	Name           string          `json:"name" bson:"name"`
+	TeamId         string          `json:"team_id" bson:"team_id"`
+	TargetType     string          `json:"target_type" bson:"target_type"` // api/webSocket/tcp/grpc
+	Timeout        int64           `json:"timeout" bson:"timeout"`         // 请求超时时间
+	Debug          string          `json:"debug" bson:"debug"`             // 是否开启Debug模式
+	MQTTConfig     MQTTConfig      `json:"mqtt_config"`
+	Configuration  *Configuration  `json:"configuration" bson:"configuration"`
+	MqttVariable   *GlobalVariable `json:"mqtt_variable"`   // 全局变量
+	GlobalVariable *GlobalVariable `json:"global_variable"` // 全局变量
 }
 
 type MQTTConfig struct {
