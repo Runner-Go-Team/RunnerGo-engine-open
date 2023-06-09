@@ -3,6 +3,7 @@ package golink
 import (
 	"context"
 	"dubbo.apache.org/dubbo-go/v3/config/generic"
+	"encoding/json"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/server/client"
@@ -18,7 +19,7 @@ func SendDubbo(dubbo model.DubboDetail, mongoCollection *mongo.Collection) {
 	results["target_id"] = dubbo.TargetId
 	rpcServer, err := client.NewRpcServer(dubbo)
 	if err != nil {
-		results["err"] = err
+		results["err"] = err.Error()
 	} else {
 		parameterTypes, parameterValues := []string{}, []hessian.Object{}
 
@@ -29,17 +30,28 @@ func SendDubbo(dubbo model.DubboDetail, mongoCollection *mongo.Collection) {
 			parameterTypes = append(parameterTypes, parame.ParamType)
 			parameterValues = append(parameterValues, parame.Val)
 		}
-
-		results["request_type"] = parameterTypes
-		results["request_body"] = parameterTypes
+		requestType, _ := json.Marshal(parameterTypes)
+		results["request_type"] = string(requestType)
+		requestBody, _ := json.Marshal(parameterValues)
+		results["request_body"] = string(requestBody)
 		resp, err := rpcServer.(*generic.GenericService).Invoke(
 			context.TODO(),
 			dubbo.FunctionName,
 			parameterTypes,
 			parameterValues, // 实参
 		)
-		results["err"] = err
-		results["response_body"] = resp
+		if err != nil {
+			results["err"] = err.Error()
+		} else {
+			results["err"] = ""
+		}
+		if resp != nil {
+			response, _ := json.Marshal(resp)
+			results["response_body"] = string(response)
+		} else {
+			results["response_body"] = ""
+		}
+
 	}
 
 	model.Insert(mongoCollection, results, middlewares.LocalIp)

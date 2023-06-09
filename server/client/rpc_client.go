@@ -5,7 +5,6 @@ import (
 	dubboConfig "dubbo.apache.org/dubbo-go/v3/config"
 	_ "dubbo.apache.org/dubbo-go/v3/imports"
 	_ "dubbo.apache.org/dubbo-go/v3/metadata/service/local"
-	"fmt"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/tools"
 )
@@ -45,7 +44,6 @@ func NewRpcServer(dubbo model.DubboDetail) (rpcServer common.RPCService, err err
 	}
 
 	if err = refConf.Init(rootConfig); err != nil {
-		fmt.Println("refConfig 初始化失败：  ", err.Error())
 		return
 	}
 
