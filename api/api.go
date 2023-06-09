@@ -156,8 +156,8 @@ func RunWs(c *gin.Context) {
 }
 
 func RunMQTT(c *gin.Context) {
-	var runTcp = model.TCP{}
-	err := c.ShouldBindJSON(&runTcp)
+	var mqtt = model.MQTT{}
+	err := c.ShouldBindJSON(&mqtt)
 
 	if err != nil {
 		global.ReturnMsg(c, http.StatusBadRequest, "数据格式不正确", err.Error())
@@ -165,13 +165,13 @@ func RunMQTT(c *gin.Context) {
 	}
 
 	uid := uuid.NewV4()
-	runTcp.Uuid = uid
-	runTcp.Debug = model.All
+	mqtt.Uuid = uid
+	mqtt.Debug = model.All
 
-	requestJson, _ := json.Marshal(&runTcp)
+	requestJson, _ := json.Marshal(&mqtt)
 
 	log.Logger.Info(fmt.Sprintf("机器ip:%s, 调试tcp：    ", middlewares.LocalIp), string(requestJson))
-	go server.DebugTcp(runTcp)
+	go server.DebugMqtt(mqtt)
 	global.ReturnMsg(c, http.StatusOK, "调试tcp", uid)
 }
 

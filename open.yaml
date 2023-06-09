@@ -38,6 +38,7 @@ mongo:
   tcpDebugTable: "tcp_debug"
   wsDebugTable: "ws_debug"
   dubboDebugTable: "dubbo_debug"
+  mqttDebugTable: "mqtt_debug"
 
 
 

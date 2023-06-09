@@ -22,8 +22,15 @@ func WebSocketRequest(recvResults, writeResults map[string]interface{}, mongoCol
 		}
 	}
 	if err != nil || conn == nil {
-		recvResults["err"] = err
-		writeResults["err"] = err
+		if err != nil {
+			recvResults["err"] = err.Error()
+			writeResults["err"] = err.Error()
+		} else {
+			recvResults["err"] = ""
+			writeResults["err"] = ""
+		}
+		recvResults["request_body"] = ""
+		writeResults["response_body"] = ""
 		recvResults["is_stop"] = true
 		writeResults["is_stop"] = true
 		model.Insert(mongoCollection, writeResults, middlewares.LocalIp)
@@ -56,7 +63,12 @@ func WebSocketRequest(recvResults, writeResults map[string]interface{}, mongoCol
 						}
 					}
 					if conn == nil {
-						writeResults["err"] = err
+						if err != nil {
+							writeResults["err"] = err.Error()
+						} else {
+							writeResults["err"] = ""
+						}
+
 						writeResults["is_stop"] = true
 						model.Insert(mongoCollection, writeResults, middlewares.LocalIp)
 						return
@@ -96,7 +108,12 @@ func WebSocketRequest(recvResults, writeResults map[string]interface{}, mongoCol
 						}
 					}
 					if conn == nil {
-						recvResults["err"] = err.Error()
+						if err != nil {
+							recvResults["err"] = err.Error()
+						} else {
+							recvResults["err"] = ""
+						}
+
 						recvResults["is_stop"] = true
 						model.Insert(mongoCollection, recvResults, middlewares.LocalIp)
 						return
@@ -105,7 +122,7 @@ func WebSocketRequest(recvResults, writeResults map[string]interface{}, mongoCol
 				}
 				select {
 				case <-readTimeAfter:
-					recvResults["err"] = err
+					recvResults["err"] = ""
 					recvResults["is_stop"] = true
 					model.Insert(mongoCollection, recvResults, middlewares.LocalIp)
 					return
@@ -117,7 +134,7 @@ func WebSocketRequest(recvResults, writeResults map[string]interface{}, mongoCol
 						model.Insert(mongoCollection, recvResults, middlewares.LocalIp)
 						break
 					}
-					recvResults["err"] = connectErr
+					recvResults["err"] = ""
 					recvResults["response_message_type"] = m
 					recvResults["response_body"] = string(p)
 					recvResults["is_stop"] = false
@@ -128,8 +145,13 @@ func WebSocketRequest(recvResults, writeResults map[string]interface{}, mongoCol
 		wg.Wait()
 	case 2:
 		if conn == nil {
-			recvResults["err"] = err
-			writeResults["err"] = err
+			if err != nil {
+				recvResults["err"] = err.Error()
+				writeResults["err"] = err.Error()
+			} else {
+				recvResults["err"] = ""
+				writeResults["err"] = ""
+			}
 			ticker.Stop()
 			recvResults["is_stop"] = true
 			writeResults["is_stop"] = true
