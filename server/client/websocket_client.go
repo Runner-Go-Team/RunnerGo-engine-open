@@ -30,9 +30,15 @@ func WebSocketRequest(recvResults, writeResults map[string]interface{}, mongoCol
 		model.Insert(mongoCollection, recvResults, middlewares.LocalIp)
 
 	}
+
+	if wsConfig.ConnectDurationTime == 0 {
+		wsConfig.ConnectDurationTime = 1
+	}
+	if wsConfig.SendMsgDurationTime == 0 {
+		wsConfig.SendMsgDurationTime = 1
+	}
 	readTimeAfter, writeTimeAfter := time.After(time.Duration(wsConfig.ConnectDurationTime)*time.Second), time.After(time.Duration(wsConfig.ConnectDurationTime)*time.Second)
 	ticker := time.NewTicker(time.Duration(wsConfig.SendMsgDurationTime) * time.Millisecond)
-	time.Sleep(10 * time.Second)
 	switch wsConfig.ConnectType {
 	case 1:
 		wg := new(sync.WaitGroup)

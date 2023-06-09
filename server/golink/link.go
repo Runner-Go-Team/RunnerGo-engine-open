@@ -824,3 +824,67 @@ func DisposeWs(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.Resul
 	}
 
 }
+
+// DisposeDubbo 开始对请求进行处理
+func DisposeDubbo(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestResults *model.ResultDataMsg, globalVar *sync.Map,
+	event model.Event, mongoCollection *mongo.Collection, options ...int64) {
+	dubbo := event.DubboDetail
+	dubbo.TeamId = event.TeamId
+
+	dubbo.Debug = event.Debug
+
+	if requestResults != nil {
+		requestResults.PlanId = reportMsg.PlanId
+		requestResults.PlanName = reportMsg.PlanName
+		requestResults.EventId = event.Id
+		requestResults.PercentAge = event.PercentAge
+		requestResults.ResponseThreshold = event.ResponseThreshold
+		requestResults.TeamId = event.TeamId
+		requestResults.SceneId = reportMsg.SceneId
+		requestResults.MachineIp = reportMsg.MachineIp
+		requestResults.Concurrency = options[1]
+		requestResults.SceneName = reportMsg.SceneName
+		requestResults.ReportId = reportMsg.ReportId
+		requestResults.ReportName = reportMsg.ReportName
+		requestResults.PercentAge = event.PercentAge
+		requestResults.RequestThreshold = event.RequestThreshold
+		requestResults.ResponseThreshold = event.ResponseThreshold
+		requestResults.ErrorThreshold = event.ErrorThreshold
+		requestResults.TargetId = dubbo.TargetId
+		requestResults.Name = dubbo.Name
+		requestResults.MachineNum = reportMsg.MachineNum
+	}
+
+	var (
+		isSucceed          = false
+		errCode            = int64(0)
+		requestTime        = uint64(0)
+		sendBytes          = float64(0)
+		receivedBytes      = float64(0)
+		errMsg             = ""
+		startTime, endTime = time.Time{}, time.Time{}
+	)
+	if event.Prepositions != nil && len(event.Prepositions) > 0 {
+		for _, preposition := range event.Prepositions {
+			preposition.Exec(globalVar, dubbo.GlobalVariable)
+		}
+	}
+
+	SendDubbo(dubbo, mongoCollection)
+	//isSucceed, requestTime, startTime, endTime = TcpConnection(tcp)
+
+	if resultDataMsgCh != nil {
+		requestResults.Name = dubbo.Name
+		requestResults.RequestTime = requestTime
+		requestResults.ErrorType = errCode
+		requestResults.IsSucceed = isSucceed
+		requestResults.SendBytes = sendBytes
+		requestResults.ReceivedBytes = receivedBytes
+		requestResults.ErrorMsg = errMsg
+		requestResults.Timestamp = time.Now().UnixMilli()
+		requestResults.StartTime = startTime.UnixMilli()
+		requestResults.EndTime = endTime.UnixMilli()
+		resultDataMsgCh <- requestResults
+	}
+
+}

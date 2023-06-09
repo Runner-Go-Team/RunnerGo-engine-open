@@ -31,6 +31,7 @@ type Event struct {
 	MQTT              MQTT            `json:"mqtt"`
 	TCP               TCP             `json:"tcp_detail"`
 	Ws                WebsocketDetail `json:"ws"`
+	DubboDetail       DubboDetail     `json:"dubbo_detail"`
 	Var               string          `json:"var"`     // if控制器key，值某个变量
 	Compare           string          `json:"compare"` // 逻辑运算符
 	Val               string          `json:"val"`     // key对应的值
