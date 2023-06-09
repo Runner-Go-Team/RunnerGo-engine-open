@@ -13,16 +13,25 @@ import (
 	hessian "github.com/apache/dubbo-go-hessian2"
 )
 
-func NewRpcClient(rpc model.DubboRequest) {
-	rpcServer := newRpcServer(rpc)
-	if rpcServer == nil {
+func NewRpcClient(dubbo model.DubboDetail) {
+	rpcServer, err := newRpcServer(dubbo)
+	if err != nil {
 		return
+	}
+	parameterTypes, parameterValues := []string{}, []hessian.Object{}
+
+	for _, parame := range dubbo.DubboParam {
+		if parame.IsChecked != model.Open {
+			break
+		}
+		parameterTypes = append(parameterTypes, parame.ParamType)
+		parameterValues = append(parameterValues, parame.Val)
 	}
 	resp, err := rpcServer.(*generic.GenericService).Invoke(
 		context.TODO(),
-		rpc.Method,
-		rpc.ParameterType,               // 参数类型
-		[]hessian.Object{rpc.Parameter}, // 实参
+		dubbo.FunctionName,
+		parameterTypes,
+		parameterValues, // 实参
 	)
 	if err != nil {
 		fmt.Println("请求错误 :   ", err.Error())
@@ -32,41 +41,46 @@ func NewRpcClient(rpc model.DubboRequest) {
 
 }
 
-func newRpcServer(rpc model.DubboRequest) (rpcServer common.RPCService) {
+func newRpcServer(dubbo model.DubboDetail) (rpcServer common.RPCService, err error) {
 	defer tools.DeferPanic("初始化dubbo配置失败")
 	registryConfig := &dubboConfig.RegistryConfig{
-		Protocol: rpc.Registry,
-		Address:  rpc.RegistryAddress,
+		Protocol: dubbo.DubboConfig.RegistrationCenterName,
+		Address:  dubbo.DubboConfig.RegistrationCenterAddress,
+	}
+
+	var zk string
+
+	if dubbo.DubboConfig.RegistrationCenterName == "zookeeper" {
+		zk = "zk"
 	}
 
 	refConf := &dubboConfig.ReferenceConfig{
-		InterfaceName: rpc.Iface, // 服务接口名
+		InterfaceName: dubbo.ApiName, // 服务接口名
 		Cluster:       "failover",
-		RegistryIDs:   []string{"zk"}, // 注册中心
-		Protocol:      rpc.Protocol,   // dubbo  或 tri（triple）
+		RegistryIDs:   []string{zk},        // 注册中心
+		Protocol:      dubbo.DubboProtocol, // dubbo  或 tri（triple）
 		Generic:       "true",
+		Version:       dubbo.Version,
 	}
-	if rpc.Registry != "zookeeper" {
-		refConf.RegistryIDs = append(refConf.RegistryIDs, rpc.Registry)
+	if dubbo.DubboConfig.RegistrationCenterName != "zookeeper" {
+		refConf.RegistryIDs = append(refConf.RegistryIDs, dubbo.DubboConfig.RegistrationCenterName)
 	}
 
 	rootConfig := dubboConfig.NewRootConfigBuilder().AddRegistry("zk", registryConfig).Build()
-	if err := dubboConfig.Load(dubboConfig.WithRootConfig(rootConfig)); err != nil {
-		fmt.Println("rootconfig 错误：", err)
+	if err = dubboConfig.Load(dubboConfig.WithRootConfig(rootConfig)); err != nil {
 		return
 	}
 
-	if err := rootConfig.Init(); err != nil {
-		fmt.Println("rootConfig 初始化失败：  ", err.Error())
+	if err = rootConfig.Init(); err != nil {
 		return
 	}
 
-	if err := refConf.Init(rootConfig); err != nil {
+	if err = refConf.Init(rootConfig); err != nil {
 		fmt.Println("refConfig 初始化失败：  ", err.Error())
 		return
 	}
 
-	refConf.GenericLoad(rpc.AppName)
+	refConf.GenericLoad(dubbo.ApiName)
 	rpcServer = refConf.GetRPCService()
 	return
 }

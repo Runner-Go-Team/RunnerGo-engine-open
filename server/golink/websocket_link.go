@@ -23,8 +23,17 @@ func webSocketSend(ws model.WebsocketDetail, mongoCollection *mongo.Collection) 
 		headers[header.Var] = []string{header.Val}
 	}
 	//  api.Request.Body.ToString()
+	recvResults, writeResults := make(map[string]interface{}), make(map[string]interface{})
+	recvResults["uuid"] = ws.Uuid.String()
+	recvResults["name"] = ws.Name
+	recvResults["team_id"] = ws.TeamId
+	recvResults["target_id"] = ws.TargetId
+	writeResults["uuid"] = ws.Uuid.String()
+	writeResults["name"] = ws.Name
+	writeResults["team_id"] = ws.TeamId
+	writeResults["target_id"] = ws.TargetId
 
-	resp, requestTime, sendBytes, err := client.WebSocketRequest(ws.Url, ws.SendMessage, headers, ws.WsConfig)
+	resp, requestTime, sendBytes, err := client.WebSocketRequest(recvResults, writeResults, mongoCollection, ws.Url, ws.SendMessage, headers, ws.WsConfig)
 
 	if err != nil {
 		isSucceed = false
