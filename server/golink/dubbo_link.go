@@ -48,8 +48,6 @@ func SendDubbo(dubbo model.DubboDetail, mongoCollection *mongo.Collection) {
 		if resp != nil {
 			response, _ := json.Marshal(resp)
 			results["response_body"] = string(response)
-		} else {
-			results["response_body"] = ""
 		}
 
 	}
