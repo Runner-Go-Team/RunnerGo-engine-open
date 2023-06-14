@@ -9,7 +9,7 @@ type DubboDetail struct {
 	TeamId   string    `json:"team_id"`
 	Debug    string    `json:"debug"`
 
-	DubboProtocol string `json:"dubbo_method"`
+	DubboProtocol string `json:"dubbo_protocol"`
 	ApiName       string `json:"api_name"`
 	FunctionName  string `json:"function_name"`
 
