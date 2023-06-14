@@ -155,25 +155,25 @@ func RunWs(c *gin.Context) {
 	global.ReturnMsg(c, http.StatusOK, "调试tcp", uid)
 }
 
-func RunMQTT(c *gin.Context) {
-	var mqtt = model.MQTT{}
-	err := c.ShouldBindJSON(&mqtt)
-
-	if err != nil {
-		global.ReturnMsg(c, http.StatusBadRequest, "数据格式不正确", err.Error())
-		return
-	}
-
-	uid := uuid.NewV4()
-	mqtt.Uuid = uid
-	mqtt.Debug = model.All
-
-	requestJson, _ := json.Marshal(&mqtt)
-
-	log.Logger.Info(fmt.Sprintf("机器ip:%s, 调试mqtt：    ", middlewares.LocalIp), string(requestJson))
-	go server.DebugMqtt(mqtt)
-	global.ReturnMsg(c, http.StatusOK, "调试tcp", uid)
-}
+//func RunMQTT(c *gin.Context) {
+//	var mqtt = model.MQTT{}
+//	err := c.ShouldBindJSON(&mqtt)
+//
+//	if err != nil {
+//		global.ReturnMsg(c, http.StatusBadRequest, "数据格式不正确", err.Error())
+//		return
+//	}
+//
+//	uid := uuid.NewV4()
+//	mqtt.Uuid = uid
+//	mqtt.Debug = model.All
+//
+//	requestJson, _ := json.Marshal(&mqtt)
+//
+//	log.Logger.Info(fmt.Sprintf("机器ip:%s, 调试mqtt：    ", middlewares.LocalIp), string(requestJson))
+//	go server.DebugMqtt(mqtt)
+//	global.ReturnMsg(c, http.StatusOK, "调试tcp", uid)
+//}
 
 func RunDubbo(c *gin.Context) {
 	var runTcp = model.DubboDetail{}
