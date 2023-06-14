@@ -350,9 +350,7 @@ func ConcurrentModel(wg *sync.WaitGroup, scene model.Scene, configuration *model
 
 				}
 			}
-			fmt.Println(11111111111111)
 			currentWg.Wait()
-			fmt.Println(2222222222222222)
 		}
 		return fmt.Sprintf("并发数：%d, 总运行时长%ds, 任务正常结束!", concurrent, time.Now().Unix()-targetTime)
 	}
