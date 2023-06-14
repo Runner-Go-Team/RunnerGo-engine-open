@@ -150,7 +150,7 @@ func RunWs(c *gin.Context) {
 
 	requestJson, _ := json.Marshal(&runWs)
 
-	log.Logger.Info(fmt.Sprintf("机器ip:%s, 调试tcp：    ", middlewares.LocalIp), string(requestJson))
+	log.Logger.Info(fmt.Sprintf("机器ip:%s, 调试websocket：    ", middlewares.LocalIp), string(requestJson))
 	go server.DebugWs(runWs)
 	global.ReturnMsg(c, http.StatusOK, "调试tcp", uid)
 }
@@ -170,7 +170,7 @@ func RunMQTT(c *gin.Context) {
 
 	requestJson, _ := json.Marshal(&mqtt)
 
-	log.Logger.Info(fmt.Sprintf("机器ip:%s, 调试tcp：    ", middlewares.LocalIp), string(requestJson))
+	log.Logger.Info(fmt.Sprintf("机器ip:%s, 调试mqtt：    ", middlewares.LocalIp), string(requestJson))
 	go server.DebugMqtt(mqtt)
 	global.ReturnMsg(c, http.StatusOK, "调试tcp", uid)
 }
@@ -190,7 +190,7 @@ func RunDubbo(c *gin.Context) {
 
 	requestJson, _ := json.Marshal(&runTcp)
 
-	log.Logger.Info(fmt.Sprintf("机器ip:%s, 调试tcp：    ", middlewares.LocalIp), string(requestJson))
+	log.Logger.Info(fmt.Sprintf("机器ip:%s, 调试dubbo：    ", middlewares.LocalIp), string(requestJson))
 	go server.DebugDubbo(runTcp)
 	global.ReturnMsg(c, http.StatusOK, "调试tcp", uid)
 }
