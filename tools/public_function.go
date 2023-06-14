@@ -167,7 +167,6 @@ func InitPublicFunc() {
 }
 
 func CallPublicFunc(funcName string, parameters []string) []reflect.Value {
-
 	if function, ok := ControllerMapsType[funcName]; ok {
 		f := reflect.ValueOf(function)
 		if len(parameters) != f.Type().NumIn() {
@@ -203,6 +202,7 @@ func ParsFunc(source string) (value string) {
 	}
 	var parameters []string
 	key := strings.Split(source, "__")[1]
+	// 去掉key的最前面和最后的字符
 	list := strings.Split(key, "(")
 	funcName := list[0]
 	if len(list) <= 1 {
@@ -215,6 +215,15 @@ func ParsFunc(source string) (value string) {
 		if strings.Contains(parameters[0], ",") {
 			parameters = strings.Split(parameters[0], ",")
 		}
+	}
+	// 如果公共函数只有一个参数
+	switch funcName {
+	case "MD5", "SHA256", "SHA512", "SHA1", "SHA224", "SHA384", "ToTimeStamp", "ToStandardTime", "RandomString":
+		var v string
+		for _, i := range parameters {
+			v += i
+		}
+		parameters = []string{v}
 	}
 	reflectValue := CallPublicFunc(funcName, parameters)
 	if reflectValue == nil {
