@@ -21,16 +21,15 @@ type MQTT struct {
 }
 
 type MQTTConfig struct {
-	PortType         string  `json:"port_type"` // 端口类型：tcp\ws\wss\ssl， 默认tcp
-	Broker           string  `json:"broker"`    // 必填项
-	Port             int     `json:"port"`      // 端口
-	Action           string  `json:"action"`
-	Topic            string  `json:"topic"`              // 必填项
-	Username         string  `json:"username"`           // 非必填
-	Password         string  `json:"password"`           // 非必填
-	ClientId         string  `json:"client_id"`          // 必填
-	PingTimeOut      int64   `json:"ping_time_out"`      // 非必填
-	ConnectTimeOut   int64   `json:"connect_time_out"`   // 非必填
+	PortType     string       `json:"port_type"` // 端口类型：tcp\ws\wss\ssl， 默认tcp
+	Broker       string       `json:"broker"`    // 必填项
+	Port         int          `json:"port"`      // 端口
+	Action       string       `json:"action"`
+	Topic        string       `json:"topic"` // 必填项
+	CommonConfig CommonConfig `json:"common_config"`
+	HigherConfig HigherConfig `json:"higher_config"`
+	PingTimeOut  int64        `json:"ping_time_out"` // 非必填
+
 	WriteTimeOut     int64   `json:"write_time_out"`     // 非必填
 	KeepLiveTime     int64   `json:"keep_live_time"`     // 默认10 非必填
 	MQTTVersion      uint    `json:"mqtt_version"`       // 版本 默认5.0
@@ -38,9 +37,20 @@ type MQTTConfig struct {
 	Will             Will    `json:"will"`               // 遗愿
 	Retained         bool    `json:"retained"`           // 是否保留消息
 	Qos              byte    `json:"qos"`                // 服务质量： 0：至多一次 ； 1：至少一次； 2：确保只有一次
+	IsEncrypt        bool    `json:"is_encrypt"`         // 是否认证
 	Tls              Tls     `json:"tls"`                // tls 认证
 	CaFile           *CaFile `json:"ca_file"`            // 认证文件
 	OnConnectionLost bool    `json:"on_connection_lost"` // 断开连接后是否需要重连
+}
+
+type CommonConfig struct {
+	Username string `json:"username"`  // 非必填
+	Password string `json:"password"`  // 非必填
+	ClientId string `json:"client_id"` // 必填
+}
+
+type HigherConfig struct {
+	ConnectTimeOut int64 `json:"connect_time_out"` // 非必填
 }
 type Will struct {
 	WillEnabled bool   //遗愿

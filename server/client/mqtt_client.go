@@ -15,19 +15,19 @@ import (
 func NewMqttClient(config model.MQTTConfig) (c *model.MQTTClient, err error) {
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(fmt.Sprintf("%s://%s:%d", config.PortType, config.Broker, config.Port))
-	opts.SetClientID(config.ClientId)
-	if config.Username != model.NILSTRING {
-		opts.SetUsername(config.Username)
+	opts.SetClientID(config.CommonConfig.ClientId)
+	if config.CommonConfig.Username != model.NILSTRING {
+		opts.SetUsername(config.CommonConfig.Username)
 	}
 
-	if config.Password != model.NILSTRING {
-		opts.SetPassword(config.Password)
+	if config.CommonConfig.Password != model.NILSTRING {
+		opts.SetPassword(config.CommonConfig.Password)
 	}
 	if config.PingTimeOut != model.NILINT {
 		opts.SetPingTimeout(time.Duration(config.PingTimeOut) * time.Second)
 	}
-	if config.ConnectTimeOut != model.NILINT {
-		opts.SetConnectTimeout(time.Duration(config.ConnectTimeOut) * time.Second)
+	if config.HigherConfig.ConnectTimeOut != model.NILINT {
+		opts.SetConnectTimeout(time.Duration(config.HigherConfig.ConnectTimeOut) * time.Second)
 	}
 	if config.WriteTimeOut != model.NILINT {
 		opts.SetWriteTimeout(time.Duration(config.WriteTimeOut) * time.Second)
@@ -47,20 +47,23 @@ func NewMqttClient(config model.MQTTConfig) (c *model.MQTTClient, err error) {
 		opts.SetWill(config.Will.WillTopic, config.Will.WillPayload, config.Will.WillQos, config.Retained)
 	}
 	opts.OnConnect = func(client mqtt.Client) {
-		//log.Logger.Debug("MQTT连接成功")
-		fmt.Println("mqtt连接成功")
+		log.Logger.Debug("MQTT连接成功")
 	}
+	c = new(model.MQTTClient)
 	if config.OnConnectionLost {
 		opts.OnConnectionLost = func(client mqtt.Client, err error) {
 			log.Logger.Debug("MQTT连接断开")
 			if config.AutoReconnect {
-				NewMqttClient(config)
+				c, err = NewMqttClient(config)
+				if err != nil {
+					return
+				}
 			}
 		}
 	}
 	opts.SetDefaultPublishHandler(model.MessagePubHandler)
 	client := mqtt.NewClient(opts)
-	c = new(model.MQTTClient)
+
 	c.Client = client
 	c.QOS = config.Qos
 	c.Retained = config.Retained

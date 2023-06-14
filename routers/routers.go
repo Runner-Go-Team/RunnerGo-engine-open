@@ -12,7 +12,7 @@ func InitRouter(Router *gin.RouterGroup) {
 		Router.POST("/run_sql/", api.RunSql)
 		Router.POST("/run_tcp/", api.RunTcp)
 		Router.POST("/run_ws/", api.RunWs)
-		Router.POST("/run_mt/", api.RunMQTT)
+		//Router.POST("/run_mt/", api.RunMQTT)
 		Router.POST("/run_dubbo/", api.RunDubbo)
 		Router.POST("/sql_connection/", api.RunMysqlConnection)
 		Router.POST("/run_scene/", api.RunScene)
