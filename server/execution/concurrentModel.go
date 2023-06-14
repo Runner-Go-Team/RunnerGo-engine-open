@@ -316,7 +316,6 @@ func ConcurrentModel(wg *sync.WaitGroup, scene model.Scene, configuration *model
 							continue
 						}
 						concurrentMap.Store(i, true)
-						wg.Add(1)
 						currentWg.Add(1)
 						go func(concurrentId int64, useConfiguration *model.Configuration, currentScene model.Scene) {
 							for startTime+duration >= time.Now().Unix() {
@@ -332,10 +331,8 @@ func ConcurrentModel(wg *sync.WaitGroup, scene model.Scene, configuration *model
 								sceneWg.Wait()
 							}
 							concurrentMap.Delete(concurrentId)
-
-							wg.Done()
 							currentWg.Done()
-
+							log.Logger.Debug("123123123123123123")
 						}(i, configuration, scene)
 
 						//if reheatTime > 0 && index == 0 && i != 0 {
