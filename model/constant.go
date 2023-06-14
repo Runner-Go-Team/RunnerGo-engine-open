@@ -26,12 +26,19 @@ const (
 	ServiceError = int64(10003)
 )
 
-// 断言类型
+// Dubbo 值类型
 const (
-	Text    = iota // 文本断言
-	Regular        // 正则表达式
-	Json           // json断言
-	XPath          // xpath断言
+	JavaString    = "java.lang.String"
+	JavaInteger   = "java.lang.Integer"
+	JavaDouble    = "java.lang.Double"
+	JavaShort     = "java.lang.Short"
+	JavaLong      = "java.lang.Long"
+	JavaFloat     = "java.lang.Float"
+	JavaByte      = "java.lang.Byte"
+	JavaBoolean   = "java.lang.Boolean"
+	JavaCharacter = "java.lang.Character"
+	JavaMap       = "java.lang.Map"
+	JavaList      = "java.lang.List"
 )
 
 // 文本断言类型
