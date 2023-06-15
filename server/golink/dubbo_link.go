@@ -19,8 +19,6 @@ func SendDubbo(dubbo model.DubboDetail, mongoCollection *mongo.Collection) {
 	results["team_id"] = dubbo.TeamId
 	results["target_id"] = dubbo.TargetId
 	parameterTypes, parameterValues := []string{}, []hessian.Object{}
-	requestType, _ := json.Marshal(parameterTypes)
-	results["request_type"] = string(requestType)
 
 	rpcServer, err := client.NewRpcServer(dubbo)
 
@@ -78,6 +76,8 @@ func SendDubbo(dubbo model.DubboDetail, mongoCollection *mongo.Collection) {
 		parameterValues = append(parameterValues, val)
 
 	}
+	requestType, _ := json.Marshal(parameterTypes)
+	results["request_type"] = string(requestType)
 	requestBody, _ := json.Marshal(parameterValues)
 	results["request_body"] = string(requestBody)
 
