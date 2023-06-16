@@ -5,6 +5,7 @@ import (
 	dubboConfig "dubbo.apache.org/dubbo-go/v3/config"
 	_ "dubbo.apache.org/dubbo-go/v3/imports"
 	_ "dubbo.apache.org/dubbo-go/v3/metadata/service/local"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/tools"
 )
@@ -15,13 +16,11 @@ func NewRpcServer(dubbo model.DubboDetail) (rpcServer common.RPCService, err err
 		Protocol: dubbo.DubboConfig.RegistrationCenterName,
 		Address:  dubbo.DubboConfig.RegistrationCenterAddress,
 	}
-
 	var zk string
 
 	if dubbo.DubboConfig.RegistrationCenterName == "zookeeper" {
 		zk = "zk"
 	}
-
 	refConf := &dubboConfig.ReferenceConfig{
 		InterfaceName: dubbo.ApiName, // 服务接口名
 		Cluster:       "failover",
@@ -38,16 +37,19 @@ func NewRpcServer(dubbo model.DubboDetail) (rpcServer common.RPCService, err err
 	if err = dubboConfig.Load(dubboConfig.WithRootConfig(rootConfig)); err != nil {
 		return
 	}
-
-	if err = rootConfig.Init(); err != nil {
-		return
-	}
+	//
+	//if err = rootConfig.Init(); err != nil {
+	//	return
+	//}
 
 	if err = refConf.Init(rootConfig); err != nil {
 		return
 	}
 
-	refConf.GenericLoad(dubbo.ApiName)
+	//refConf.GenericLoad(dubbo.ApiName)
+	log.Logger.Debug("refConf:    ", refConf)
+	log.Logger.Debug("err:    ", err)
+	refConf.GenericLoad("consumer")
 	rpcServer = refConf.GetRPCService()
 	return
 }
