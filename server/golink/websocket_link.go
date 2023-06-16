@@ -2,6 +2,7 @@
 package golink
 
 import (
+	"encoding/json"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/server/client"
 	"github.com/shopspring/decimal"
@@ -24,14 +25,23 @@ func webSocketSend(ws model.WebsocketDetail, mongoCollection *mongo.Collection) 
 	}
 	//  api.Request.Body.ToString()
 	recvResults, writeResults := make(map[string]interface{}), make(map[string]interface{})
+	recvResults["type"] = "recv"
 	recvResults["uuid"] = ws.Uuid.String()
 	recvResults["name"] = ws.Name
 	recvResults["team_id"] = ws.TeamId
 	recvResults["target_id"] = ws.TargetId
+
+	writeResults["type"] = "send"
 	writeResults["uuid"] = ws.Uuid.String()
 	writeResults["name"] = ws.Name
 	writeResults["team_id"] = ws.TeamId
 	writeResults["target_id"] = ws.TargetId
+	header, _ := json.Marshal(headers)
+	if header != nil {
+		writeResults["header"] = string(header)
+	} else {
+		writeResults["header"] = ""
+	}
 
 	resp, requestTime, sendBytes, err := client.WebSocketRequest(recvResults, writeResults, mongoCollection, ws.Url, ws.SendMessage, headers, ws.WsConfig)
 

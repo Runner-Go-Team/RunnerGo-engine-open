@@ -152,7 +152,7 @@ func RunWs(c *gin.Context) {
 
 	log.Logger.Info(fmt.Sprintf("机器ip:%s, 调试websocket：    ", middlewares.LocalIp), string(requestJson))
 	go server.DebugWs(runWs)
-	global.ReturnMsg(c, http.StatusOK, "调试tcp", uid)
+	global.ReturnMsg(c, http.StatusOK, "调试ws", uid)
 }
 
 //func RunMQTT(c *gin.Context) {

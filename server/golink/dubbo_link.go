@@ -21,7 +21,6 @@ func SendDubbo(dubbo model.DubboDetail, mongoCollection *mongo.Collection) {
 	parameterTypes, parameterValues := []string{}, []hessian.Object{}
 
 	rpcServer, err := client.NewRpcServer(dubbo)
-
 	for _, parame := range dubbo.DubboParam {
 		if parame.IsChecked != model.Open {
 			break
@@ -84,7 +83,6 @@ func SendDubbo(dubbo model.DubboDetail, mongoCollection *mongo.Collection) {
 	if err != nil {
 		results["response_body"] = err.Error()
 	} else {
-
 		resp, err := rpcServer.(*generic.GenericService).Invoke(
 			context.TODO(),
 			dubbo.FunctionName,

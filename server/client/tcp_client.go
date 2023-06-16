@@ -4,10 +4,7 @@ import (
 	"net"
 )
 
-func NewTcpClient(url string) net.Conn {
-	conn, err := net.Dial("tcp", url)
-	if err != nil {
-		return nil
-	}
-	return conn
+func NewTcpClient(url string) (conn net.Conn, err error) {
+	conn, err = net.Dial("tcp", url)
+	return
 }
