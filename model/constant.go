@@ -184,5 +184,5 @@ const (
 	LongConnection     = int32(1)
 	ShortConnection    = int32(2)
 	AutoConnectionSend = int32(1)
-	ConnectionAndSend  = int32(2)
+	ConnectionAndSend  = int32(0)
 )
