@@ -1,11 +1,13 @@
 package golink
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/server/client"
+	"github.com/go-redis/redis"
 	"go.mongodb.org/mongo-driver/mongo"
 	"net"
 	"sync"
@@ -15,7 +17,7 @@ import (
 func TcpConnection(tcp model.TCP, mongoCollection *mongo.Collection) {
 	var conn net.Conn
 	var err error
-	recvResults, writeResults := make(map[string]interface{}), make(map[string]interface{})
+	connectionResults, recvResults, writeResults := make(map[string]interface{}), make(map[string]interface{}), make(map[string]interface{})
 
 	recvResults["type"] = "recv"
 	recvResults["uuid"] = tcp.Uuid.String()
@@ -29,9 +31,17 @@ func TcpConnection(tcp model.TCP, mongoCollection *mongo.Collection) {
 	writeResults["team_id"] = tcp.TeamId
 	writeResults["target_id"] = tcp.TargetId
 
+	connectionResults["type"] = "connection"
+	connectionResults["uuid"] = tcp.Uuid.String()
+	connectionResults["name"] = tcp.Name
+	connectionResults["team_id"] = tcp.TeamId
+	connectionResults["target_id"] = tcp.TargetId
+
 	for i := 0; i < tcp.TcpConfig.RetryNum; i++ {
 		conn, err = client.NewTcpClient(tcp.Url)
 		if conn != nil {
+			connectionResults["status"] = true
+			connectionResults["is_stop"] = false
 			break
 		}
 	}
@@ -62,15 +72,20 @@ func TcpConnection(tcp model.TCP, mongoCollection *mongo.Collection) {
 	buf := make([]byte, 1024)
 
 	switch tcp.TcpConfig.ConnectType {
-	case 1:
+	// 长连接
+	case model.LongConnection:
+		adjustKey := fmt.Sprintf("WsStatusChange:%s", tcp.Uuid.String())
+		pubSub := model.SubscribeMsg(adjustKey)
+		statusCh := pubSub.Channel()
 		connChan := make(chan net.Conn, 2)
 		wg := new(sync.WaitGroup)
 		wg.Add(1)
-		go Read(wg, readTimeAfter, connChan, buf, conn, tcp, recvResults, mongoCollection)
+		go Read(wg, readTimeAfter, connChan, buf, conn, tcp, recvResults, mongoCollection, statusCh)
 		wg.Add(1)
-		go Write(wg, writeTimeAfter, connChan, ticker, conn, tcp, writeResults, mongoCollection)
+		go Write(wg, writeTimeAfter, connChan, ticker, conn, tcp, writeResults, mongoCollection, statusCh)
 		wg.Wait()
-	case 2:
+	// 短连接
+	case model.ShortConnection:
 		msg := []byte(tcp.SendMessage)
 		_, err := conn.Write(msg)
 		writeResults["request_body"] = msg
@@ -115,7 +130,7 @@ func ReConnection(tcp model.TCP, connChan chan net.Conn) (conn net.Conn, err err
 	return
 }
 
-func Write(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Conn, ticker *time.Ticker, conn net.Conn, tcp model.TCP, results map[string]interface{}, mongoCollection *mongo.Collection) {
+func Write(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Conn, ticker *time.Ticker, conn net.Conn, tcp model.TCP, results map[string]interface{}, mongoCollection *mongo.Collection, statusCh <-chan *redis.Message) {
 	defer wg.Done()
 	defer func() {
 		if conn != nil {
@@ -123,70 +138,154 @@ func Write(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Con
 		}
 	}()
 	var err error
-	for {
-		select {
-		case <-timeAfter:
-			results["status"] = true
-			results["is_stop"] = true
-			model.Insert(mongoCollection, results, middlewares.LocalIp)
-			return
-		case <-ticker.C:
-			msg := []byte(tcp.SendMessage)
-			if conn == nil {
-				conn, err = ReConnection(tcp, connChan)
-				results["status"] = false
-				results["is_stop"] = true
-				results["response_body"] = err.Error()
-				model.Insert(mongoCollection, results, middlewares.LocalIp)
-				break
-			}
+	switch tcp.TcpConfig.IsAutoSend {
+	case model.AutoConnectionSend:
+		for {
 			select {
-			case conn = <-connChan:
-				_, err := conn.Write(msg)
-				if err != nil {
+			case <-timeAfter:
+				results["status"] = true
+				results["is_stop"] = true
+				model.Insert(mongoCollection, results, middlewares.LocalIp)
+				return
+			case c := <-statusCh:
+				var tcpStatusChange = new(model.ConnectionStatusChange)
+				_ = json.Unmarshal([]byte(c.Payload), tcpStatusChange)
+				if tcpStatusChange.Type == 1 {
+					results["status"] = true
+					results["is_stop"] = true
+					model.Insert(mongoCollection, results, middlewares.LocalIp)
+					return
+				}
+			case <-ticker.C:
+				msg := []byte(tcp.SendMessage)
+				if conn == nil {
+					conn, err = ReConnection(tcp, connChan)
 					results["status"] = false
 					results["is_stop"] = true
 					results["response_body"] = err.Error()
 					model.Insert(mongoCollection, results, middlewares.LocalIp)
 					break
 				}
-				results["request_body"] = tcp.SendMessage
-				if err != nil {
-					results["status"] = false
-					results["request_body"] = err.Error()
-				} else {
-					results["status"] = true
-				}
-				results["is_stop"] = false
-				model.Insert(mongoCollection, results, middlewares.LocalIp)
-				log.Logger.Debug(fmt.Sprintf("tcp写入消息: %s", tcp.SendMessage))
-			default:
-				_, err := conn.Write(msg)
-				if err != nil {
-					results["status"] = false
-					results["is_stop"] = true
-					results["response_body"] = err.Error()
+				select {
+				case conn = <-connChan:
+					_, err := conn.Write(msg)
+					if err != nil {
+						results["status"] = false
+						results["is_stop"] = true
+						results["response_body"] = err.Error()
+						model.Insert(mongoCollection, results, middlewares.LocalIp)
+						break
+					}
+					results["request_body"] = tcp.SendMessage
+					if err != nil {
+						results["status"] = false
+						results["request_body"] = err.Error()
+					} else {
+						results["status"] = true
+					}
+					results["is_stop"] = false
 					model.Insert(mongoCollection, results, middlewares.LocalIp)
-					break
+					log.Logger.Debug(fmt.Sprintf("tcp写入消息: %s", tcp.SendMessage))
+				default:
+					_, err := conn.Write(msg)
+					if err != nil {
+						results["status"] = false
+						results["is_stop"] = true
+						results["response_body"] = err.Error()
+						model.Insert(mongoCollection, results, middlewares.LocalIp)
+						break
+					}
+					results["request_body"] = tcp.SendMessage
+					if err != nil {
+						results["status"] = false
+						results["request_body"] = err.Error()
+					} else {
+						results["status"] = true
+					}
+					results["is_stop"] = false
+					model.Insert(mongoCollection, results, middlewares.LocalIp)
+					log.Logger.Debug(fmt.Sprintf("tcp写入消息: %s", tcp.SendMessage))
 				}
-				results["request_body"] = tcp.SendMessage
-				if err != nil {
-					results["status"] = false
-					results["request_body"] = err.Error()
-				} else {
-					results["status"] = true
-				}
-				results["is_stop"] = false
-				model.Insert(mongoCollection, results, middlewares.LocalIp)
-				log.Logger.Debug(fmt.Sprintf("tcp写入消息: %s", tcp.SendMessage))
-			}
 
+			}
 		}
+	case model.ConnectionAndSend:
+		for {
+			select {
+			case <-timeAfter:
+				results["status"] = true
+				results["is_stop"] = true
+				model.Insert(mongoCollection, results, middlewares.LocalIp)
+				return
+			case c := <-statusCh:
+				var tcpStatusChange = new(model.ConnectionStatusChange)
+				_ = json.Unmarshal([]byte(c.Payload), tcpStatusChange)
+				switch tcpStatusChange.Type {
+				case 1:
+					results["status"] = true
+					results["is_stop"] = true
+					model.Insert(mongoCollection, results, middlewares.LocalIp)
+					return
+				case 2:
+					tcp.SendMessage = tcpStatusChange.Message
+					msg := []byte(tcp.SendMessage)
+					if conn == nil {
+						conn, err = ReConnection(tcp, connChan)
+						results["status"] = false
+						results["is_stop"] = true
+						results["response_body"] = err.Error()
+						model.Insert(mongoCollection, results, middlewares.LocalIp)
+						break
+					}
+					select {
+					case conn = <-connChan:
+						_, err := conn.Write(msg)
+						if err != nil {
+							results["status"] = false
+							results["is_stop"] = true
+							results["response_body"] = err.Error()
+							model.Insert(mongoCollection, results, middlewares.LocalIp)
+							break
+						}
+						results["request_body"] = tcp.SendMessage
+						if err != nil {
+							results["status"] = false
+							results["request_body"] = err.Error()
+						} else {
+							results["status"] = true
+						}
+						results["is_stop"] = false
+						model.Insert(mongoCollection, results, middlewares.LocalIp)
+					default:
+						_, err := conn.Write(msg)
+						if err != nil {
+							results["status"] = false
+							results["is_stop"] = true
+							results["response_body"] = err.Error()
+							model.Insert(mongoCollection, results, middlewares.LocalIp)
+							break
+						}
+						results["request_body"] = tcp.SendMessage
+						if err != nil {
+							results["status"] = false
+							results["request_body"] = err.Error()
+						} else {
+							results["status"] = true
+						}
+						results["is_stop"] = false
+						model.Insert(mongoCollection, results, middlewares.LocalIp)
+					}
+
+				}
+
+			}
+		}
+
 	}
 
 }
 
-func Read(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Conn, buf []byte, conn net.Conn, tcp model.TCP, results map[string]interface{}, mongoCollection *mongo.Collection) {
+func Read(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Conn, buf []byte, conn net.Conn, tcp model.TCP, results map[string]interface{}, mongoCollection *mongo.Collection, statusCh <-chan *redis.Message) {
 	defer wg.Done()
 	defer func() {
 		if conn != nil {
@@ -201,6 +300,16 @@ func Read(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Conn
 			results["is_stop"] = true
 			model.Insert(mongoCollection, results, middlewares.LocalIp)
 			return
+		case c := <-statusCh:
+			var tcpStatusChange = new(model.ConnectionStatusChange)
+			_ = json.Unmarshal([]byte(c.Payload), tcpStatusChange)
+			switch tcpStatusChange.Type {
+			case 1:
+				results["status"] = true
+				results["is_stop"] = true
+				model.Insert(mongoCollection, results, middlewares.LocalIp)
+				return
+			}
 		default:
 			if conn == nil {
 				conn, err = ReConnection(tcp, connChan)
@@ -230,7 +339,6 @@ func Read(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Conn
 				results["response_body"] = msg
 				results["is_stop"] = false
 				model.Insert(mongoCollection, results, middlewares.LocalIp)
-				log.Logger.Debug(fmt.Sprintf("tcp读消息: %s", msg))
 			default:
 				n, err := conn.Read(buf)
 				if err != nil {
@@ -249,7 +357,6 @@ func Read(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Conn
 				results["response_body"] = msg
 				results["is_stop"] = false
 				model.Insert(mongoCollection, results, middlewares.LocalIp)
-				log.Logger.Debug(fmt.Sprintf("tcp读消息: %s", msg))
 			}
 
 		}

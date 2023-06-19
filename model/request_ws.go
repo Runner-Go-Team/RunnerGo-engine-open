@@ -10,6 +10,7 @@ type WebsocketDetail struct {
 	Url            string          `json:"url"`
 	Debug          string          `json:"debug"`
 	SendMessage    string          `json:"send_message"`
+	MessageType    string          `json:"message_type"` // "Binary"、"Text"、"Json"、"Xml"
 	WsHeader       []WsQuery       `json:"ws_header"`
 	WsParam        []WsQuery       `json:"ws_param"`
 	WsEvent        []WsQuery       `json:"ws_event"`
@@ -20,12 +21,13 @@ type WebsocketDetail struct {
 }
 
 type WsConfig struct {
-	ConnectType         int `json:"connect_type"`           // 连接类型：1-长连接，2-短连接
-	ConnectDurationTime int `json:"connect_duration_time"`  // 连接持续时长，单位：秒
-	SendMsgDurationTime int `json:"send_msg_duration_time"` // 发送消息间隔时长，单位：毫秒
-	ConnectTimeoutTime  int `json:"connect_timeout_time"`   // 连接超时时间，单位：毫秒
-	RetryNum            int `json:"retry_num"`              // 重连次数
-	RetryInterval       int `json:"retry_interval"`         // 重连间隔时间，单位：毫秒
+	ConnectType         int32 `json:"connect_type"`           // 连接类型：1-长连接，2-短连接
+	IsAutoSend          int32 `json:"is_auto_send"`           // 是否自动发送消息：0-非自动，1-自动
+	ConnectDurationTime int   `json:"connect_duration_time"`  // 连接持续时长，单位：秒
+	SendMsgDurationTime int   `json:"send_msg_duration_time"` // 发送消息间隔时长，单位：毫秒
+	ConnectTimeoutTime  int   `json:"connect_timeout_time"`   // 连接超时时间，单位：毫秒
+	RetryNum            int   `json:"retry_num"`              // 重连次数
+	RetryInterval       int   `json:"retry_interval"`         // 重连间隔时间，单位：毫秒
 }
 
 type WsQuery struct {
