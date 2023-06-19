@@ -9,12 +9,6 @@ const (
 
 )
 
-const (
-	CommonTaskType = 1
-	TimingTaskType = 2
-	CICDTaskType   = 3
-)
-
 // ConfigTask 任务配置
 type ConfigTask struct {
 	DebugMode   string   `json:"debug_mode"`   // 开启debug模式： all: 所有日志; only_error: 仅错误日志；  only_success：仅成功日志：stop： 停止debug;
@@ -47,4 +41,10 @@ type SubscriptionStressPlanStatusChange struct {
 type MachineModeConf struct {
 	Machine  string    `json:"machine"`
 	ModeConf *ModeConf `json:"mode_conf"`
+}
+
+type ConnectionStatusChange struct {
+	Type        int32  `json:"type"` // 1: 断开连接； 2： 发送消息
+	MessageType string `json:"message_type"`
+	Message     string `json:"message"`
 }

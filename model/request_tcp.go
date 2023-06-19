@@ -12,6 +12,7 @@ type TCP struct {
 	Debug          string          `json:"debug"`       // 是否开启Debug模式
 	Url            string          `json:"url"`
 	SendMessage    string          `json:"send_message"`
+	MessageType    string          `json:"message_type"` // "Binary"、"Text"、"Json"、"Xml"
 	TcpConfig      *TcpConfig      `json:"tcp_config"`
 	Configuration  *Configuration  `json:"configuration"`
 	SqlVariable    *GlobalVariable `json:"sql_variable"`    // 全局变量
@@ -19,12 +20,13 @@ type TCP struct {
 }
 
 type TcpConfig struct {
-	ConnectType         int `json:"connect_type"`           // 连接类型：1-长连接，2-短连接
-	ConnectTimeoutTime  int `json:"connect_timeout_time"`   // 连接超时时间，单位：毫秒
-	RetryNum            int `json:"retry_num"`              // 重连次数
-	RetryInterval       int `json:"retry_interval"`         // 重连间隔时间，单位：毫秒
-	ConnectDurationTime int `json:"connect_duration_time"`  // 连接持续时长
-	SendMsgDurationTime int `json:"send_msg_duration_time"` // 发送消息间隔时长
+	ConnectType         int32 `json:"connect_type"`           // 连接类型：1-长连接，2-短连接
+	IsAutoSend          int32 `json:"is_auto_send"`           // 是否自动发送消息：0-非自动，1-自动
+	ConnectTimeoutTime  int   `json:"connect_timeout_time"`   // 连接超时时间，单位：毫秒
+	RetryNum            int   `json:"retry_num"`              // 重连次数
+	RetryInterval       int   `json:"retry_interval"`         // 重连间隔时间，单位：毫秒
+	ConnectDurationTime int   `json:"connect_duration_time"`  // 连接持续时长
+	SendMsgDurationTime int   `json:"send_msg_duration_time"` // 发送消息间隔时长
 }
 
 func (tcpConfig *TcpConfig) Init() {

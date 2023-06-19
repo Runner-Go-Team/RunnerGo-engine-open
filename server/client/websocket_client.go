@@ -1,21 +1,28 @@
 package client
 
 import (
+	"encoding/json"
+	"fmt"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
+	"github.com/go-redis/redis"
 	"github.com/gorilla/websocket"
+	uuid "github.com/satori/go.uuid"
 	"go.mongodb.org/mongo-driver/mongo"
 	"sync"
 	"time"
 )
 
-func WebSocketRequest(recvResults, writeResults map[string]interface{}, mongoCollection *mongo.Collection, url string, body string, headers map[string][]string, wsConfig model.WsConfig) (resp []byte, requestTime uint64, sendBytes uint, err error) {
+func WebSocketRequest(recvResults, writeResults, connectionResults map[string]interface{}, mongoCollection *mongo.Collection, url string, body string, headers map[string][]string, wsConfig model.WsConfig, uid uuid.UUID) (resp []byte, requestTime uint64, sendBytes uint, err error) {
 	var conn *websocket.Conn
 
+	recvResults["type"] = "recv"
 	for i := 0; i < wsConfig.RetryNum; i++ {
 		conn, _, err = websocket.DefaultDialer.Dial(url, headers)
 		if conn != nil {
+			connectionResults["status"] = true
+			connectionResults["is_stop"] = false
 			break
 		}
 	}
@@ -50,57 +57,137 @@ func WebSocketRequest(recvResults, writeResults map[string]interface{}, mongoCol
 	readTimeAfter, writeTimeAfter := time.After(time.Duration(wsConfig.ConnectDurationTime)*time.Second), time.After(time.Duration(wsConfig.ConnectDurationTime)*time.Second)
 	ticker := time.NewTicker(time.Duration(wsConfig.SendMsgDurationTime) * time.Millisecond)
 	switch wsConfig.ConnectType {
-	case 1:
+	// 长连接
+	case model.LongConnection:
+		// 订阅redis中消息  任务状态：包括：报告停止；debug日志状态；任务配置变更
+		adjustKey := fmt.Sprintf("WsStatusChange:%s", uid.String())
+		pubSub := model.SubscribeMsg(adjustKey)
+		statusCh := pubSub.Channel()
 		wg := new(sync.WaitGroup)
-		wg.Add(1)
-		go func(wsWg *sync.WaitGroup) {
-			defer wsWg.Done()
-
-			for {
-
-				if conn == nil {
-					for i := 0; i < wsConfig.RetryNum; i++ {
-						conn, _, err = websocket.DefaultDialer.Dial(url, headers)
-						if conn != nil {
-							break
-						}
-					}
+		switch wsConfig.IsAutoSend {
+		// 自动发送
+		case model.AutoConnectionSend:
+			wg.Add(1)
+			go func(wsWg *sync.WaitGroup, sub *redis.PubSub) {
+				defer wsWg.Done()
+				for {
 					if conn == nil {
-						if err != nil {
-							writeResults["err"] = err.Error()
-						} else {
-							writeResults["err"] = ""
+						for i := 0; i < wsConfig.RetryNum; i++ {
+							conn, _, err = websocket.DefaultDialer.Dial(url, headers)
+							if conn != nil {
+								break
+							}
 						}
+						if conn == nil {
+							if err != nil {
+								writeResults["err"] = err.Error()
+							} else {
+								writeResults["err"] = ""
+							}
+							writeResults["status"] = false
+							writeResults["is_stop"] = true
+							model.Insert(mongoCollection, writeResults, middlewares.LocalIp)
+							return
+						}
+
+					}
+					select {
+					case <-writeTimeAfter:
 						writeResults["status"] = false
 						writeResults["is_stop"] = true
 						model.Insert(mongoCollection, writeResults, middlewares.LocalIp)
 						return
-					}
-
-				}
-				select {
-				case <-writeTimeAfter:
-					writeResults["status"] = false
-					writeResults["is_stop"] = true
-					model.Insert(mongoCollection, writeResults, middlewares.LocalIp)
-					return
-				case <-ticker.C:
-					bodyBytes := []byte(body)
-					err = conn.WriteMessage(websocket.TextMessage, bodyBytes)
-					writeResults["request_body"] = body
-					writeResults["status"] = true
-					writeResults["is_stop"] = false
-					if err != nil {
-						writeResults["err"] = err.Error()
-						writeResults["status"] = false
+					case c := <-statusCh:
+						var wsStatusChange = new(model.ConnectionStatusChange)
+						_ = json.Unmarshal([]byte(c.Payload), wsStatusChange)
+						if wsStatusChange.Type == 1 {
+							writeResults["status"] = false
+							writeResults["is_stop"] = true
+							model.Insert(mongoCollection, writeResults, middlewares.LocalIp)
+							return
+						}
+					case <-ticker.C:
+						bodyBytes := []byte(body)
+						err = conn.WriteMessage(websocket.TextMessage, bodyBytes)
+						writeResults["request_body"] = body
+						writeResults["status"] = true
+						writeResults["is_stop"] = false
+						if err != nil {
+							writeResults["err"] = err.Error()
+							writeResults["status"] = false
+							model.Insert(mongoCollection, writeResults, middlewares.LocalIp)
+							continue
+						}
 						model.Insert(mongoCollection, writeResults, middlewares.LocalIp)
-						continue
 					}
-					model.Insert(mongoCollection, writeResults, middlewares.LocalIp)
 				}
-			}
 
-		}(wg)
+			}(wg, pubSub)
+		// 手动发送
+		case model.ConnectionAndSend:
+			wg.Add(1)
+			go func(wsWg *sync.WaitGroup, sub *redis.PubSub) {
+				defer wsWg.Done()
+				for {
+
+					if conn == nil {
+						for i := 0; i < wsConfig.RetryNum; i++ {
+							conn, _, err = websocket.DefaultDialer.Dial(url, headers)
+							if conn != nil {
+								break
+							}
+						}
+						if conn == nil {
+							if err != nil {
+								writeResults["err"] = err.Error()
+							} else {
+								writeResults["err"] = ""
+							}
+							writeResults["status"] = false
+							writeResults["is_stop"] = true
+							model.Insert(mongoCollection, writeResults, middlewares.LocalIp)
+							return
+						}
+
+					}
+					select {
+					case <-writeTimeAfter:
+						writeResults["status"] = false
+						writeResults["is_stop"] = true
+						model.Insert(mongoCollection, writeResults, middlewares.LocalIp)
+						return
+					case c := <-statusCh:
+						var wsStatusChange = new(model.ConnectionStatusChange)
+						_ = json.Unmarshal([]byte(c.Payload), wsStatusChange)
+						switch wsStatusChange.Type {
+						case 1:
+							writeResults["status"] = false
+							writeResults["is_stop"] = true
+							model.Insert(mongoCollection, writeResults, middlewares.LocalIp)
+							return
+						case 2:
+							body = wsStatusChange.Message
+							bodyBytes := []byte(body)
+							err = conn.WriteMessage(websocket.TextMessage, bodyBytes)
+							writeResults["request_body"] = body
+							writeResults["status"] = true
+							writeResults["is_stop"] = false
+							if err != nil {
+								writeResults["err"] = err.Error()
+								writeResults["status"] = false
+								model.Insert(mongoCollection, writeResults, middlewares.LocalIp)
+								continue
+							}
+							model.Insert(mongoCollection, writeResults, middlewares.LocalIp)
+						}
+
+					}
+				}
+
+			}(wg, pubSub)
+		}
+
+		// 读消息
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -133,6 +220,16 @@ func WebSocketRequest(recvResults, writeResults map[string]interface{}, mongoCol
 					recvResults["is_stop"] = true
 					model.Insert(mongoCollection, recvResults, middlewares.LocalIp)
 					return
+				case c := <-statusCh:
+					var wsStatusChange = new(model.ConnectionStatusChange)
+					_ = json.Unmarshal([]byte(c.Payload), wsStatusChange)
+					if wsStatusChange.Type == 1 {
+						recvResults["status"] = false
+						recvResults["is_stop"] = true
+						model.Insert(mongoCollection, recvResults, middlewares.LocalIp)
+						return
+					}
+
 				default:
 					m, p, connectErr := conn.ReadMessage()
 					if connectErr != nil {
@@ -152,7 +249,9 @@ func WebSocketRequest(recvResults, writeResults map[string]interface{}, mongoCol
 			}
 		}()
 		wg.Wait()
-	case 2:
+
+	// 短链接
+	case model.ShortConnection:
 		if conn == nil {
 			if err != nil {
 				recvResults["err"] = err.Error()

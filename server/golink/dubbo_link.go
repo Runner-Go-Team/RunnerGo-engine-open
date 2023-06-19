@@ -4,6 +4,7 @@ import (
 	"context"
 	"dubbo.apache.org/dubbo-go/v3/config/generic"
 	"encoding/json"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/server/client"
@@ -21,6 +22,7 @@ func SendDubbo(dubbo model.DubboDetail, mongoCollection *mongo.Collection) {
 	parameterTypes, parameterValues := []string{}, []hessian.Object{}
 
 	rpcServer, err := client.NewRpcServer(dubbo)
+
 	for _, parame := range dubbo.DubboParam {
 		if parame.IsChecked != model.Open {
 			break
@@ -79,7 +81,6 @@ func SendDubbo(dubbo model.DubboDetail, mongoCollection *mongo.Collection) {
 	results["request_type"] = string(requestType)
 	requestBody, _ := json.Marshal(parameterValues)
 	results["request_body"] = string(requestBody)
-
 	if err != nil {
 		results["response_body"] = err.Error()
 	} else {
@@ -96,6 +97,7 @@ func SendDubbo(dubbo model.DubboDetail, mongoCollection *mongo.Collection) {
 			response, _ := json.Marshal(resp)
 			results["response_body"] = string(response)
 		}
+		log.Logger.Debug("reference:     ", rpcServer.(*generic.GenericService).Reference())
 
 	}
 

@@ -1,7 +1,10 @@
 package client
 
 import (
+	"fmt"
+	"github.com/samuel/go-zookeeper/zk"
 	"testing"
+	"time"
 )
 
 func TestNewRpcClient(t *testing.T) {
@@ -32,4 +35,16 @@ func TestNewRpcClient(t *testing.T) {
 	//rpc.Method = "sayHi"
 	//rpc.AppName = "demo"
 	//NewRpcClient(rpc)
+
+	// 测试连接zk
+	hosts := []string{"172.17.101.188:2181"}
+	conn, event, err := zk.Connect(hosts, time.Second*5)
+	defer conn.Close()
+
+	if err != nil {
+		fmt.Println("err:   ", err)
+		return
+	}
+	fmt.Println("event:      ", event)
+	fmt.Println("conn:       ", conn.Server())
 }

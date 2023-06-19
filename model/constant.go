@@ -174,3 +174,15 @@ const (
 	DebugStatus  = 2
 	ReportChange = 3
 )
+
+// tcp/ws 消息类型
+const (
+	MsBinary           = "Binary"
+	MsText             = "Text"
+	MsJson             = "Json"
+	MsXml              = "Xml"
+	LongConnection     = int32(1)
+	ShortConnection    = int32(2)
+	AutoConnectionSend = int32(1)
+	ConnectionAndSend  = int32(2)
+)
