@@ -74,7 +74,7 @@ func TcpConnection(tcp model.TCP, mongoCollection *mongo.Collection) {
 	switch tcp.TcpConfig.ConnectType {
 	// 长连接
 	case model.LongConnection:
-		adjustKey := fmt.Sprintf("WsStatusChange:%s", tcp.Uuid.String())
+		adjustKey := fmt.Sprintf("TcpStatusChange:%s", tcp.Uuid.String())
 		pubSub := model.SubscribeMsg(adjustKey)
 		statusCh := pubSub.Channel()
 		connChan := make(chan net.Conn, 2)
