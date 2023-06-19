@@ -185,4 +185,6 @@ const (
 	ShortConnection    = int32(2)
 	AutoConnectionSend = int32(1)
 	ConnectionAndSend  = int32(0)
+	UnConnection       = int32(1)
+	SendMessage        = int32(2)
 )

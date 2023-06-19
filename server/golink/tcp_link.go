@@ -136,6 +136,9 @@ func Write(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Con
 		if conn != nil {
 			conn.Close()
 		}
+		if ticker != nil {
+			ticker.Stop()
+		}
 	}()
 	var err error
 	var tcpStatusChange = new(model.ConnectionStatusChange)
@@ -221,12 +224,12 @@ func Write(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Con
 			case c := <-statusCh:
 				_ = json.Unmarshal([]byte(c.Payload), tcpStatusChange)
 				switch tcpStatusChange.Type {
-				case 1:
+				case model.UnConnection:
 					results["status"] = true
 					results["is_stop"] = true
 					model.Insert(mongoCollection, results, middlewares.LocalIp)
 					return
-				case 2:
+				case model.SendMessage:
 					tcp.SendMessage = tcpStatusChange.Message
 					msg := []byte(tcp.SendMessage)
 					if conn == nil {
@@ -280,7 +283,13 @@ func Write(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Con
 
 			}
 		}
+	default:
 
+		results["status"] = false
+		results["is_stop"] = true
+		results["response_body"] = err.Error()
+		model.Insert(mongoCollection, results, middlewares.LocalIp)
+		return
 	}
 
 }
@@ -302,7 +311,6 @@ func Read(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Conn
 			model.Insert(mongoCollection, results, middlewares.LocalIp)
 			return
 		case c := <-statusCh:
-
 			_ = json.Unmarshal([]byte(c.Payload), tcpStatusChange)
 			switch tcpStatusChange.Type {
 			case 1:

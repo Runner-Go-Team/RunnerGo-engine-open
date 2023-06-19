@@ -16,7 +16,6 @@ import (
 
 func WebSocketRequest(recvResults, writeResults, connectionResults map[string]interface{}, mongoCollection *mongo.Collection, url string, body string, headers map[string][]string, wsConfig model.WsConfig, uid uuid.UUID) (resp []byte, requestTime uint64, sendBytes uint, err error) {
 	var conn *websocket.Conn
-
 	recvResults["type"] = "recv"
 	for i := 0; i < wsConfig.RetryNum; i++ {
 		conn, _, err = websocket.DefaultDialer.Dial(url, headers)
@@ -56,6 +55,7 @@ func WebSocketRequest(recvResults, writeResults, connectionResults map[string]in
 	}
 	readTimeAfter, writeTimeAfter := time.After(time.Duration(wsConfig.ConnectDurationTime)*time.Second), time.After(time.Duration(wsConfig.ConnectDurationTime)*time.Second)
 	ticker := time.NewTicker(time.Duration(wsConfig.SendMsgDurationTime) * time.Millisecond)
+	defer ticker.Stop()
 	switch wsConfig.ConnectType {
 	// 长连接
 	case model.LongConnection:
@@ -185,6 +185,11 @@ func WebSocketRequest(recvResults, writeResults, connectionResults map[string]in
 				}
 
 			}(wg, pubSub)
+		default:
+			writeResults["status"] = false
+			writeResults["is_stop"] = true
+			model.Insert(mongoCollection, writeResults, middlewares.LocalIp)
+			return
 		}
 
 		// 读消息
@@ -261,7 +266,6 @@ func WebSocketRequest(recvResults, writeResults, connectionResults map[string]in
 			}
 			recvResults["status"] = false
 			writeResults["status"] = false
-			ticker.Stop()
 			recvResults["is_stop"] = true
 			writeResults["is_stop"] = true
 			model.Insert(mongoCollection, writeResults, middlewares.LocalIp)
@@ -303,6 +307,11 @@ func WebSocketRequest(recvResults, writeResults, connectionResults map[string]in
 		model.Insert(mongoCollection, recvResults, middlewares.LocalIp)
 		return
 
+	default:
+		recvResults["status"] = false
+		writeResults["status"] = false
+		recvResults["is_stop"] = true
+		writeResults["is_stop"] = true
 	}
 	return
 
