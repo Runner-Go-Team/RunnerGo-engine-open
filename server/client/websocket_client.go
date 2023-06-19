@@ -63,6 +63,7 @@ func WebSocketRequest(recvResults, writeResults, connectionResults map[string]in
 		adjustKey := fmt.Sprintf("WsStatusChange:%s", uid.String())
 		pubSub := model.SubscribeMsg(adjustKey)
 		statusCh := pubSub.Channel()
+		var wsStatusChange = new(model.ConnectionStatusChange)
 		wg := new(sync.WaitGroup)
 		switch wsConfig.IsAutoSend {
 		// 自动发送
@@ -98,7 +99,7 @@ func WebSocketRequest(recvResults, writeResults, connectionResults map[string]in
 						model.Insert(mongoCollection, writeResults, middlewares.LocalIp)
 						return
 					case c := <-statusCh:
-						var wsStatusChange = new(model.ConnectionStatusChange)
+
 						_ = json.Unmarshal([]byte(c.Payload), wsStatusChange)
 						if wsStatusChange.Type == 1 {
 							writeResults["status"] = false
@@ -157,7 +158,6 @@ func WebSocketRequest(recvResults, writeResults, connectionResults map[string]in
 						model.Insert(mongoCollection, writeResults, middlewares.LocalIp)
 						return
 					case c := <-statusCh:
-						var wsStatusChange = new(model.ConnectionStatusChange)
 						_ = json.Unmarshal([]byte(c.Payload), wsStatusChange)
 						switch wsStatusChange.Type {
 						case 1:
@@ -221,7 +221,6 @@ func WebSocketRequest(recvResults, writeResults, connectionResults map[string]in
 					model.Insert(mongoCollection, recvResults, middlewares.LocalIp)
 					return
 				case c := <-statusCh:
-					var wsStatusChange = new(model.ConnectionStatusChange)
 					_ = json.Unmarshal([]byte(c.Payload), wsStatusChange)
 					if wsStatusChange.Type == 1 {
 						recvResults["status"] = false

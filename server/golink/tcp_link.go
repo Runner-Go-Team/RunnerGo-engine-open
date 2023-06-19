@@ -138,6 +138,7 @@ func Write(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Con
 		}
 	}()
 	var err error
+	var tcpStatusChange = new(model.ConnectionStatusChange)
 	switch tcp.TcpConfig.IsAutoSend {
 	case model.AutoConnectionSend:
 		for {
@@ -148,7 +149,7 @@ func Write(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Con
 				model.Insert(mongoCollection, results, middlewares.LocalIp)
 				return
 			case c := <-statusCh:
-				var tcpStatusChange = new(model.ConnectionStatusChange)
+
 				_ = json.Unmarshal([]byte(c.Payload), tcpStatusChange)
 				if tcpStatusChange.Type == 1 {
 					results["status"] = true
@@ -218,7 +219,6 @@ func Write(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Con
 				model.Insert(mongoCollection, results, middlewares.LocalIp)
 				return
 			case c := <-statusCh:
-				var tcpStatusChange = new(model.ConnectionStatusChange)
 				_ = json.Unmarshal([]byte(c.Payload), tcpStatusChange)
 				switch tcpStatusChange.Type {
 				case 1:
@@ -293,6 +293,7 @@ func Read(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Conn
 		}
 	}()
 	var err error
+	var tcpStatusChange = new(model.ConnectionStatusChange)
 	for {
 		select {
 		case <-timeAfter:
@@ -301,7 +302,7 @@ func Read(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Conn
 			model.Insert(mongoCollection, results, middlewares.LocalIp)
 			return
 		case c := <-statusCh:
-			var tcpStatusChange = new(model.ConnectionStatusChange)
+
 			_ = json.Unmarshal([]byte(c.Payload), tcpStatusChange)
 			switch tcpStatusChange.Type {
 			case 1:
