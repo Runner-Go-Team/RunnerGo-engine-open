@@ -82,7 +82,7 @@ func TcpConnection(tcp model.TCP, mongoCollection *mongo.Collection) {
 		wg.Add(1)
 		go Read(wg, readTimeAfter, connChan, buf, conn, tcp, recvResults, mongoCollection, statusCh)
 		wg.Add(1)
-		go Write(wg, writeTimeAfter, connChan, ticker, conn, tcp, writeResults, mongoCollection, statusCh)
+		go Write(wg, writeTimeAfter, connChan, ticker, conn, tcp, writeResults, connectionResults, mongoCollection, statusCh)
 		wg.Wait()
 	// 短连接
 	case model.ShortConnection:
@@ -130,7 +130,7 @@ func ReConnection(tcp model.TCP, connChan chan net.Conn) (conn net.Conn, err err
 	return
 }
 
-func Write(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Conn, ticker *time.Ticker, conn net.Conn, tcp model.TCP, results map[string]interface{}, mongoCollection *mongo.Collection, statusCh <-chan *redis.Message) {
+func Write(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Conn, ticker *time.Ticker, conn net.Conn, tcp model.TCP, results, connectionResults map[string]interface{}, mongoCollection *mongo.Collection, statusCh <-chan *redis.Message) {
 	defer wg.Done()
 	defer func() {
 		if conn != nil {
@@ -141,7 +141,8 @@ func Write(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Con
 		}
 	}()
 	var err error
-	var tcpStatusChange = new(model.ConnectionStatusChange)
+
+	tcpStatusChange := new(model.ConnectionStatusChange)
 	switch tcp.TcpConfig.IsAutoSend {
 	case model.AutoConnectionSend:
 		for {
@@ -214,6 +215,9 @@ func Write(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Con
 			}
 		}
 	case model.ConnectionAndSend:
+		connectionResults["status"] = true
+		connectionResults["is_stop"] = false
+		model.Insert(mongoCollection, connectionResults, middlewares.LocalIp)
 		for {
 			select {
 			case <-timeAfter:
