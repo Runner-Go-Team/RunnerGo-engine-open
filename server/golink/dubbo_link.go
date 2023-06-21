@@ -4,7 +4,6 @@ import (
 	"context"
 	"dubbo.apache.org/dubbo-go/v3/config/generic"
 	"encoding/json"
-	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/server/client"
@@ -82,6 +81,7 @@ func SendDubbo(dubbo model.DubboDetail, mongoCollection *mongo.Collection) {
 	requestBody, _ := json.Marshal(parameterValues)
 	results["request_body"] = string(requestBody)
 	if err != nil {
+		results["status"] = false
 		results["response_body"] = err.Error()
 	} else {
 		resp, err := rpcServer.(*generic.GenericService).Invoke(
@@ -91,15 +91,16 @@ func SendDubbo(dubbo model.DubboDetail, mongoCollection *mongo.Collection) {
 			parameterValues, // 实参
 		)
 		if err != nil {
+			results["status"] = false
 			results["response_body"] = err.Error()
 		}
 		if resp != nil {
 			response, _ := json.Marshal(resp)
+			results["status"] = true
 			results["response_body"] = string(response)
+
 		}
-		log.Logger.Debug("reference:     ", rpcServer.(*generic.GenericService).Reference())
 
 	}
-
 	model.Insert(mongoCollection, results, middlewares.LocalIp)
 }

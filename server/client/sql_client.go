@@ -7,6 +7,7 @@ import (
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
 	_ "github.com/go-sql-driver/mysql" //mysql驱动
 	_ "github.com/lib/pq"              //postgres驱动
+	_ "github.com/mattn/go-oci8"       //oracle驱动
 	"strings"
 	"time"
 )
@@ -73,7 +74,17 @@ func SqlRequest(sqlInfo model.MysqlDatabaseInfo, sqls string) (db *sql.DB, resul
 }
 
 func newMysqlClient(sqlInfo model.MysqlDatabaseInfo) (db *sql.DB, err error) {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?%s", sqlInfo.User, sqlInfo.Password, sqlInfo.Host, sqlInfo.Port, sqlInfo.DbName, sqlInfo.Charset)
+	var dsn string
+	switch sqlInfo.Type {
+	case "oracle":
+		sqlInfo.Type = "oci8"
+		dsn = fmt.Sprintf("%s:%s@%s:%d/%s?%s", sqlInfo.User, sqlInfo.Password, sqlInfo.Host, sqlInfo.Port, sqlInfo.DbName, sqlInfo.Charset)
+	case "mysql":
+		dsn = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?%s", sqlInfo.User, sqlInfo.Password, sqlInfo.Host, sqlInfo.Port, sqlInfo.DbName, sqlInfo.Charset)
+	case "postgres":
+		dsn = fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=verify-full", sqlInfo.User, sqlInfo.Password, sqlInfo.Host, sqlInfo.Port, sqlInfo.DbName)
+	}
+
 	db, err = sql.Open(sqlInfo.Type, dsn)
 	if err != nil {
 		log.Logger.Error(fmt.Sprintf("%s数据库连接失败： %s", sqlInfo.Type, err.Error()))

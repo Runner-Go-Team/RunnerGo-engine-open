@@ -332,7 +332,6 @@ func ConcurrentModel(wg *sync.WaitGroup, scene model.Scene, configuration *model
 							}
 							concurrentMap.Delete(concurrentId)
 							currentWg.Done()
-							log.Logger.Debug("concurrentId:     ", concurrentId)
 						}(i, configuration, scene)
 
 						//if reheatTime > 0 && index == 0 && i != 0 {

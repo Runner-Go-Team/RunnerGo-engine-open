@@ -47,7 +47,7 @@ func NewRpcServer(dubbo model.DubboDetail) (rpcServer common.RPCService, err err
 		return
 	}
 
-	refConf.GenericLoad("example.dubbo.io")
+	refConf.GenericLoad(dubbo.ApiName)
 	rpcServer = refConf.GetRPCService()
 	return
 }
