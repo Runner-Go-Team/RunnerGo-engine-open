@@ -197,7 +197,7 @@ func RunDubbo(c *gin.Context) {
 
 func RunMysqlConnection(c *gin.Context) {
 
-	var connection = model.MysqlDatabaseInfo{}
+	var connection = model.SqlDatabaseInfo{}
 	err := c.ShouldBindJSON(&connection)
 	if err != nil {
 		global.ReturnMsg(c, http.StatusBadRequest, "数据格式不正确", err.Error())

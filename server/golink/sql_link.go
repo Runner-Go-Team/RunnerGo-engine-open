@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func SqlSend(sql model.SQL, sqlInfo model.MysqlDatabaseInfo, mongoCollection *mongo.Collection, globalVar *sync.Map) (isSucceed bool, requestTime uint64, startTime, endTime time.Time) {
+func SqlSend(sql model.SQL, sqlInfo model.SqlDatabaseInfo, mongoCollection *mongo.Collection, globalVar *sync.Map) (isSucceed bool, requestTime uint64, startTime, endTime time.Time) {
 	var (
 	//errCode         = model.NoError
 	//receivedBytes   = float64(0)
