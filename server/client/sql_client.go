@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-func SqlRequest(sqlInfo model.MysqlDatabaseInfo, sqls string) (db *sql.DB, result map[string]interface{}, err error, startTime, endTime time.Time, requestTime uint64) {
+func SqlRequest(sqlInfo model.SqlDatabaseInfo, sqls string) (db *sql.DB, result map[string]interface{}, err error, startTime, endTime time.Time, requestTime uint64) {
 	db, err = newMysqlClient(sqlInfo)
 	if db == nil || err != nil {
 		return
@@ -75,7 +75,7 @@ func SqlRequest(sqlInfo model.MysqlDatabaseInfo, sqls string) (db *sql.DB, resul
 
 }
 
-func newMysqlClient(sqlInfo model.MysqlDatabaseInfo) (db *sql.DB, err error) {
+func newMysqlClient(sqlInfo model.SqlDatabaseInfo) (db *sql.DB, err error) {
 	var dsn string
 	switch sqlInfo.Type {
 	case "oracle":
@@ -95,7 +95,7 @@ func newMysqlClient(sqlInfo model.MysqlDatabaseInfo) (db *sql.DB, err error) {
 	return
 }
 
-func TestConnection(sqlInfo model.MysqlDatabaseInfo) (db *sql.DB, err error) {
+func TestConnection(sqlInfo model.SqlDatabaseInfo) (db *sql.DB, err error) {
 	db, err = newMysqlClient(sqlInfo)
 	if err != nil {
 		return
