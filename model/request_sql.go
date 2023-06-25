@@ -1,9 +1,16 @@
 package model
 
 import (
+	sql_client "database/sql"
+	"encoding/json"
 	"fmt"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	uuid "github.com/satori/go.uuid"
+	"go.mongodb.org/mongo-driver/mongo"
+	"strings"
 	"sync"
+	"time"
 )
 
 type SQL struct {
@@ -44,6 +51,142 @@ type MysqlRegex struct {
 	Var       string `json:"var"`
 	Field     string `json:"field"`
 	Index     int    `json:"index"` // 正则时提取第几个值
+}
+
+func (sql *SQL) Send(mongoCollection *mongo.Collection, globalVar *sync.Map) (isSucceed bool, requestTime uint64, startTime, endTime time.Time) {
+	isSucceed = true
+	db, result, err, startTime, endTime, requestTime := sql.Request()
+	defer db.Close()
+	if err != nil {
+		isSucceed = false
+	}
+	results := make(map[string]interface{})
+	assertionList := sql.Asser(result)
+	for _, assert := range assertionList {
+		if assert.IsSucceed == false {
+			isSucceed = false
+		}
+	}
+	regex := sql.RegexSql(result, globalVar)
+	if sql.Debug == "all" {
+		results["team_id"] = sql.TeamId
+		results["sql_name"] = sql.Name
+		results["target_id"] = sql.TargetId
+		results["uuid"] = sql.Uuid.String()
+		if err != nil {
+			results["err"] = err.Error()
+		} else {
+			results["err"] = ""
+		}
+
+		results["request_time"] = requestTime / uint64(time.Millisecond)
+		results["sql_result"] = result
+		results["assertion"] = assertionList
+		results["status"] = isSucceed
+		by, _ := json.Marshal(sql.MysqlDatabaseInfo)
+		if by != nil {
+			results["database"] = string(by)
+		}
+		results["sql"] = sql.SqlString
+		results["regex"] = regex
+	}
+	Insert(mongoCollection, results, middlewares.LocalIp)
+	return
+}
+
+func (sql *SQL) Request() (db *sql_client.DB, result map[string]interface{}, err error, startTime, endTime time.Time, requestTime uint64) {
+	db, err = sql.init()
+	if db == nil || err != nil {
+		return
+	}
+	// 不区分大小写,去除空格，去除回车符/换行符
+	sqls := strings.ToLower(strings.TrimSpace(strings.NewReplacer("\r", "", "\n", "").Replace(sql.SqlString)))
+	//strings.EqualFold
+	startTime = time.Now()
+	result = make(map[string]interface{})
+	if strings.HasPrefix(sqls, "select") {
+		rows, errQuery := db.Query(sqls)
+		requestTime = uint64(time.Since(startTime))
+		if errQuery != nil || rows == nil {
+			err = errQuery
+			return
+		}
+		defer rows.Close()
+		cols, _ := rows.Columns()
+		values := make([]sql_client.RawBytes, len(cols))
+		scans := make([]interface{}, len(cols))
+		if cols != nil {
+			for i := range cols {
+				scans[i] = &values[i]
+			}
+		}
+		resultMap := make(map[string][]string)
+		for rows.Next() {
+			if err := rows.Scan(scans...); err != nil {
+				continue
+			}
+			for j, v := range values {
+				resultMap[cols[j]] = append(resultMap[cols[j]], string(v))
+			}
+		}
+		for k, v := range resultMap {
+			result[k] = v
+		}
+		return
+
+	} else {
+		results, errExec := db.Exec(sqls)
+		requestTime = uint64(time.Since(startTime))
+		if errExec != nil || result == nil {
+			err = errExec
+			return
+		}
+
+		row, errExec := results.RowsAffected()
+		if errExec != nil {
+			return
+		}
+		result["rows_affected"] = row
+		last, errExec := results.LastInsertId()
+		if errExec != nil {
+			return
+		}
+		result["last_insert_id"] = last
+		return
+	}
+}
+
+func (sql *SQL) init() (db *sql_client.DB, err error) {
+	var dsn string
+	sqlInfo := sql.MysqlDatabaseInfo
+	switch sqlInfo.Type {
+	case "oracle":
+		sqlInfo.Type = "oci8"
+		dsn = fmt.Sprintf("%s:%s@%s:%d/%s?%s", sqlInfo.User, sqlInfo.Password, sqlInfo.Host, sqlInfo.Port, sqlInfo.DbName, sqlInfo.Charset)
+	case "mysql":
+		dsn = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?%s", sqlInfo.User, sqlInfo.Password, sqlInfo.Host, sqlInfo.Port, sqlInfo.DbName, sqlInfo.Charset)
+	case "postgres":
+		dsn = fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=verify-full", sqlInfo.User, sqlInfo.Password, sqlInfo.Host, sqlInfo.Port, sqlInfo.DbName)
+	}
+
+	db, err = sql_client.Open(sqlInfo.Type, dsn)
+	if err != nil {
+		log.Logger.Error(fmt.Sprintf("%s数据库连接失败： %s", sqlInfo.Type, err.Error()))
+		return
+	}
+	return
+}
+
+func (sql *SQL) TestConnection() (db *sql_client.DB, err error) {
+	db, err = sql.init()
+	if err != nil {
+		return
+	}
+	err = db.Ping()
+	if err != nil {
+		return
+	}
+	return
 }
 
 func (sql *SQL) Asser(results map[string]interface{}) (assertionList []AssertionMsg) {
@@ -243,7 +386,6 @@ func (sql *SQL) RegexSql(results map[string]interface{}, globalVar *sync.Map) (r
 		}
 		reg := make(map[string]interface{})
 		if value, ok := results[regex.Field]; ok {
-
 			switch regex.Index {
 			case -1:
 				globalVar.Store(regex.Var, value)

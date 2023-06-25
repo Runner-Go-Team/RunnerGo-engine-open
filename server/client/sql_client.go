@@ -7,7 +7,7 @@ import (
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
 	_ "github.com/go-sql-driver/mysql" //mysql驱动
 	_ "github.com/lib/pq"              //postgres驱动
-	_ "github.com/mattn/go-oci8"       //oracle驱动
+	//_ "github.com/mattn/go-oci8"       //oracle驱动
 	"strings"
 	"time"
 )

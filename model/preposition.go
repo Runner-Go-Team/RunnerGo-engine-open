@@ -11,9 +11,10 @@ type Preposition struct {
 	Scope     int32  `json:"scope"`
 	JsScript  string `json:"js_script"`
 	Event     Event  `json:"event"`
+	TempMap   sync.Map
 }
 
-func (p *Preposition) Exec(globalVariable *sync.Map, tempVariable *GlobalVariable) {
+func (p *Preposition) Exec() {
 	if p == nil {
 		return
 	}
@@ -46,13 +47,17 @@ func (p *Preposition) Exec(globalVariable *sync.Map, tempVariable *GlobalVariabl
 	//		tempVariable.Variable = append(tempVariable.Variable, varForm)
 	//
 	//	}
-	//case MysqlMode:
-	//	db, result, err, _, _, _ := client.SqlRequest(p.Event.SQL.MysqlDatabaseInfo, p.Event.SQL.SqlString)
-	//	defer db.Close()
-	//	if err != nil {
-	//		return
-	//	}
-	//	results := make(map[string]interface{})
+	case MysqlMode:
+		//db, result, err, _, _, _ := client.SqlRequest(p.Event.SQL.MysqlDatabaseInfo, p.Event.SQL.SqlString)
+		//defer db.Close()
+		//if err != nil {
+		//	return
+		//}
+		//if result != nil {
+		//	for k, v := range result {
+		//		p.TempMap.Store(k, v)
+		//	}
+		//}
 
 	}
 }

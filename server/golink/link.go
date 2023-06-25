@@ -561,7 +561,7 @@ func DisposeRequest(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.
 	)
 	if event.Prepositions != nil && len(event.Prepositions) > 0 {
 		for _, preposition := range event.Prepositions {
-			preposition.Exec(globalVar, api.GlobalVariable)
+			preposition.Exec()
 		}
 	}
 
@@ -642,14 +642,12 @@ func DisposeSql(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.Resu
 	)
 	if event.Prepositions != nil && len(event.Prepositions) > 0 {
 		for _, preposition := range event.Prepositions {
-			preposition.Exec(globalVar, sql.GlobalVariable)
+			preposition.Exec()
 		}
 	}
 
-	sqlInfo := sql.MysqlDatabaseInfo
-
-	isSucceed, requestTime, startTime, endTime = SqlSend(sql, sqlInfo, mongoCollection, globalVar)
-
+	//isSucceed, requestTime, startTime, endTime = SqlSend(sql, sqlInfo, mongoCollection, globalVar)
+	isSucceed, requestTime, startTime, endTime = sql.Send(mongoCollection, globalVar)
 	if resultDataMsgCh != nil {
 		requestResults.Name = sql.Name
 		requestResults.RequestTime = requestTime
@@ -707,7 +705,7 @@ func DisposeTcp(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.Resu
 	)
 	if event.Prepositions != nil && len(event.Prepositions) > 0 {
 		for _, preposition := range event.Prepositions {
-			preposition.Exec(globalVar, tcp.GlobalVariable)
+			preposition.Exec()
 		}
 	}
 
@@ -802,7 +800,7 @@ func DisposeWs(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.Resul
 	)
 	if event.Prepositions != nil && len(event.Prepositions) > 0 {
 		for _, preposition := range event.Prepositions {
-			preposition.Exec(globalVar, ws.GlobalVariable)
+			preposition.Exec()
 		}
 	}
 
@@ -866,7 +864,7 @@ func DisposeDubbo(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.Re
 	)
 	if event.Prepositions != nil && len(event.Prepositions) > 0 {
 		for _, preposition := range event.Prepositions {
-			preposition.Exec(globalVar, dubbo.GlobalVariable)
+			preposition.Exec()
 		}
 	}
 
