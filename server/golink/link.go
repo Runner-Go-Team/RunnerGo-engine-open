@@ -426,7 +426,6 @@ func disposeDebugNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.M
 		event.CaseId = scene.CaseId
 		DisposeRequest(reportMsg, resultDataMsgCh, nil, globalVar, event, requestCollection)
 		eventResult.Status = model.End
-
 		preNodeMap.Store(event.Id, eventResult)
 	case model.IfControllerType:
 		keys := tools.FindAllDestStr(event.Var, "{{(.*?)}}")

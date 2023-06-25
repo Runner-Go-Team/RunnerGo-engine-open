@@ -39,7 +39,6 @@ type Api struct {
 	Assert         []*AssertionText     `json:"assert"`          // 验证的方法(断言)
 	Regex          []*RegularExpression `json:"regex"`           // 正则表达式
 	Debug          string               `json:"debug"`           // 是否开启Debug模式
-	Connection     int64                `json:"connection"`      // 0:websocket长连接
 	Configuration  *Configuration       `json:"configuration"`   // 场景设置
 	GlobalVariable *GlobalVariable      `json:"global_variable"` // 全局变量
 	ApiVariable    *GlobalVariable      `json:"api_variable"`
