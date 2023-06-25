@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/constant"
 	"sync"
 )
 
@@ -47,7 +48,7 @@ func (p *Preposition) Exec() {
 	//		tempVariable.Variable = append(tempVariable.Variable, varForm)
 	//
 	//	}
-	case MysqlMode:
+	case constant.MysqlMode:
 		//db, result, err, _, _, _ := client.SqlRequest(p.Event.SQL.MysqlDatabaseInfo, p.Event.SQL.SqlString)
 		//defer db.Close()
 		//if err != nil {

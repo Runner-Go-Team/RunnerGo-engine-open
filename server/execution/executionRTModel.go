@@ -3,6 +3,7 @@ package execution
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/constant"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
@@ -36,7 +37,7 @@ func RTModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Configu
 	// 只要开始时间+持续时长大于当前时间就继续循环
 	targetTime, startTime, endTime := time.Now().Unix(), time.Now().Unix(), time.Now().Unix()
 	switch scene.ConfigTask.ControlMode {
-	case model.CentralizedMode:
+	case constant.CentralizedMode:
 		for startTime+stepRunTime > endTime {
 			scene.Debug = debug
 
@@ -101,13 +102,13 @@ func RTModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Configu
 				}
 				log.Logger.Debug(fmt.Sprintf("%s报告，手动修改为：  %s", scene.ReportId, c.Payload))
 				switch subscriptionStressPlanStatusChange.Type {
-				case model.StopPlan:
+				case constant.StopPlan:
 					if subscriptionStressPlanStatusChange.StopPlan == "stop" {
 						return fmt.Sprintf("最大并发数：%d， 总运行时长%ds, 任务手动结束！", concurrent, endTime-targetTime)
 					}
-				case model.DebugStatus:
+				case constant.DebugStatus:
 					debug = subscriptionStressPlanStatusChange.Debug
-				case model.ReportChange:
+				case constant.ReportChange:
 					MachineModeConf := subscriptionStressPlanStatusChange.MachineModeConf
 					if MachineModeConf.Machine != middlewares.LocalIp {
 						continue
@@ -151,7 +152,7 @@ func RTModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Configu
 					currentWg.Add(1)
 					go func(concurrentId, concurrent int64, useConfiguration *model.Configuration) {
 						var sceneWg = &sync.WaitGroup{}
-						golink.DisposeScene(wg, sceneWg, model.PlanType, scene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
+						golink.DisposeScene(wg, sceneWg, constant.PlanType, scene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
 						sceneWg.Wait()
 						concurrentMap.Delete(concurrentId)
 						currentWg.Done()
@@ -193,7 +194,7 @@ func RTModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Configu
 			}
 
 		}
-	case model.AloneMode:
+	case constant.AloneMode:
 		for startTime+stepRunTime > endTime {
 			scene.Debug = debug
 
@@ -258,7 +259,7 @@ func RTModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Configu
 				}
 				log.Logger.Debug(fmt.Sprintf("%s报告，手动修改为：  %s", scene.ReportId, c.Payload))
 				switch subscriptionStressPlanStatusChange.Type {
-				case model.StopPlan:
+				case constant.StopPlan:
 					if subscriptionStressPlanStatusChange.StopPlan == "stop" {
 						concurrentMap.Range(func(key, value any) bool {
 							concurrentMap.Delete(key)
@@ -266,9 +267,9 @@ func RTModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Configu
 						})
 						return fmt.Sprintf("最大并发数：%d， 总运行时长%ds, 任务手动结束！", concurrent, endTime-targetTime)
 					}
-				case model.DebugStatus:
+				case constant.DebugStatus:
 					debug = subscriptionStressPlanStatusChange.Debug
-				case model.ReportChange:
+				case constant.ReportChange:
 					MachineModeConf := subscriptionStressPlanStatusChange.MachineModeConf
 					if MachineModeConf.Machine != middlewares.LocalIp {
 						continue
@@ -317,7 +318,7 @@ func RTModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Configu
 								break
 							}
 							var sceneWg = &sync.WaitGroup{}
-							golink.DisposeScene(wg, sceneWg, model.PlanType, scene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
+							golink.DisposeScene(wg, sceneWg, constant.PlanType, scene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
 							sceneWg.Wait()
 						}
 						concurrentMap.Delete(concurrentId)

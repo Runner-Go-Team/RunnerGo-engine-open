@@ -3,6 +3,7 @@ package golink
 
 import (
 	"encoding/json"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/constant"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/server/client"
 	"github.com/shopspring/decimal"
@@ -13,12 +14,12 @@ func webSocketSend(ws model.WebsocketDetail, mongoCollection *mongo.Collection) 
 	var (
 		// startTime = time.Now()
 		isSucceed     = true
-		errCode       = model.NoError
+		errCode       = constant.NoError
 		receivedBytes = float64(0)
 	)
 	headers := map[string][]string{}
 	for _, header := range ws.WsHeader {
-		if header.IsChecked != model.Open {
+		if header.IsChecked != constant.Open {
 			continue
 		}
 		headers[header.Var] = []string{header.Val}
@@ -53,7 +54,7 @@ func webSocketSend(ws model.WebsocketDetail, mongoCollection *mongo.Collection) 
 
 	if err != nil {
 		isSucceed = false
-		errCode = model.RequestError // 请求错误
+		errCode = constant.RequestError // 请求错误
 	} else {
 		// 接收到的字节长度
 		receivedBytes, _ = decimal.NewFromFloat(float64(len(resp)) / 1024).Round(2).Float64()

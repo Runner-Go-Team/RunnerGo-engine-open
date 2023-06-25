@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/config"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/constant"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/global"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
@@ -115,7 +116,7 @@ func sceneDecomposition(plan *auto.Plan, wg *sync.WaitGroup, reportMsg *model.Re
 	defer mongoClient.Disconnect(context.TODO())
 	startTime := time.Now().UnixMilli()
 	switch plan.ConfigTask.SceneRunMode {
-	case model.AuToOrderMode:
+	case constant.AuToOrderMode:
 		for _, scene := range plan.Scenes {
 			key := fmt.Sprintf("StopAutoPlan:%s:%s:%s", scene.TeamId, scene.PlanId, scene.ReportId)
 			err, stop := model.QueryPlanStatus(key)
@@ -129,7 +130,7 @@ func sceneDecomposition(plan *auto.Plan, wg *sync.WaitGroup, reportMsg *model.Re
 
 			disposeCase(scene, plan.ConfigTask.SceneRunMode, plan.ConfigTask.CaseRunMode, wg, configuration, reportMsg, resultDataMsgCh, collection)
 		}
-	case model.AuToSameMode:
+	case constant.AuToSameMode:
 		for _, scene := range plan.Scenes {
 			key := fmt.Sprintf("StopAutoPlan:%s:%s:%s", scene.TeamId, scene.PlanId, scene.ReportId)
 			err, stop := model.QueryPlanStatus(key)
@@ -152,7 +153,7 @@ func sceneDecomposition(plan *auto.Plan, wg *sync.WaitGroup, reportMsg *model.Re
 }
 
 func disposeCase(scene model.Scene, sceneRunMode, caseMode int64, wg *sync.WaitGroup, configuration *model.Configuration, reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, collection *mongo.Collection) {
-	if sceneRunMode == model.AuToSameMode {
+	if sceneRunMode == constant.AuToSameMode {
 		defer wg.Done()
 	}
 	if scene.Cases == nil || len(scene.Cases) < 1 {
@@ -165,21 +166,21 @@ func disposeCase(scene model.Scene, sceneRunMode, caseMode int64, wg *sync.WaitG
 		if err == nil && stop == "stop" {
 			return
 		}
-		if c.IsChecked != model.Open {
+		if c.IsChecked != constant.Open {
 			continue
 		}
 		c.PlanId = scene.PlanId
 		c.TeamId = scene.TeamId
 		c.ReportId = scene.ReportId
 		c.ParentId = scene.SceneId
-		c.Debug = model.All
+		c.Debug = constant.All
 		if scene.Configuration != nil {
 			c.Configuration = scene.Configuration
 		}
 		switch caseMode {
-		case model.AuToOrderMode:
+		case constant.AuToOrderMode:
 			var sceneWg = &sync.WaitGroup{}
-			golink.DisposeScene(wg, sceneWg, model.SceneType, c, configuration, reportMsg, resultDataMsgCh, collection)
+			golink.DisposeScene(wg, sceneWg, constant.SceneType, c, configuration, reportMsg, resultDataMsgCh, collection)
 			sceneWg.Wait()
 		}
 	}

@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/constant"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/global"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
@@ -86,7 +87,7 @@ func RunApi(c *gin.Context) {
 
 	uid := uuid.NewV4()
 	runApi.Uuid = uid
-	runApi.Debug = model.All
+	runApi.Debug = constant.All
 
 	requestJson, _ := json.Marshal(&runApi)
 
@@ -97,7 +98,7 @@ func RunApi(c *gin.Context) {
 }
 
 func RunSql(c *gin.Context) {
-	var runSql = model.SQL{}
+	var runSql = model.SQLDetail{}
 	err := c.ShouldBindJSON(&runSql)
 
 	if err != nil {
@@ -106,8 +107,8 @@ func RunSql(c *gin.Context) {
 	}
 
 	uid := uuid.NewV4()
-	runSql.Uuid = uid
-	runSql.Debug = model.All
+	//runSql.Uuid = uid
+	//runSql.Debug = constant.All
 
 	requestJson, _ := json.Marshal(&runSql)
 
@@ -117,7 +118,7 @@ func RunSql(c *gin.Context) {
 }
 
 func RunTcp(c *gin.Context) {
-	var runTcp = model.TCP{}
+	var runTcp = model.TCPDetail{}
 	err := c.ShouldBindJSON(&runTcp)
 
 	if err != nil {
@@ -127,7 +128,7 @@ func RunTcp(c *gin.Context) {
 
 	uid := uuid.NewV4()
 	runTcp.Uuid = uid
-	runTcp.Debug = model.All
+	runTcp.Debug = constant.All
 
 	requestJson, _ := json.Marshal(&runTcp)
 
@@ -146,7 +147,7 @@ func RunWs(c *gin.Context) {
 
 	uid := uuid.NewV4()
 	runWs.Uuid = uid
-	runWs.Debug = model.All
+	runWs.Debug = constant.All
 
 	requestJson, _ := json.Marshal(&runWs)
 
@@ -186,7 +187,7 @@ func RunDubbo(c *gin.Context) {
 
 	uid := uuid.NewV4()
 	runTcp.Uuid = uid
-	runTcp.Debug = model.All
+	runTcp.Debug = constant.All
 
 	requestJson, _ := json.Marshal(&runTcp)
 

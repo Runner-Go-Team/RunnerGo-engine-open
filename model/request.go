@@ -2,10 +2,13 @@ package model
 
 import (
 	"bytes"
+	"crypto/tls"
+	"crypto/x509"
 	"encoding/binary"
 	"encoding/gob"
 	"encoding/json"
 	"fmt"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/constant"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/tools"
@@ -15,6 +18,7 @@ import (
 	"github.com/lixiangyun/go-ntlm/messages"
 	uuid "github.com/satori/go.uuid"
 	"github.com/valyala/fasthttp"
+	"go.mongodb.org/mongo-driver/mongo"
 	"io"
 	"math"
 	"mime/multipart"
@@ -29,20 +33,20 @@ import (
 
 // Api 请求数据
 type Api struct {
-	TargetId       string               `json:"target_id"`
-	Uuid           uuid.UUID            `json:"uuid"`
-	Name           string               `json:"name"`
-	TeamId         string               `json:"team_id"`
-	TargetType     string               `json:"target_type"` // api/webSocket/tcp/grpc
-	Method         string               `json:"method"`      // 方法 GET/POST/PUT
-	Request        Request              `json:"request"`
-	Assert         []*AssertionText     `json:"assert"`          // 验证的方法(断言)
-	Regex          []*RegularExpression `json:"regex"`           // 正则表达式
-	Debug          string               `json:"debug"`           // 是否开启Debug模式
-	Configuration  *Configuration       `json:"configuration"`   // 场景设置
-	GlobalVariable *GlobalVariable      `json:"global_variable"` // 全局变量
-	ApiVariable    *GlobalVariable      `json:"api_variable"`
-	HttpApiSetup   *HttpApiSetup        `json:"http_api_setup"`
+	TargetId       string          `json:"target_id"`
+	Uuid           uuid.UUID       `json:"uuid"`
+	Name           string          `json:"name"`
+	TeamId         string          `json:"team_id"`
+	TargetType     string          `json:"target_type"` // api/webSocket/tcp/grpc
+	Debug          string          `json:"debug"`       // 是否开启Debug模式
+	Request        Request         `json:"request"`
+	SQL            SQLDetail       `json:"sql_detail"`
+	TCP            TCPDetail       `json:"tcp_detail"`
+	Ws             WebsocketDetail `json:"ws_detail"`
+	DubboDetail    DubboDetail     `json:"dubbo_detail"`
+	Configuration  *Configuration  `json:"configuration"`   // 场景设置
+	GlobalVariable *GlobalVariable `json:"global_variable"` // 全局变量
+	ApiVariable    *GlobalVariable `json:"api_variable"`
 }
 
 func (api *Api) Send() {
@@ -58,12 +62,12 @@ func (api *Api) GlobalToRequest() {
 			api.Request.Cookie.Parameter = []*VarForm{}
 		}
 		for _, parameter := range api.GlobalVariable.Cookie.Parameter {
-			if parameter.IsChecked != Open {
+			if parameter.IsChecked != constant.Open {
 				continue
 			}
 			var isExist bool
 			for _, value := range api.Request.Cookie.Parameter {
-				if value.IsChecked == Open && parameter.Key == value.Key && parameter.Value == value.Value {
+				if value.IsChecked == constant.Open && parameter.Key == value.Key && parameter.Value == value.Value {
 					isExist = true
 				}
 			}
@@ -81,12 +85,12 @@ func (api *Api) GlobalToRequest() {
 			api.Request.Header.Parameter = []*VarForm{}
 		}
 		for _, parameter := range api.GlobalVariable.Header.Parameter {
-			if parameter.IsChecked != Open {
+			if parameter.IsChecked != constant.Open {
 				continue
 			}
 			var isExist bool
 			for _, value := range api.Request.Header.Parameter {
-				if value.IsChecked == Open && parameter.Key == value.Key && parameter.Value == parameter.Value {
+				if value.IsChecked == constant.Open && parameter.Key == value.Key && parameter.Value == parameter.Value {
 					isExist = true
 				}
 			}
@@ -99,23 +103,23 @@ func (api *Api) GlobalToRequest() {
 	}
 
 	if api.GlobalVariable.Assert != nil && len(api.GlobalVariable.Assert) > 0 {
-		if api.Assert == nil {
-			api.Assert = []*AssertionText{}
+		if api.Request.Assert == nil {
+			api.Request.Assert = []*AssertionText{}
 		}
 		for _, parameter := range api.GlobalVariable.Assert {
-			if parameter.IsChecked != Open {
+			if parameter.IsChecked != constant.Open {
 				continue
 			}
 			var isExist bool
-			for _, asser := range api.Assert {
-				if asser.IsChecked == Open && parameter.ResponseType == asser.ResponseType && parameter.Compare == asser.Compare && parameter.Val == asser.Val && parameter.Var == asser.Var {
+			for _, asser := range api.Request.Assert {
+				if asser.IsChecked == constant.Open && parameter.ResponseType == asser.ResponseType && parameter.Compare == asser.Compare && parameter.Val == asser.Val && parameter.Var == asser.Var {
 					isExist = true
 				}
 			}
 			if isExist {
 				continue
 			}
-			api.Assert = append(api.Assert, parameter)
+			api.Request.Assert = append(api.Request.Assert, parameter)
 
 		}
 	}
@@ -136,14 +140,19 @@ type HttpApiSetup struct {
 }
 
 type Request struct {
-	PreUrl    string     `json:"pre_url"`
-	URL       string     `json:"url"`
-	Parameter []*VarForm `json:"parameter"`
-	Header    *Header    `json:"header"` // Headers
-	Query     *Query     `json:"query"`
-	Body      *Body      `json:"body"`
-	Auth      *Auth      `json:"auth"`
-	Cookie    *Cookie    `json:"cookie"`
+	PreUrl       string               `json:"pre_url"`
+	URL          string               `json:"url"`
+	Method       string               `json:"method"` // 方法 GET/POST/PUT
+	Debug        string               `json:"debug"`
+	Parameter    []*VarForm           `json:"parameter"`
+	Header       *Header              `json:"header"` // Headers
+	Query        *Query               `json:"query"`
+	Body         *Body                `json:"body"`
+	Auth         *Auth                `json:"auth"`
+	Cookie       *Cookie              `json:"cookie"`
+	HttpApiSetup *HttpApiSetup        `json:"http_api_setup"`
+	Assert       []*AssertionText     `json:"assert"` // 验证的方法(断言)
+	Regex        []*RegularExpression `json:"regex"`  // 正则表达式
 }
 
 type Body struct {
@@ -152,13 +161,162 @@ type Body struct {
 	Parameter []*VarForm `json:"parameter"`
 }
 
+func (r Request) Send(debug string, debugMsg map[string]interface{}, requestCollection *mongo.Collection, globalVar *sync.Map) (bool, int64, uint64, float64, float64, string, time.Time, time.Time) {
+	var (
+		isSucceed       = true
+		errCode         = constant.NoError
+		receivedBytes   = float64(0)
+		errMsg          = ""
+		assertNum       = 0
+		assertFailedNum = 0
+	)
+
+	if r.HttpApiSetup == nil {
+		r.HttpApiSetup = new(HttpApiSetup)
+	}
+
+	resp, req, requestTime, sendBytes, err, str, startTime, endTime := r.Request()
+	defer fasthttp.ReleaseResponse(resp) // 用完需要释放资源
+	defer fasthttp.ReleaseRequest(req)
+	var regex []map[string]interface{}
+	if r.Regex != nil {
+		for _, regular := range r.Regex {
+			if regular.IsChecked != constant.Open {
+				continue
+			}
+			reg := make(map[string]interface{})
+			value := regular.Extract(resp, globalVar)
+			if value == nil {
+				continue
+			}
+			reg[regular.Var] = value
+			regex = append(regex, reg)
+		}
+	}
+	if err != nil {
+		isSucceed = false
+		errMsg = err.Error()
+	}
+	var assertionMsgList []AssertionMsg
+	// 断言验证
+
+	if r.Assert != nil {
+		var assertionMsg = AssertionMsg{}
+		var (
+			code    = int64(10000)
+			succeed = true
+			msg     = ""
+		)
+		for _, v := range r.Assert {
+			if v.IsChecked != constant.Open {
+				continue
+			}
+			code, succeed, msg = v.VerifyAssertionText(resp)
+			if succeed != true {
+				errCode = code
+				isSucceed = succeed
+				errMsg = msg
+				assertFailedNum++
+			}
+			assertionMsg.Code = code
+			assertionMsg.IsSucceed = succeed
+			assertionMsg.Msg = msg
+			assertionMsgList = append(assertionMsgList, assertionMsg)
+			assertNum++
+		}
+	}
+	// 接收到的字节长度
+	//contentLength = uint(resp.Header.ContentLength())
+
+	receivedBytes = float64(resp.Header.ContentLength()) / 1024
+	if receivedBytes <= 0 {
+		receivedBytes = float64(len(resp.Body())) / 1024
+	}
+	// 开启debug模式后，将请求响应信息写入到mongodb中
+	if debug != "" && r.Debug != "stop" {
+		responseTime := endTime.Format("2006-01-02 15:04:05")
+		insertDebugMsg(regex, debugMsg, resp, req, requestTime, responseTime, receivedBytes, errMsg, debug, str, err, isSucceed, assertionMsgList, assertNum, assertFailedNum)
+		if requestCollection != nil {
+			Insert(requestCollection, debugMsg, middlewares.LocalIp)
+		}
+	}
+	return isSucceed, errCode, requestTime, sendBytes, receivedBytes, errMsg, startTime, endTime
+}
+
+var (
+	KeepAliveClient *fasthttp.Client
+	once            sync.Once
+)
+
+func (r Request) Request() (resp *fasthttp.Response, req *fasthttp.Request, requestTime uint64, sendBytes float64, err error, str string, startTime, endTime time.Time) {
+	var client *fasthttp.Client
+	req = fasthttp.AcquireRequest()
+	if r.HttpApiSetup.KeepAlive {
+		newKeepAlive(r.HttpApiSetup, r.Auth)
+		client = KeepAliveClient
+		req.Header.Set("Connection", "keep-alive")
+	} else {
+		client = fastClient(r.HttpApiSetup, r.Auth)
+	}
+
+	// set method
+	req.Header.SetMethod(r.Method)
+	// set header
+	r.Header.SetHeader(req)
+	r.Cookie.SetCookie(req)
+	url := r.URL
+	urls := strings.Split(url, "//")
+	if !strings.EqualFold(urls[0], constant.HTTP) && !strings.EqualFold(urls[0], constant.HTTPS) {
+		url = constant.HTTP + "//" + url
+
+	}
+
+	urlQuery := req.URI().QueryArgs()
+
+	if r.Query.Parameter != nil {
+		for _, v := range r.Query.Parameter {
+			if v.IsChecked != constant.Open {
+				continue
+			}
+			if !strings.Contains(url, v.Key) {
+				by := v.ValueToByte()
+				urlQuery.AddBytesV(v.Key, by)
+				url = url + fmt.Sprintf("&%s=%s", v.Key, string(v.ValueToByte()))
+			}
+		}
+	}
+	// set url
+	req.SetRequestURI(url)
+	// set body
+	str = r.Body.SetBody(req)
+
+	// set auth
+	r.Auth.SetAuth(req)
+	resp = fasthttp.AcquireResponse()
+	startTime = time.Now()
+	// 发送请求
+	if r.HttpApiSetup.IsRedirects == 0 {
+		err = client.DoRedirects(req, resp, r.HttpApiSetup.RedirectsNum)
+	} else {
+		err = client.Do(req, resp)
+	}
+	//err = client.Do(req, resp)
+	endTime = time.Now()
+	requestTime = uint64(time.Since(startTime))
+	sendBytes = float64(req.Header.ContentLength()) / 1024
+	if sendBytes <= 0 {
+		sendBytes = float64(len(req.Body())) / 1024
+	}
+	return
+}
+
 func (b *Body) SetBody(req *fasthttp.Request) string {
 	if b == nil {
 		return ""
 	}
 	switch b.Mode {
-	case NoneMode:
-	case FormMode:
+	case constant.NoneMode:
+	case constant.FormMode:
 		req.Header.SetContentType("multipart/form-data")
 		// 新建一个缓冲，用于存放文件内容
 
@@ -172,7 +330,7 @@ func (b *Body) SetBody(req *fasthttp.Request) string {
 		//var fileTypeList []string
 		for _, value := range b.Parameter {
 
-			if value.IsChecked != Open {
+			if value.IsChecked != constant.Open {
 				continue
 			}
 			if value.Key == "" {
@@ -180,12 +338,12 @@ func (b *Body) SetBody(req *fasthttp.Request) string {
 			}
 
 			switch value.Type {
-			case FileType:
+			case constant.FileType:
 				if value.FileBase64 == nil || len(value.FileBase64) < 1 {
 					continue
 				}
 				for _, base64Str := range value.FileBase64 {
-					by, fileType := tools.Base64DeEncode(base64Str, FileType)
+					by, fileType := tools.Base64DeEncode(base64Str, constant.FileType)
 					log.Logger.Debug(fmt.Sprintf("机器ip:%s, fileType:    ", middlewares.LocalIp), fileType)
 					if by == nil {
 						continue
@@ -207,7 +365,7 @@ func (b *Body) SetBody(req *fasthttp.Request) string {
 						continue
 					}
 				}
-			case FileUrlType:
+			case constant.FileUrlType:
 				val, ok := value.Value.(string)
 				if !ok {
 					continue
@@ -272,13 +430,13 @@ func (b *Body) SetBody(req *fasthttp.Request) string {
 			req.SetBody(bodyBuffer.Bytes())
 		}
 		return bodyBuffer.String()
-	case UrlencodeMode:
+	case constant.UrlencodeMode:
 
 		req.Header.SetContentType("application/x-www-form-urlencoded")
 		args := url.Values{}
 
 		for _, value := range b.Parameter {
-			if value.IsChecked != Open || value.Key == "" || value.Value == nil {
+			if value.IsChecked != constant.Open || value.Key == "" || value.Value == nil {
 				continue
 			}
 			args.Add(value.Key, value.Value.(string))
@@ -287,23 +445,23 @@ func (b *Body) SetBody(req *fasthttp.Request) string {
 		req.SetBodyString(args.Encode())
 		return args.Encode()
 
-	case XmlMode:
+	case constant.XmlMode:
 		req.Header.SetContentType("application/xml")
 		req.SetBodyString(b.Raw)
 		return b.Raw
-	case JSMode:
+	case constant.JSMode:
 		req.Header.SetContentType("application/javascript")
 		req.SetBodyString(b.Raw)
 		return b.Raw
-	case PlainMode:
+	case constant.PlainMode:
 		req.Header.SetContentType("text/plain")
 		req.SetBodyString(b.Raw)
 		return b.Raw
-	case HtmlMode:
+	case constant.HtmlMode:
 		req.Header.SetContentType("text/html")
 		req.SetBodyString(b.Raw)
 		return b.Raw
-	case JsonMode:
+	case constant.JsonMode:
 		req.Header.SetContentType("application/json")
 		req.SetBodyString(b.Raw)
 		return b.Raw
@@ -320,7 +478,7 @@ func (header *Header) SetHeader(req *fasthttp.Request) {
 		return
 	}
 	for _, v := range header.Parameter {
-		if v.IsChecked != Open || v.Value == nil {
+		if v.IsChecked != constant.Open || v.Value == nil {
 			continue
 		}
 		if strings.EqualFold(v.Key, "content-type") {
@@ -339,7 +497,7 @@ func (cookie *Cookie) SetCookie(req *fasthttp.Request) {
 		return
 	}
 	for _, v := range cookie.Parameter {
-		if v.IsChecked != Open || v.Value == nil || v.Key == "" {
+		if v.IsChecked != constant.Open || v.Value == nil || v.Key == "" {
 			continue
 		}
 		req.Header.SetCookie(v.Key, v.Value.(string))
@@ -395,7 +553,7 @@ func (re RegularExpression) Extract(resp *fasthttp.Response, globalVar *sync.Map
 		}
 	}
 	switch re.Type {
-	case RegExtract:
+	case constant.RegExtract:
 		if re.Express == "" {
 			value = ""
 			globalVar.Store(name, value)
@@ -408,10 +566,10 @@ func (re RegularExpression) Extract(resp *fasthttp.Response, globalVar *sync.Map
 			value = value.([][]string)[0][1]
 		}
 		globalVar.Store(name, value)
-	case JsonExtract:
+	case constant.JsonExtract:
 		value = tools.JsonPath(string(resp.Body()), re.Express)
 		globalVar.Store(name, value)
-	case HeaderExtract:
+	case constant.HeaderExtract:
 		if re.Express == "" {
 			value = ""
 			globalVar.Store(name, value)
@@ -419,7 +577,7 @@ func (re RegularExpression) Extract(resp *fasthttp.Response, globalVar *sync.Map
 		}
 		value = tools.MatchString(resp.Header.String(), re.Express, re.Index)
 		globalVar.Store(name, value)
-	case CodeExtract:
+	case constant.CodeExtract:
 		value = resp.StatusCode()
 		globalVar.Store(name, value)
 	}
@@ -609,21 +767,21 @@ type Consumer struct {
 }
 
 func (auth *Auth) SetAuth(req *fasthttp.Request) {
-	if auth == nil || auth.Type == NoAuth || auth.Type == Unidirectional || auth.Type == Bidirectional {
+	if auth == nil || auth.Type == constant.NoAuth || auth.Type == constant.Unidirectional || auth.Type == constant.Bidirectional {
 		return
 	}
 	switch auth.Type {
-	case Kv:
+	case constant.Kv:
 		if auth.KV.Value != nil {
 			req.Header.Add(auth.KV.Key, auth.KV.Value.(string))
 		}
 
-	case BEarer:
+	case constant.BEarer:
 		req.Header.Add("authorization", "Bearer "+auth.Bearer.Key)
-	case BAsic:
+	case constant.BAsic:
 		pw := fmt.Sprintf("%s:%s", auth.Basic.UserName, auth.Basic.Password)
 		req.Header.Add("Authorization", "Basic "+tools.Base64EncodeStd(pw))
-	case DigestType:
+	case constant.DigestType:
 		encryption := tools.GetEncryption(auth.Digest.Algorithm)
 		if encryption != nil {
 			uri := string(req.URI().RequestURI())
@@ -658,7 +816,7 @@ func (auth *Auth) SetAuth(req *fasthttp.Request) {
 				auth.Digest.Nc, auth.Digest.Cnonce, response, auth.Digest.Opaque)
 			req.Header.Add("Authorization", digest)
 		}
-	case HawkType:
+	case constant.HawkType:
 		var alg hawk.Alg
 		if strings.Contains(auth.Hawk.Algorithm, "SHA512") {
 			alg = 2
@@ -682,7 +840,7 @@ func (auth *Auth) SetAuth(req *fasthttp.Request) {
 		c := hawk.NewClient(credential, option)
 		authorization, _ := c.Header(string(req.Header.Method()), string(req.Host())+string(req.Header.RequestURI()))
 		req.Header.Add("Authorization", authorization)
-	case EdgegridType:
+	case constant.EdgegridType:
 		reader := bytes.NewReader(req.Body())
 		reqNew, err := http.NewRequest(string(req.Header.Method()), req.URI().String(), reader)
 		if err != nil {
@@ -691,7 +849,7 @@ func (auth *Auth) SetAuth(req *fasthttp.Request) {
 		params := edgegrid.NewAuthParams(reqNew, auth.Edgegrid.AccessToken, auth.Edgegrid.ClientToken, auth.Edgegrid.ClientSecret)
 		authorization := edgegrid.Auth(params)
 		req.Header.Add("Authorization", authorization)
-	case NtlmType:
+	case constant.NtlmType:
 		session, err := ntlm.CreateClientSession(ntlm.Version1, ntlm.ConnectionlessMode)
 		if err != nil {
 			return
@@ -707,7 +865,7 @@ func (auth *Auth) SetAuth(req *fasthttp.Request) {
 		}
 		req.Header.Add("Connection", "keep-alive")
 		req.Header.Add("Authorization", challenge.String())
-	case Awsv4Type:
+	case constant.Awsv4Type:
 		signature := ""
 		date := strconv.Itoa(int(time.Now().Month())) + strconv.Itoa(time.Now().Day())
 		awsv := fmt.Sprintf("AWS4-HMAC-SHA256 Credential=%s/2022%s/%s/%s/aws4_request, SignedHeaders=content-length;content-type;host;x-amz-date;x-amz-security-token, Signature=%s",
@@ -718,7 +876,7 @@ func (auth *Auth) SetAuth(req *fasthttp.Request) {
 		req.Header.Add("X-Amz-Date", date+"T"+currentTime+"Z")
 		req.Header.Add("Authorization", awsv)
 
-	case Oauth1Type:
+	case constant.Oauth1Type:
 
 		//config := oauth1.Config{
 		//	ConsumerKey:    auth.Oauth1.ConsumerKey,
@@ -739,39 +897,39 @@ func (v *VarForm) ValueToByte() (by []byte) {
 		return
 	}
 	switch v.Type {
-	case StringType:
+	case constant.StringType:
 		by = []byte(v.Value.(string))
-	case TextType:
+	case constant.TextType:
 		by = []byte(v.Value.(string))
-	case ObjectType:
+	case constant.ObjectType:
 		by = []byte(v.Value.(string))
-	case ArrayType:
+	case constant.ArrayType:
 		by = []byte(v.Value.(string))
-	case NumberType:
+	case constant.NumberType:
 		bytesBuffer := bytes.NewBuffer([]byte{})
 		_ = binary.Write(bytesBuffer, binary.BigEndian, v.Value.(int))
 		by = bytesBuffer.Bytes()
-	case IntegerType:
+	case constant.IntegerType:
 		bytesBuffer := bytes.NewBuffer([]byte{})
 		_ = binary.Write(bytesBuffer, binary.BigEndian, v.Value.(int))
 		by = bytesBuffer.Bytes()
-	case DoubleType:
+	case constant.DoubleType:
 		bytesBuffer := bytes.NewBuffer([]byte{})
 		_ = binary.Write(bytesBuffer, binary.BigEndian, v.Value.(int64))
 		by = bytesBuffer.Bytes()
-	case FileType:
+	case constant.FileType:
 		bits := math.Float64bits(v.Value.(float64))
 		binary.LittleEndian.PutUint64(by, bits)
-	case BooleanType:
+	case constant.BooleanType:
 		buf := bytes.Buffer{}
 		enc := gob.NewEncoder(&buf)
 		_ = enc.Encode(v.Value.(bool))
 		by = buf.Bytes()
-	case DateType:
+	case constant.DateType:
 		by = []byte(v.Value.(string))
-	case DateTimeType:
+	case constant.DateTimeType:
 		by = []byte(v.Value.(string))
-	case TimeStampType:
+	case constant.TimeStampType:
 		bytesBuffer := bytes.NewBuffer([]byte{})
 		_ = binary.Write(bytesBuffer, binary.BigEndian, v.Value.(int64))
 		by = bytesBuffer.Bytes()
@@ -785,39 +943,39 @@ func (v *VarForm) toByte() (by []byte) {
 		return
 	}
 	switch v.Type {
-	case StringType:
+	case constant.StringType:
 		by = []byte(v.Value.(string))
-	case TextType:
+	case constant.TextType:
 		by = []byte(v.Value.(string))
-	case ObjectType:
+	case constant.ObjectType:
 		by = []byte(v.Value.(string))
-	case ArrayType:
+	case constant.ArrayType:
 		by = []byte(v.Value.(string))
-	case NumberType:
+	case constant.NumberType:
 		bytesBuffer := bytes.NewBuffer([]byte{})
 		_ = binary.Write(bytesBuffer, binary.BigEndian, v.Value.(int))
 		by = bytesBuffer.Bytes()
-	case IntegerType:
+	case constant.IntegerType:
 		bytesBuffer := bytes.NewBuffer([]byte{})
 		_ = binary.Write(bytesBuffer, binary.BigEndian, v.Value.(int))
 		by = bytesBuffer.Bytes()
-	case DoubleType:
+	case constant.DoubleType:
 		bytesBuffer := bytes.NewBuffer([]byte{})
 		_ = binary.Write(bytesBuffer, binary.BigEndian, v.Value.(int64))
 		by = bytesBuffer.Bytes()
-	case FileType:
+	case constant.FileType:
 		bits := math.Float64bits(v.Value.(float64))
 		binary.LittleEndian.PutUint64(by, bits)
-	case BooleanType:
+	case constant.BooleanType:
 		buf := bytes.Buffer{}
 		enc := gob.NewEncoder(&buf)
 		_ = enc.Encode(v.Value.(bool))
 		by = buf.Bytes()
-	case DateType:
+	case constant.DateType:
 		by = []byte(v.Value.(string))
-	case DateTimeType:
+	case constant.DateTimeType:
 		by = []byte(v.Value.(string))
-	case TimeStampType:
+	case constant.TimeStampType:
 		bytesBuffer := bytes.NewBuffer([]byte{})
 		_ = binary.Write(bytesBuffer, binary.BigEndian, v.Value.(int64))
 		by = bytesBuffer.Bytes()
@@ -832,35 +990,35 @@ func (v *VarForm) Conversion() {
 		return
 	}
 	switch v.FieldType {
-	case StringType:
+	case constant.StringType:
 		v.Value = v.Value.(string)
 		// 字符串类型不用转换
-	case TextType:
+	case constant.TextType:
 		v.Value = v.Value.(string)
 		// 文本类型不用转换
-	case ObjectType:
+	case constant.ObjectType:
 		v.Value = v.Value.(string)
 		// 对象不用转换
-	case ArrayType:
+	case constant.ArrayType:
 		v.Value = v.Value.(string)
 		// 数组不用转换
-	case IntegerType:
+	case constant.IntegerType:
 		v.Value = v.Value.(int)
-	case NumberType:
+	case constant.NumberType:
 		v.Value = v.Value.(int)
-	case FloatType:
+	case constant.FloatType:
 		v.Value = v.Value.(float64)
-	case DoubleType:
+	case constant.DoubleType:
 		v.Value = v.Value.(float64)
-	case FileType:
+	case constant.FileType:
 		v.Value = v.Value.(string)
-	case DateType:
+	case constant.DateType:
 		v.Value = v.Value.(string)
-	case DateTimeType:
+	case constant.DateTimeType:
 		v.Value = v.Value.(string)
-	case TimeStampType:
+	case constant.TimeStampType:
 		v.Value = v.Value.(int64)
-	case BooleanType:
+	case constant.BooleanType:
 		v.Value = v.Value.(bool)
 	}
 }
@@ -885,14 +1043,14 @@ func (r *Api) AddAssertion() {
 	if r.Configuration.SceneVariable == nil || r.Configuration.SceneVariable.Assert == nil || len(r.Configuration.SceneVariable.Assert) <= 0 {
 		return
 	}
-	if r.Assert == nil {
-		r.Assert = r.Configuration.SceneVariable.Assert
+	if r.Request.Assert == nil {
+		r.Request.Assert = r.Configuration.SceneVariable.Assert
 		return
 	}
-	by1, _ := json.Marshal(r.Assert)
+	by1, _ := json.Marshal(r.Request.Assert)
 	log.Logger.Debug("222222:     ", string(by1))
 	for _, assert := range r.Configuration.SceneVariable.Assert {
-		r.Assert = append(r.Assert, assert)
+		r.Request.Assert = append(r.Request.Assert, assert)
 	}
 	by, _ := json.Marshal(r.Configuration.SceneVariable.Assert)
 	log.Logger.Debug("byLLLLL:     ", string(by))
@@ -940,8 +1098,8 @@ func (r *Api) ReplaceBodyVarForm(globalVar *sync.Map) {
 		return
 	}
 	switch r.Request.Body.Mode {
-	case NoneMode:
-	case FormMode:
+	case constant.NoneMode:
+	case constant.FormMode:
 		if r.Request.Body.Parameter == nil || len(r.Request.Body.Parameter) <= 0 {
 			return
 		}
@@ -1003,7 +1161,7 @@ func (r *Api) ReplaceBodyVarForm(globalVar *sync.Map) {
 			queryVarForm.Conversion()
 		}
 
-	case UrlencodeMode:
+	case constant.UrlencodeMode:
 		if r.Request.Body.Parameter == nil || len(r.Request.Body.Parameter) <= 0 {
 			return
 		}
@@ -1275,7 +1433,7 @@ func (r *Api) ReplaceAuthVarForm(globalVar *sync.Map) {
 		return
 	}
 	switch r.Request.Auth.Type {
-	case Kv:
+	case constant.Kv:
 		if r.Request.Auth.KV == nil || r.Request.Auth.KV.Key == "" || r.Request.Auth.KV.Value == nil {
 			return
 		}
@@ -1308,7 +1466,7 @@ func (r *Api) ReplaceAuthVarForm(globalVar *sync.Map) {
 			}
 		}
 
-	case BEarer:
+	case constant.BEarer:
 		if r.Request.Auth.Bearer == nil || r.Request.Auth.Bearer.Key == "" {
 			return
 		}
@@ -1340,7 +1498,7 @@ func (r *Api) ReplaceAuthVarForm(globalVar *sync.Map) {
 				r.Request.Auth.Bearer.Key = strings.Replace(r.Request.Auth.Bearer.Key, v[0], value.(string), -1)
 			}
 		}
-	case BAsic:
+	case constant.BAsic:
 		if r.Request.Auth.Basic != nil && r.Request.Auth.Basic.UserName != "" {
 			names := tools.FindAllDestStr(r.Request.Auth.Basic.UserName, "{{(.*?)}}")
 			if names != nil {
@@ -1408,10 +1566,10 @@ func (r *Api) ReplaceAuthVarForm(globalVar *sync.Map) {
 }
 
 func (r *Api) ReplaceAssertionVarForm(globalVar *sync.Map) {
-	if r.Assert == nil || len(r.Assert) <= 0 {
+	if r.Request.Assert == nil || len(r.Request.Assert) <= 0 {
 		return
 	}
-	for _, assert := range r.Assert {
+	for _, assert := range r.Request.Assert {
 		if assert.Val == "" {
 			continue
 		}
@@ -1464,219 +1622,173 @@ func (r *Api) ReplaceAssertionVarForm(globalVar *sync.Map) {
 	}
 }
 
-// FindParameterizes 将请求中的变量全部放到一个map中
-//func (r *Api) FindParameterizes() {
-//	r.Request.URL = strings.TrimSpace(r.Request.URL)
-//	urls := tools.FindAllDestStr(r.Request.URL, "{{(.*?)}}")
-//
-//	for _, name := range urls {
-//
-//		r.Parameters.Range(func(key, value any) bool {
-//			return true
-//		})
-//		if _, ok := r.Parameters.Load(name[1]); !ok {
-//			r.Parameters.Store(name[1], name[0])
-//		}
-//	}
-//	r.findBodyParameters()
-//	r.findQueryParameters()
-//	r.findHeaderParameters()
-//	r.findAuthParameters()
-//}
+func insertDebugMsg(regex []map[string]interface{}, debugMsg map[string]interface{}, resp *fasthttp.Response, req *fasthttp.Request, requestTime uint64, responseTime string, receivedBytes float64, errMsg, debug, str string, err error, isSucceed bool, assertionMsgList []AssertionMsg, assertNum, assertFailedNum int) {
+	switch debug {
+	case constant.All:
+		makeDebugMsg(regex, debugMsg, resp, req, requestTime, responseTime, receivedBytes, errMsg, str, err, isSucceed, assertionMsgList, assertNum, assertFailedNum)
+	case constant.OnlySuccess:
+		if isSucceed == true {
+			makeDebugMsg(regex, debugMsg, resp, req, requestTime, responseTime, receivedBytes, errMsg, str, err, isSucceed, assertionMsgList, assertNum, assertFailedNum)
+		}
 
-// ReplaceParameters 将场景变量中的值赋值给，接口变量
-//func (r *Api) ReplaceParameters(Variable []*KV) {
-//	for _, v := range Variable {
-//		r.Parameters.Store(v.Key, v.Value)
-//	}
-//}
+	case constant.OnlyError:
+		if isSucceed == false {
+			makeDebugMsg(regex, debugMsg, resp, req, requestTime, responseTime, receivedBytes, errMsg, str, err, isSucceed, assertionMsgList, assertNum, assertFailedNum)
+		}
+	}
+}
 
-// 将Query中的变量，都存储到接口变量中
-//func (r *Api) findQueryParameters() {
-//
-//	if r.Request.Query == nil || r.Request.Query.Parameter == nil {
-//		return
-//	}
-//	for _, varForm := range r.Request.Query.Parameter {
-//		nameParameters := tools.FindAllDestStr(varForm.Key, "{{(.*?)}}")
-//		for _, name := range nameParameters {
-//			if _, ok := r.Parameters.Load(name[1]); !ok {
-//				r.Parameters.Store(name[1], name[0])
-//			}
-//		}
-//		if varForm.Value == nil {
-//			continue
-//		}
-//		valueParameters := tools.FindAllDestStr(varForm.Value.(string), "{{(.*?)}}")
-//		for _, value := range valueParameters {
-//			if len(value) > 1 {
-//				if _, ok := r.Parameters.Load(value[1]); !ok {
-//					r.Parameters.Store(value[1], value[0])
-//				}
-//			}
-//
-//		}
-//	}
-//
-//}
+func makeDebugMsg(regex []map[string]interface{}, debugMsg map[string]interface{}, resp *fasthttp.Response, req *fasthttp.Request, requestTime uint64, responseTime string, receivedBytes float64, errMsg, str string, err error, isSucceed bool, assertionMsgList []AssertionMsg, assertNum, assertFailedNum int) {
 
-//func (r *Api) findBodyParameters() {
-//	if r.Request.Body != nil {
-//		switch r.Request.Body.Mode {
-//		case NoneMode:
-//		case FormMode:
-//			if r.Request.Body.Parameter == nil {
-//				return
-//			}
-//			for _, parameter := range r.Request.Body.Parameter {
-//				keys := tools.FindAllDestStr(parameter.Key, "{{(.*?)}}")
-//				if keys != nil && len(keys) > 1 {
-//					for _, key := range keys {
-//						if _, ok := r.Parameters.Load(key[1]); !ok {
-//							r.Parameters.Store(key[1], key[0])
-//						}
-//					}
-//				}
-//				if parameter.Value == nil {
-//					continue
-//				}
-//				values := tools.FindAllDestStr(parameter.Value.(string), "{{(.*?)}}")
-//				if values != nil {
-//					for _, value := range values {
-//						if _, ok := r.Parameters.Load(value[1]); !ok {
-//							r.Parameters.Store(value[1], value[0])
-//						}
-//					}
-//				}
-//
-//			}
-//		case UrlencodeMode:
-//			if r.Request.Body.Parameter == nil {
-//				return
-//			}
-//			for _, parameter := range r.Request.Body.Parameter {
-//				keys := tools.FindAllDestStr(parameter.Key, "{{(.*?)}}")
-//				if keys != nil {
-//					for _, key := range keys {
-//						if _, ok := r.Parameters.Load(key[1]); !ok {
-//							r.Parameters.Store(key[1], key[0])
-//						}
-//					}
-//				}
-//				if parameter.Value == nil {
-//					continue
-//				}
-//				values := tools.FindAllDestStr(parameter.Value.(string), "{{(.*?)}}")
-//				if values != nil {
-//					for _, value := range values {
-//						if _, ok := r.Parameters.Load(value[1]); !ok {
-//							r.Parameters.Store(value[1], value[0])
-//						}
-//					}
-//				}
-//			}
-//		default:
-//			if r.Request.Body.Raw == "" {
-//				return
-//			}
-//			bodys := tools.FindAllDestStr(r.Request.Body.Raw, "{{(.*?)}}")
-//			if bodys != nil {
-//				for _, body := range bodys {
-//					if len(body) > 1 {
-//						if _, ok := r.Parameters.Load(body[1]); !ok {
-//							r.Parameters.Store(body[1], body[0])
-//						}
-//					}
-//				}
-//			}
-//		}
-//	}
-//
-//}
+	if req.Header.Method() != nil {
+		debugMsg["method"] = string(req.Header.Method())
+	}
+	debugMsg["type"] = constant.RequestType
+	debugMsg["request_time"] = requestTime / uint64(time.Millisecond)
+	debugMsg["request_code"] = resp.StatusCode()
+	debugMsg["request_header"] = req.Header.String()
+	debugMsg["response_time"] = responseTime
+	if string(req.Body()) != "" {
+		var errBody error
+		debugMsg["request_body"], errBody = url.QueryUnescape(string(req.Body()))
+		if errBody != nil {
+			debugMsg["request_body"] = string(req.Body())
+		}
+		log.Logger.Debug()
+	} else {
+		debugMsg["request_body"] = str
+	}
+	if string(resp.Body()) == "" && errMsg != "" {
+		debugMsg["response_body"] = errMsg
+	}
 
-// 将Header中的变量，都存储到接口变量中
-//func (r *Api) findHeaderParameters() {
-//
-//	if r.Request.Header.Parameter == nil {
-//		return
-//	}
-//	for _, varForm := range r.Request.Header.Parameter {
-//		nameParameters := tools.FindAllDestStr(varForm.Key, "{{(.*?)}}")
-//		for _, name := range nameParameters {
-//			if _, ok := r.Parameters.Load(name[1]); !ok {
-//				r.Parameters.Store(name[1], name[0])
-//			}
-//		}
-//		if varForm.Value == nil {
-//			continue
-//		}
-//		valueParameters := tools.FindAllDestStr(varForm.Value.(string), "{{(.*?)}}")
-//		for _, value := range valueParameters {
-//			if len(value) > 1 {
-//				if _, ok := r.Parameters.Load(value[1]); !ok {
-//					r.Parameters.Store(value[1], value[0])
-//				}
-//			}
-//
-//		}
-//	}
-//
-//}
+	debugMsg["response_header"] = resp.Header.String()
 
-//func (r *Api) findAuthParameters() {
-//	if r.Request.Auth != nil {
-//		switch r.Request.Auth.Type {
-//		case Kv:
-//			if r.Request.Auth.KV.Key == "" {
-//				return
-//			}
-//			keys := tools.FindAllDestStr(r.Request.Auth.KV.Key, "{{(.*?)}}")
-//			for _, key := range keys {
-//				if _, ok := r.Parameters.Load(key[1]); !ok {
-//					r.Parameters.Store(key[1], key[0])
-//				}
-//			}
-//
-//			if r.Request.Auth.KV.Value == nil {
-//				return
-//
-//			}
-//
-//			values := tools.FindAllDestStr(r.Request.Auth.KV.Value.(string), "{{(.*?)}}")
-//			for _, value := range values {
-//				if _, ok := r.Parameters.Load(value[1]); !ok {
-//					r.Parameters.Store(value[1], value[0])
-//				}
-//			}
-//		case BEarer:
-//			if r.Request.Auth.Bearer.Key == "" {
-//				return
-//			}
-//			keys := tools.FindAllDestStr(r.Request.Auth.Bearer.Key, "{{(.*?)}}")
-//			for _, key := range keys {
-//				if _, ok := r.Parameters.Load(key[1]); !ok {
-//					r.Parameters.Store(key[1], key[0])
-//				}
-//			}
-//		case BAsic:
-//			if r.Request.Auth.Basic.UserName == "" {
-//				return
-//			}
-//			names := tools.FindAllDestStr(r.Request.Auth.Basic.UserName, "{{(.*?)}}")
-//			for _, name := range names {
-//				if _, ok := r.Parameters.Load(name[1]); !ok {
-//					r.Parameters.Store(name[1], name[0])
-//				}
-//			}
-//			if r.Request.Auth.Basic.UserName == "" {
-//				return
-//			}
-//			pws := tools.FindAllDestStr(r.Request.Auth.Basic.Password, "{{(.*?)}}")
-//			for _, pw := range pws {
-//				if _, ok := r.Parameters.Load(pw[1]); !ok {
-//					r.Parameters.Store(pw[1], pw[0])
-//				}
-//			}
-//		}
-//	}
-//}
+	debugMsg["response_bytes"], _ = strconv.ParseFloat(fmt.Sprintf("%0.2f", receivedBytes), 64)
+	if err != nil {
+		debugMsg["response_body"] = err.Error()
+	} else {
+		debugMsg["response_body"] = string(resp.Body())
+	}
+	switch isSucceed {
+	case false:
+		debugMsg["status"] = constant.Failed
+	case true:
+		debugMsg["status"] = constant.Success
+	}
+	debugMsg["assertion"] = assertionMsgList
+	debugMsg["assertion_num"] = assertNum
+	debugMsg["assertion_failed_num"] = assertFailedNum
+	debugMsg["regex"] = regex
+}
+
+// 获取fasthttp客户端
+func fastClient(httpApiSetup *HttpApiSetup, auth *Auth) (fc *fasthttp.Client) {
+	tr := &tls.Config{InsecureSkipVerify: true}
+	if auth != nil || auth.Bidirectional != nil {
+		switch auth.Type {
+		case constant.Bidirectional:
+			tr.InsecureSkipVerify = false
+			if auth.Bidirectional.CaCert != "" {
+				if strings.HasPrefix(auth.Bidirectional.CaCert, "https://") || strings.HasPrefix(auth.Bidirectional.CaCert, "http://") {
+					client := &fasthttp.Client{}
+					loadReq := fasthttp.AcquireRequest()
+					defer loadReq.ConnectionClose()
+					// set url
+					loadReq.Header.SetMethod("GET")
+					loadReq.SetRequestURI(auth.Bidirectional.CaCert)
+					loadResp := fasthttp.AcquireResponse()
+					defer loadResp.ConnectionClose()
+					if err := client.Do(loadReq, loadResp); err != nil {
+						log.Logger.Error(fmt.Sprintf("机器ip:%s, 下载crt文件失败：", middlewares.LocalIp), err)
+					}
+					if loadResp != nil && loadResp.Body() != nil {
+						caCertPool := x509.NewCertPool()
+						if caCertPool != nil {
+							caCertPool.AppendCertsFromPEM(loadResp.Body())
+							tr.ClientCAs = caCertPool
+						}
+					}
+				}
+			}
+		case constant.Unidirectional:
+			tr.InsecureSkipVerify = false
+		}
+	}
+	fc = &fasthttp.Client{
+		TLSConfig: tr,
+	}
+	if httpApiSetup.ClientName != "" {
+		fc.Name = httpApiSetup.ClientName
+	}
+	if httpApiSetup.UserAgent {
+		fc.NoDefaultUserAgentHeader = false
+	}
+	if httpApiSetup.MaxIdleConnDuration != 0 {
+		fc.MaxIdleConnDuration = time.Duration(httpApiSetup.MaxIdleConnDuration) * time.Second
+	} else {
+		fc.MaxIdleConnDuration = time.Duration(0) * time.Second
+	}
+	if httpApiSetup.MaxConnPerHost != 0 {
+		fc.MaxConnsPerHost = httpApiSetup.MaxConnPerHost
+	}
+
+	fc.MaxConnWaitTimeout = time.Duration(httpApiSetup.MaxConnWaitTimeout) * time.Second
+	fc.WriteTimeout = time.Duration(httpApiSetup.WriteTimeOut) * time.Millisecond
+	fc.ReadTimeout = time.Duration(httpApiSetup.ReadTimeOut) * time.Millisecond
+
+	return fc
+}
+
+func newKeepAlive(httpApiSetup *HttpApiSetup, auth *Auth) {
+	once.Do(func() {
+		tr := &tls.Config{InsecureSkipVerify: true}
+		if auth != nil && auth.Bidirectional != nil {
+			switch auth.Type {
+			case constant.Bidirectional:
+				tr.InsecureSkipVerify = false
+				if auth.Bidirectional.CaCert != "" {
+					if strings.HasPrefix(auth.Bidirectional.CaCert, "https://") || strings.HasPrefix(auth.Bidirectional.CaCert, "http://") {
+						client := &fasthttp.Client{}
+						loadReq := fasthttp.AcquireRequest()
+						defer loadReq.ConnectionClose()
+						// set url
+						loadReq.Header.SetMethod("GET")
+						loadReq.SetRequestURI(auth.Bidirectional.CaCert)
+						loadResp := fasthttp.AcquireResponse()
+						defer loadResp.ConnectionClose()
+						if err := client.Do(loadReq, loadResp); err != nil {
+							log.Logger.Error(fmt.Sprintf("机器ip:%s, 下载crt文件失败：", middlewares.LocalIp), err)
+						}
+						if loadResp != nil && loadResp.Body() != nil {
+							caCertPool := x509.NewCertPool()
+							if caCertPool != nil {
+								caCertPool.AppendCertsFromPEM(loadResp.Body())
+								tr.ClientCAs = caCertPool
+							}
+						}
+					}
+				}
+			case constant.Unidirectional:
+				tr.InsecureSkipVerify = false
+			}
+		}
+		KeepAliveClient = &fasthttp.Client{
+			TLSConfig: tr,
+		}
+		if httpApiSetup.ClientName != "" {
+			KeepAliveClient.Name = httpApiSetup.ClientName
+		}
+		if httpApiSetup.UserAgent {
+			KeepAliveClient.NoDefaultUserAgentHeader = false
+		}
+		KeepAliveClient.MaxIdleConnDuration = time.Duration(httpApiSetup.MaxIdleConnDuration) * time.Second
+		if httpApiSetup.MaxConnPerHost != 0 {
+			KeepAliveClient.MaxConnsPerHost = httpApiSetup.MaxConnPerHost
+		}
+
+		KeepAliveClient.WriteTimeout = time.Duration(httpApiSetup.WriteTimeOut) * time.Millisecond
+		KeepAliveClient.ReadTimeout = time.Duration(httpApiSetup.ReadTimeOut) * time.Millisecond
+		KeepAliveClient.MaxConnWaitTimeout = time.Duration(httpApiSetup.MaxConnWaitTimeout) * time.Second
+	})
+}

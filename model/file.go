@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/constant"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	"github.com/valyala/fasthttp"
@@ -43,7 +44,7 @@ func (p *ParameterizedFile) UseFile() {
 	}
 	p.VariableNames.VarMapList = make(map[string][]string)
 	for _, path := range p.Paths {
-		if path.IsChecked != Open {
+		if path.IsChecked != constant.Open {
 			continue
 		}
 		req.Header.SetRequestURI(path.Path)

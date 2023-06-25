@@ -3,6 +3,7 @@ package model
 import (
 	"context"
 	"fmt"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/constant"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -46,5 +47,5 @@ func QueryDebugStatus(collection *mongo.Collection, teamId, planId, reportId str
 	if ok {
 		return value.(string)
 	}
-	return StopDebug
+	return constant.StopDebug
 }

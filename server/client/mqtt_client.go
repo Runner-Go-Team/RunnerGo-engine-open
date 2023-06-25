@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/constant"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -16,26 +17,26 @@ func NewMqttClient(config model.MQTTConfig) (c *model.MQTTClient, err error) {
 	opts := mqtt.NewClientOptions()
 	opts.AddBroker(fmt.Sprintf("%s://%s:%d", config.PortType, config.Broker, config.Port))
 	opts.SetClientID(config.CommonConfig.ClientId)
-	if config.CommonConfig.Username != model.NILSTRING {
+	if config.CommonConfig.Username != constant.NILSTRING {
 		opts.SetUsername(config.CommonConfig.Username)
 	}
 
-	if config.CommonConfig.Password != model.NILSTRING {
+	if config.CommonConfig.Password != constant.NILSTRING {
 		opts.SetPassword(config.CommonConfig.Password)
 	}
-	if config.PingTimeOut != model.NILINT {
+	if config.PingTimeOut != constant.NILINT {
 		opts.SetPingTimeout(time.Duration(config.PingTimeOut) * time.Second)
 	}
-	if config.HigherConfig.ConnectTimeOut != model.NILINT {
+	if config.HigherConfig.ConnectTimeOut != constant.NILINT {
 		opts.SetConnectTimeout(time.Duration(config.HigherConfig.ConnectTimeOut) * time.Second)
 	}
-	if config.WriteTimeOut != model.NILINT {
+	if config.WriteTimeOut != constant.NILINT {
 		opts.SetWriteTimeout(time.Duration(config.WriteTimeOut) * time.Second)
 	}
-	if config.KeepLiveTime != model.NILINT {
+	if config.KeepLiveTime != constant.NILINT {
 		opts.SetKeepAlive(time.Duration(config.KeepLiveTime) * time.Second)
 	}
-	if config.MQTTVersion != model.NILINT {
+	if config.MQTTVersion != constant.NILINT {
 		opts.SetProtocolVersion(config.MQTTVersion)
 	}
 

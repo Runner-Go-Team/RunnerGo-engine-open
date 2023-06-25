@@ -3,6 +3,7 @@ package golink
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/constant"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
@@ -14,7 +15,7 @@ import (
 	"time"
 )
 
-func TcpConnection(tcp model.TCP, mongoCollection *mongo.Collection) {
+func TcpConnection(tcp model.TCPDetail, mongoCollection *mongo.Collection) {
 	var conn net.Conn
 	var err error
 	connectionResults, recvResults, writeResults := make(map[string]interface{}), make(map[string]interface{}), make(map[string]interface{})
@@ -73,7 +74,7 @@ func TcpConnection(tcp model.TCP, mongoCollection *mongo.Collection) {
 
 	switch tcp.TcpConfig.ConnectType {
 	// 长连接
-	case model.LongConnection:
+	case constant.LongConnection:
 		adjustKey := fmt.Sprintf("TcpStatusChange:%s", tcp.Uuid.String())
 		pubSub := model.SubscribeMsg(adjustKey)
 		statusCh := pubSub.Channel()
@@ -85,7 +86,7 @@ func TcpConnection(tcp model.TCP, mongoCollection *mongo.Collection) {
 		go Write(wg, writeTimeAfter, connChan, ticker, conn, tcp, writeResults, connectionResults, mongoCollection, statusCh)
 		wg.Wait()
 	// 短连接
-	case model.ShortConnection:
+	case constant.ShortConnection:
 		msg := []byte(tcp.SendMessage)
 		_, err := conn.Write(msg)
 		writeResults["request_body"] = msg
@@ -117,7 +118,7 @@ func TcpConnection(tcp model.TCP, mongoCollection *mongo.Collection) {
 	}
 }
 
-func ReConnection(tcp model.TCP, connChan chan net.Conn) (conn net.Conn, err error) {
+func ReConnection(tcp model.TCPDetail, connChan chan net.Conn) (conn net.Conn, err error) {
 	for i := 0; i < tcp.TcpConfig.RetryNum; i++ {
 		conn, err = client.NewTcpClient(tcp.Url)
 		if conn != nil {
@@ -130,7 +131,7 @@ func ReConnection(tcp model.TCP, connChan chan net.Conn) (conn net.Conn, err err
 	return
 }
 
-func Write(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Conn, ticker *time.Ticker, conn net.Conn, tcp model.TCP, results, connectionResults map[string]interface{}, mongoCollection *mongo.Collection, statusCh <-chan *redis.Message) {
+func Write(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Conn, ticker *time.Ticker, conn net.Conn, tcp model.TCPDetail, results, connectionResults map[string]interface{}, mongoCollection *mongo.Collection, statusCh <-chan *redis.Message) {
 	defer wg.Done()
 	defer func() {
 		if conn != nil {
@@ -144,7 +145,7 @@ func Write(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Con
 
 	tcpStatusChange := new(model.ConnectionStatusChange)
 	switch tcp.TcpConfig.IsAutoSend {
-	case model.AutoConnectionSend:
+	case constant.AutoConnectionSend:
 		for {
 			select {
 			case <-timeAfter:
@@ -214,7 +215,7 @@ func Write(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Con
 
 			}
 		}
-	case model.ConnectionAndSend:
+	case constant.ConnectionAndSend:
 		connectionResults["status"] = true
 		connectionResults["is_stop"] = false
 		model.Insert(mongoCollection, connectionResults, middlewares.LocalIp)
@@ -228,12 +229,12 @@ func Write(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Con
 			case c := <-statusCh:
 				_ = json.Unmarshal([]byte(c.Payload), tcpStatusChange)
 				switch tcpStatusChange.Type {
-				case model.UnConnection:
+				case constant.UnConnection:
 					results["status"] = true
 					results["is_stop"] = true
 					model.Insert(mongoCollection, results, middlewares.LocalIp)
 					return
-				case model.SendMessage:
+				case constant.SendMessage:
 					tcp.SendMessage = tcpStatusChange.Message
 					msg := []byte(tcp.SendMessage)
 					if conn == nil {
@@ -298,7 +299,7 @@ func Write(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Con
 
 }
 
-func Read(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Conn, buf []byte, conn net.Conn, tcp model.TCP, results map[string]interface{}, mongoCollection *mongo.Collection, statusCh <-chan *redis.Message) {
+func Read(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Conn, buf []byte, conn net.Conn, tcp model.TCPDetail, results map[string]interface{}, mongoCollection *mongo.Collection, statusCh <-chan *redis.Message) {
 	defer wg.Done()
 	defer func() {
 		if conn != nil {

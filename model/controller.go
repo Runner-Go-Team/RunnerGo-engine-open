@@ -1,99 +1,100 @@
 package model
 
 import (
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/constant"
 	"strings"
 )
 
 func (ic *Event) PerForm(value string) (result, msg string) {
 	switch ic.Compare {
-	case Equal:
+	case constant.Equal:
 		if strings.Compare(ic.Val, value) == 0 {
-			result = Success
-			msg = ic.Val + " " + Equal + " " + value + "  成功"
+			result = constant.Success
+			msg = ic.Val + " " + constant.Equal + " " + value + "  成功"
 		} else {
-			result = Failed
-			msg = ic.Val + " " + Equal + " " + value + "  失败"
+			result = constant.Failed
+			msg = ic.Val + " " + constant.Equal + " " + value + "  失败"
 		}
 
-	case UNEqual:
+	case constant.UNEqual:
 		if strings.Compare(ic.Val, value) != 0 {
-			result = Success
-			msg = ic.Val + " " + UNEqual + " " + value + "  成功"
+			result = constant.Success
+			msg = ic.Val + " " + constant.UNEqual + " " + value + "  成功"
 		} else {
-			result = Failed
-			msg = ic.Val + " " + UNEqual + " " + value + "  失败"
+			result = constant.Failed
+			msg = ic.Val + " " + constant.UNEqual + " " + value + "  失败"
 		}
 
-	case GreaterThan:
+	case constant.GreaterThan:
 		if value > ic.Val {
-			result = Success
-			msg = ic.Val + " " + GreaterThan + " " + value + "  成功"
+			result = constant.Success
+			msg = ic.Val + " " + constant.GreaterThan + " " + value + "  成功"
 		} else {
-			result = Failed
-			msg = ic.Val + " " + GreaterThan + " " + value + "  失败"
+			result = constant.Failed
+			msg = ic.Val + " " + constant.GreaterThan + " " + value + "  失败"
 		}
 
-	case GreaterThanOrEqual:
+	case constant.GreaterThanOrEqual:
 		if value >= ic.Val {
-			result = Success
-			msg = ic.Val + " " + GreaterThanOrEqual + " " + value + "  成功"
+			result = constant.Success
+			msg = ic.Val + " " + constant.GreaterThanOrEqual + " " + value + "  成功"
 		} else {
-			result = Failed
-			msg = ic.Val + " " + GreaterThanOrEqual + " " + value + "  失败"
+			result = constant.Failed
+			msg = ic.Val + " " + constant.GreaterThanOrEqual + " " + value + "  失败"
 		}
 
-	case LessThan:
+	case constant.LessThan:
 		if value < ic.Val {
-			result = Success
-			msg = ic.Val + " " + LessThan + " " + value + "  成功"
+			result = constant.Success
+			msg = ic.Val + " " + constant.LessThan + " " + value + "  成功"
 		} else {
-			result = Failed
-			msg = ic.Val + " " + LessThan + " " + value + "  失败"
+			result = constant.Failed
+			msg = ic.Val + " " + constant.LessThan + " " + value + "  失败"
 		}
 
-	case LessThanOrEqual:
+	case constant.LessThanOrEqual:
 		if value <= ic.Val {
-			result = Success
-			msg = ic.Val + " " + LessThanOrEqual + " " + value + "  成功"
+			result = constant.Success
+			msg = ic.Val + " " + constant.LessThanOrEqual + " " + value + "  成功"
 		} else {
-			result = Failed
-			msg = ic.Val + " " + LessThanOrEqual + " " + value + "  失败"
+			result = constant.Failed
+			msg = ic.Val + " " + constant.LessThanOrEqual + " " + value + "  失败"
 		}
-	case Includes:
+	case constant.Includes:
 		if strings.Contains(value, ic.Val) {
-			result = Success
-			msg = ic.Val + " " + Includes + " " + value + "  成功"
+			result = constant.Success
+			msg = ic.Val + " " + constant.Includes + " " + value + "  成功"
 		} else {
-			result = Failed
-			msg = ic.Val + " " + Includes + " " + value + "  失败"
+			result = constant.Failed
+			msg = ic.Val + " " + constant.Includes + " " + value + "  失败"
 		}
-	case UNIncludes:
+	case constant.UNIncludes:
 		if !strings.Contains(value, ic.Val) {
-			result = Success
-			msg = ic.Val + " " + UNIncludes + " " + value + "  成功"
+			result = constant.Success
+			msg = ic.Val + " " + constant.UNIncludes + " " + value + "  成功"
 		} else {
-			result = Failed
-			msg = ic.Val + " " + UNIncludes + " " + value + "  失败"
+			result = constant.Failed
+			msg = ic.Val + " " + constant.UNIncludes + " " + value + "  失败"
 		}
-	case NULL:
+	case constant.NULL:
 		if value == "" {
-			result = Success
-			msg = ic.Val + " " + NULL + " " + value + "  成功"
+			result = constant.Success
+			msg = ic.Val + " " + constant.NULL + " " + value + "  成功"
 		} else {
-			result = Failed
-			msg = ic.Val + " " + NULL + " " + value + "  失败"
+			result = constant.Failed
+			msg = ic.Val + " " + constant.NULL + " " + value + "  失败"
 		}
 
-	case NotNULL:
+	case constant.NotNULL:
 		if value != "" {
-			result = Success
-			msg = ic.Var + " " + NotNULL + " " + value + "  成功"
+			result = constant.Success
+			msg = ic.Var + " " + constant.NotNULL + " " + value + "  成功"
 		} else {
-			result = Failed
-			msg = ic.Var + " " + NotNULL + " " + value + "  失败"
+			result = constant.Failed
+			msg = ic.Var + " " + constant.NotNULL + " " + value + "  失败"
 		}
 	default:
-		result = Failed
+		result = constant.Failed
 		msg = ""
 	}
 	return

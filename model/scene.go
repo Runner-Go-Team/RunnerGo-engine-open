@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/constant"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/tools"
 	uuid "github.com/satori/go.uuid"
 	"strings"
@@ -66,12 +67,12 @@ func (g *GlobalVariable) SupToSub(variable *GlobalVariable) {
 			variable.Header.Parameter = []*VarForm{}
 		}
 		for _, parameter := range g.Header.Parameter {
-			if parameter.IsChecked != Open {
+			if parameter.IsChecked != constant.Open {
 				continue
 			}
 			var isExist bool
 			for _, header := range variable.Header.Parameter {
-				if header.IsChecked == Open && parameter.Key == header.Key && header.Value == parameter.Value {
+				if header.IsChecked == constant.Open && parameter.Key == header.Key && header.Value == parameter.Value {
 					isExist = true
 				}
 			}
@@ -90,12 +91,12 @@ func (g *GlobalVariable) SupToSub(variable *GlobalVariable) {
 			variable.Cookie.Parameter = []*VarForm{}
 		}
 		for _, parameter := range g.Cookie.Parameter {
-			if parameter.IsChecked != Open {
+			if parameter.IsChecked != constant.Open {
 				continue
 			}
 			var isExist bool
 			for _, cookie := range variable.Cookie.Parameter {
-				if cookie.IsChecked == Open && parameter.Key == cookie.Key && parameter.Value == cookie.Value {
+				if cookie.IsChecked == constant.Open && parameter.Key == cookie.Key && parameter.Value == cookie.Value {
 					isExist = true
 				}
 			}
@@ -110,12 +111,12 @@ func (g *GlobalVariable) SupToSub(variable *GlobalVariable) {
 			variable.Variable = []*VarForm{}
 		}
 		for _, parameter := range g.Variable {
-			if parameter.IsChecked != Open {
+			if parameter.IsChecked != constant.Open {
 				continue
 			}
 			var isExist bool
 			for _, v := range variable.Variable {
-				if v.IsChecked == Open && v.Key == parameter.Key {
+				if v.IsChecked == constant.Open && v.Key == parameter.Key {
 					isExist = true
 				}
 			}
@@ -130,12 +131,12 @@ func (g *GlobalVariable) SupToSub(variable *GlobalVariable) {
 			variable.Assert = []*AssertionText{}
 		}
 		for _, parameter := range g.Assert {
-			if parameter.IsChecked != Open {
+			if parameter.IsChecked != constant.Open {
 				continue
 			}
 			var isExist bool
 			for _, a := range variable.Assert {
-				if a.IsChecked == Open && a.Var == parameter.Var && a.Val == parameter.Val && a.Compare == parameter.Compare {
+				if a.IsChecked == constant.Open && a.Var == parameter.Var && a.Val == parameter.Val && a.Compare == parameter.Compare {
 					isExist = true
 				}
 			}
@@ -151,7 +152,7 @@ func (g *GlobalVariable) SupToSub(variable *GlobalVariable) {
 func (g *GlobalVariable) InitReplace() {
 	if g.Variable != nil && len(g.Variable) > 0 {
 		for _, kv := range g.Variable {
-			if kv.IsChecked != Open {
+			if kv.IsChecked != constant.Open {
 				continue
 			}
 			if kv.Value != nil {
@@ -175,7 +176,7 @@ func (g *GlobalVariable) InitReplace() {
 
 	if g.Header != nil && g.Header.Parameter != nil && len(g.Header.Parameter) > 0 {
 		for _, parameter := range g.Header.Parameter {
-			if parameter.IsChecked != Open {
+			if parameter.IsChecked != constant.Open {
 				continue
 			}
 			if parameter.Value != nil {
@@ -195,7 +196,7 @@ func (g *GlobalVariable) InitReplace() {
 					}
 					if g.Variable != nil {
 						for _, variable := range g.Variable {
-							if variable.IsChecked != Open {
+							if variable.IsChecked != constant.Open {
 								continue
 							}
 							if v[1] == variable.Key {
@@ -209,7 +210,7 @@ func (g *GlobalVariable) InitReplace() {
 	}
 	if g.Cookie != nil && g.Cookie.Parameter != nil && len(g.Cookie.Parameter) > 0 {
 		for _, parameter := range g.Cookie.Parameter {
-			if parameter.IsChecked != Open {
+			if parameter.IsChecked != constant.Open {
 				continue
 			}
 			if parameter.Value != nil {
@@ -229,7 +230,7 @@ func (g *GlobalVariable) InitReplace() {
 					}
 					if g.Variable != nil {
 						for _, variable := range g.Variable {
-							if variable.IsChecked != Open {
+							if variable.IsChecked != constant.Open {
 								continue
 							}
 
@@ -245,7 +246,7 @@ func (g *GlobalVariable) InitReplace() {
 
 	if g.Assert != nil && len(g.Assert) > 0 {
 		for _, asser := range g.Assert {
-			if asser.IsChecked != Open {
+			if asser.IsChecked != constant.Open {
 				continue
 			}
 			values := tools.FindAllDestStr(asser.Val, "{{(.*?)}}")
@@ -264,7 +265,7 @@ func (g *GlobalVariable) InitReplace() {
 				}
 				if g.Variable != nil {
 					for _, variable := range g.Variable {
-						if variable.IsChecked != Open {
+						if variable.IsChecked != constant.Open {
 							continue
 						}
 						if v[1] == variable.Key {

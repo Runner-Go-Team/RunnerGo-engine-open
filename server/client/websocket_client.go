@@ -3,6 +3,7 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/constant"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
@@ -58,7 +59,7 @@ func WebSocketRequest(recvResults, writeResults, connectionResults map[string]in
 	defer ticker.Stop()
 	switch wsConfig.ConnectType {
 	// 长连接
-	case model.LongConnection:
+	case constant.LongConnection:
 		// 订阅redis中消息  任务状态：包括：报告停止；debug日志状态；任务配置变更
 		adjustKey := fmt.Sprintf("WsStatusChange:%s", uid.String())
 		pubSub := model.SubscribeMsg(adjustKey)
@@ -67,7 +68,7 @@ func WebSocketRequest(recvResults, writeResults, connectionResults map[string]in
 		wg := new(sync.WaitGroup)
 		switch wsConfig.IsAutoSend {
 		// 自动发送
-		case model.AutoConnectionSend:
+		case constant.AutoConnectionSend:
 			wg.Add(1)
 			go func(wsWg *sync.WaitGroup, sub *redis.PubSub) {
 				defer wsWg.Done()
@@ -125,7 +126,7 @@ func WebSocketRequest(recvResults, writeResults, connectionResults map[string]in
 
 			}(wg, pubSub)
 		// 手动发送
-		case model.ConnectionAndSend:
+		case constant.ConnectionAndSend:
 			wg.Add(1)
 			go func(wsWg *sync.WaitGroup, sub *redis.PubSub) {
 				defer wsWg.Done()
@@ -255,7 +256,7 @@ func WebSocketRequest(recvResults, writeResults, connectionResults map[string]in
 		wg.Wait()
 
 	// 短链接
-	case model.ShortConnection:
+	case constant.ShortConnection:
 		if conn == nil {
 			if err != nil {
 				recvResults["err"] = err.Error()

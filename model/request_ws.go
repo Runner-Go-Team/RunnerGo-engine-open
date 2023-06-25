@@ -3,6 +3,7 @@ package model
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/constant"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	"github.com/go-redis/redis"
 	"github.com/gorilla/websocket"
@@ -51,7 +52,7 @@ func (ws WebsocketDetail) Send(mongoCollection *mongo.Collection) (bool, int64, 
 	var (
 		// startTime = time.Now()
 		isSucceed     = true
-		errCode       = NoError
+		errCode       = constant.NoError
 		receivedBytes = float64(0)
 	)
 
@@ -59,7 +60,7 @@ func (ws WebsocketDetail) Send(mongoCollection *mongo.Collection) (bool, int64, 
 
 	if err != nil {
 		isSucceed = false
-		errCode = RequestError // 请求错误
+		errCode = constant.RequestError // 请求错误
 	} else {
 		// 接收到的字节长度
 		receivedBytes, _ = decimal.NewFromFloat(float64(len(resp)) / 1024).Round(2).Float64()
@@ -90,7 +91,7 @@ func (ws WebsocketDetail) Request(mongoCollection *mongo.Collection) (resp []byt
 	connectionResults["target_id"] = ws.TargetId
 	headers := map[string][]string{}
 	for _, header := range ws.WsHeader {
-		if header.IsChecked != Open {
+		if header.IsChecked != constant.Open {
 			continue
 		}
 		headers[header.Var] = []string{header.Val}
@@ -144,7 +145,7 @@ func (ws WebsocketDetail) Request(mongoCollection *mongo.Collection) (resp []byt
 	defer ticker.Stop()
 	switch wsConfig.ConnectType {
 	// 长连接
-	case LongConnection:
+	case constant.LongConnection:
 		// 订阅redis中消息  任务状态：包括：报告停止；debug日志状态；任务配置变更
 		adjustKey := fmt.Sprintf("WsStatusChange:%s", ws.Uuid.String())
 		pubSub := SubscribeMsg(adjustKey)
@@ -153,7 +154,7 @@ func (ws WebsocketDetail) Request(mongoCollection *mongo.Collection) (resp []byt
 		wg := new(sync.WaitGroup)
 		switch wsConfig.IsAutoSend {
 		// 自动发送
-		case AutoConnectionSend:
+		case constant.AutoConnectionSend:
 			wg.Add(1)
 			go func(wsWg *sync.WaitGroup, sub *redis.PubSub) {
 				defer wsWg.Done()
@@ -211,7 +212,7 @@ func (ws WebsocketDetail) Request(mongoCollection *mongo.Collection) (resp []byt
 
 			}(wg, pubSub)
 		// 手动发送
-		case ConnectionAndSend:
+		case constant.ConnectionAndSend:
 			wg.Add(1)
 			go func(wsWg *sync.WaitGroup, sub *redis.PubSub) {
 				defer wsWg.Done()
@@ -341,7 +342,7 @@ func (ws WebsocketDetail) Request(mongoCollection *mongo.Collection) (resp []byt
 		wg.Wait()
 
 	// 短链接
-	case ShortConnection:
+	case constant.ShortConnection:
 		if conn == nil {
 			if err != nil {
 				recvResults["err"] = err.Error()

@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/config"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/constant"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/global"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
@@ -316,11 +317,11 @@ func DebugScene(scene model.Scene) {
 		p.UseFile()
 	}
 
-	scene.Debug = model.All
+	scene.Debug = constant.All
 	defer mongoClient.Disconnect(context.TODO())
 	mongoCollection := model.NewCollection(config.Conf.Mongo.DataBase, config.Conf.Mongo.SceneDebugTable, mongoClient)
 	var sceneWg = &sync.WaitGroup{}
-	golink.DisposeScene(wg, sceneWg, model.SceneType, scene, configuration, nil, nil, mongoCollection)
+	golink.DisposeScene(wg, sceneWg, constant.SceneType, scene, configuration, nil, nil, mongoCollection)
 	wg.Wait()
 	sceneWg.Wait()
 	log.Logger.Info(fmt.Sprintf("机器ip:%s, 团队: %s, 场景：%s, 调试结束！", middlewares.LocalIp, scene.TeamId, scene.SceneName))
@@ -355,7 +356,7 @@ func DebugApi(debugApi model.Api) {
 
 	if debugApi.ApiVariable.Variable != nil {
 		for _, variable := range debugApi.Configuration.SceneVariable.Variable {
-			if variable.IsChecked != model.Open {
+			if variable.IsChecked != constant.Open {
 				continue
 			}
 			globalVar.Store(variable.Key, variable.Value)
@@ -383,7 +384,7 @@ func DebugApi(debugApi model.Api) {
 	event.TeamId = debugApi.TeamId
 	event.Weight = 100
 	event.Id = "接口调试"
-	event.Debug = model.All
+	event.Debug = constant.All
 	// 新建mongo客户端连接，用于发送debug数据
 	mongoClient, err := model.NewMongoClient(
 		config.Conf.Mongo.DSN,
@@ -419,7 +420,7 @@ func DebugApi(debugApi model.Api) {
 }
 
 // DebugSql sql调试
-func DebugSql(debugSql model.SQL) {
+func DebugSql(debugSql model.SQLDetail) {
 
 	var globalVar = new(sync.Map)
 
@@ -461,7 +462,7 @@ func DebugSql(debugSql model.SQL) {
 
 	if debugSql.SqlVariable.Variable != nil {
 		for _, variable := range debugSql.Configuration.SceneVariable.Variable {
-			if variable.IsChecked != model.Open {
+			if variable.IsChecked != constant.Open {
 				continue
 			}
 			globalVar.Store(variable.Key, variable.Value)
@@ -470,11 +471,11 @@ func DebugSql(debugSql model.SQL) {
 	}
 
 	event := model.Event{}
-	event.SQL = debugSql
-	event.TeamId = debugSql.TeamId
+	event.Api.SQL = debugSql
+	//event.TeamId = debugSql.TeamId
 	event.Weight = 100
 	event.Id = "接口调试"
-	event.Debug = model.All
+	event.Debug = constant.All
 	// 新建mongo客户端连接，用于发送debug数据
 	mongoClient, err := model.NewMongoClient(
 		config.Conf.Mongo.DSN,
@@ -504,12 +505,12 @@ func DebugSql(debugSql model.SQL) {
 	mongoCollection := model.NewCollection(config.Conf.Mongo.DataBase, config.Conf.Mongo.SqlDebugTable, mongoClient)
 
 	golink.DisposeSql(nil, nil, nil, globalVar, event, mongoCollection)
-	log.Logger.Info(fmt.Sprintf("机器ip:%s, 团队：%s, sql：%s, 调试结束！", middlewares.LocalIp, debugSql.TeamId, debugSql.Name))
+	//log.Logger.Info(fmt.Sprintf("机器ip:%s, 团队：%s, sql：%s, 调试结束！", middlewares.LocalIp, debugSql.TeamId, debugSql.Name))
 
 }
 
 // DebugTcp tcp调试
-func DebugTcp(debugTcp model.TCP) {
+func DebugTcp(debugTcp model.TCPDetail) {
 
 	var globalVar = new(sync.Map)
 
@@ -551,7 +552,7 @@ func DebugTcp(debugTcp model.TCP) {
 
 	if debugTcp.SqlVariable.Variable != nil {
 		for _, variable := range debugTcp.Configuration.SceneVariable.Variable {
-			if variable.IsChecked != model.Open {
+			if variable.IsChecked != constant.Open {
 				continue
 			}
 			globalVar.Store(variable.Key, variable.Value)
@@ -560,11 +561,11 @@ func DebugTcp(debugTcp model.TCP) {
 	}
 
 	event := model.Event{}
-	event.TCP = debugTcp
+	event.Api.TCP = debugTcp
 	event.TeamId = debugTcp.TeamId
 	event.Weight = 100
 	event.Id = "接口调试"
-	event.Debug = model.All
+	event.Debug = constant.All
 	// 新建mongo客户端连接，用于发送debug数据
 	mongoClient, err := model.NewMongoClient(
 		config.Conf.Mongo.DSN,
@@ -641,7 +642,7 @@ func DebugWs(debugWs model.WebsocketDetail) {
 
 	if debugWs.WsVariable.Variable != nil {
 		for _, variable := range debugWs.Configuration.SceneVariable.Variable {
-			if variable.IsChecked != model.Open {
+			if variable.IsChecked != constant.Open {
 				continue
 			}
 			globalVar.Store(variable.Key, variable.Value)
@@ -650,11 +651,11 @@ func DebugWs(debugWs model.WebsocketDetail) {
 	}
 
 	event := model.Event{}
-	event.Ws = debugWs
+	event.Api.Ws = debugWs
 	event.TeamId = debugWs.TeamId
 	event.Weight = 100
 	event.Id = "接口调试"
-	event.Debug = model.All
+	event.Debug = constant.All
 	// 新建mongo客户端连接，用于发送debug数据
 	mongoClient, err := model.NewMongoClient(
 		config.Conf.Mongo.DSN,
@@ -731,7 +732,7 @@ func DebugDubbo(dubbo model.DubboDetail) {
 
 	if dubbo.DubboVariable.Variable != nil {
 		for _, variable := range dubbo.Configuration.SceneVariable.Variable {
-			if variable.IsChecked != model.Open {
+			if variable.IsChecked != constant.Open {
 				continue
 			}
 			globalVar.Store(variable.Key, variable.Value)
@@ -740,11 +741,11 @@ func DebugDubbo(dubbo model.DubboDetail) {
 	}
 
 	event := model.Event{}
-	event.DubboDetail = dubbo
+	event.Api.DubboDetail = dubbo
 	event.TeamId = dubbo.TeamId
 	event.Weight = 100
 	event.Id = "接口调试"
-	event.Debug = model.All
+	event.Debug = constant.All
 	// 新建mongo客户端连接，用于发送debug数据
 	mongoClient, err := model.NewMongoClient(
 		config.Conf.Mongo.DSN,

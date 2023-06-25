@@ -2,7 +2,7 @@ package model
 
 import uuid "github.com/satori/go.uuid"
 
-type TCP struct {
+type TCPDetail struct {
 	TargetId       string          `json:"target_id"`
 	Uuid           uuid.UUID       `json:"uuid"`
 	Name           string          `json:"name"`

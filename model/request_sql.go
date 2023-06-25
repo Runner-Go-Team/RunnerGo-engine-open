@@ -4,27 +4,22 @@ import (
 	sql_client "database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/constant"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
-	uuid "github.com/satori/go.uuid"
 	"go.mongodb.org/mongo-driver/mongo"
 	"strings"
 	"sync"
 	"time"
 )
 
-type SQL struct {
-	TargetId        string          `json:"target_id"`
-	Uuid            uuid.UUID       `json:"uuid"`
-	Name            string          `json:"name"`
-	TeamId          string          `json:"team_id"`
-	TargetType      string          `json:"target_type"` // api/webSocket/tcp/grpc
+type SQLDetail struct {
+	TargetType      string          `json:"target_type"` // mysql/oracle/postgresql
 	SqlString       string          `json:"sql_string"`
 	SqlDatabaseInfo SqlDatabaseInfo `json:"sql_database_info"`
 	Assert          []*SqlAssert    `json:"assert"`  // 验证的方法(断言)
 	Timeout         int64           `json:"timeout"` // 请求超时时间
 	Regex           []*SqlRegex     `json:"regex"`   // 关联提取
-	Debug           string          `json:"debug"`   // 是否开启Debug模式
 	Configuration   *Configuration  `json:"configuration"`
 	SqlVariable     *GlobalVariable `json:"sql_variable"`    // 全局变量
 	GlobalVariable  *GlobalVariable `json:"global_variable"` // 全局变量
@@ -53,14 +48,14 @@ type SqlRegex struct {
 	Index     int    `json:"index"` // 正则时提取第几个值
 }
 
-func (sql *SQL) Send(mongoCollection *mongo.Collection, globalVar *sync.Map) (isSucceed bool, requestTime uint64, startTime, endTime time.Time) {
+func (sql *SQLDetail) Send(debug string, debugMsg map[string]interface{}, mongoCollection *mongo.Collection, globalVar *sync.Map) (isSucceed bool, requestTime uint64, startTime, endTime time.Time) {
 	isSucceed = true
 	db, result, err, startTime, endTime, requestTime := sql.Request()
 	defer db.Close()
 	if err != nil {
 		isSucceed = false
 	}
-	results := make(map[string]interface{})
+
 	assertionList := sql.Asser(result)
 	for _, assert := range assertionList {
 		if assert.IsSucceed == false {
@@ -68,33 +63,63 @@ func (sql *SQL) Send(mongoCollection *mongo.Collection, globalVar *sync.Map) (is
 		}
 	}
 	regex := sql.RegexSql(result, globalVar)
-	if sql.Debug == "all" {
-		results["team_id"] = sql.TeamId
-		results["sql_name"] = sql.Name
-		results["target_id"] = sql.TargetId
-		results["uuid"] = sql.Uuid.String()
+	switch debug {
+	case constant.All:
 		if err != nil {
-			results["err"] = err.Error()
+			debugMsg["sql_result"] = err.Error()
 		} else {
-			results["err"] = ""
+			debugMsg["sql_result"] = result
 		}
+		debugMsg["request_time"] = requestTime / uint64(time.Millisecond)
 
-		results["request_time"] = requestTime / uint64(time.Millisecond)
-		results["sql_result"] = result
-		results["assertion"] = assertionList
-		results["status"] = isSucceed
+		debugMsg["assertion"] = assertionList
+		debugMsg["status"] = isSucceed
 		by, _ := json.Marshal(sql.SqlDatabaseInfo)
 		if by != nil {
-			results["database"] = string(by)
+			debugMsg["database"] = string(by)
 		}
-		results["sql"] = sql.SqlString
-		results["regex"] = regex
+		debugMsg["sql"] = sql.SqlString
+		debugMsg["regex"] = regex
+		Insert(mongoCollection, debugMsg, middlewares.LocalIp)
+	case constant.OnlyError:
+		if err == nil {
+			return
+		}
+		debugMsg["sql_result"] = err.Error()
+		debugMsg["request_time"] = requestTime / uint64(time.Millisecond)
+
+		debugMsg["assertion"] = assertionList
+		debugMsg["status"] = isSucceed
+		by, _ := json.Marshal(sql.SqlDatabaseInfo)
+		if by != nil {
+			debugMsg["database"] = string(by)
+		}
+		debugMsg["sql"] = sql.SqlString
+		debugMsg["regex"] = regex
+		Insert(mongoCollection, debugMsg, middlewares.LocalIp)
+	case constant.OnlySuccess:
+		if err != nil {
+			return
+		}
+
+		debugMsg["sql_result"] = result
+		debugMsg["request_time"] = requestTime / uint64(time.Millisecond)
+
+		debugMsg["assertion"] = assertionList
+		debugMsg["status"] = isSucceed
+		by, _ := json.Marshal(sql.SqlDatabaseInfo)
+		if by != nil {
+			debugMsg["database"] = string(by)
+		}
+		debugMsg["sql"] = sql.SqlString
+		debugMsg["regex"] = regex
+		Insert(mongoCollection, debugMsg, middlewares.LocalIp)
 	}
-	Insert(mongoCollection, results, middlewares.LocalIp)
+
 	return
 }
 
-func (sql *SQL) Request() (db *sql_client.DB, result map[string]interface{}, err error, startTime, endTime time.Time, requestTime uint64) {
+func (sql *SQLDetail) Request() (db *sql_client.DB, result map[string]interface{}, err error, startTime, endTime time.Time, requestTime uint64) {
 	db, err = sql.init()
 	if db == nil || err != nil {
 		return
@@ -156,7 +181,7 @@ func (sql *SQL) Request() (db *sql_client.DB, result map[string]interface{}, err
 	}
 }
 
-func (sql *SQL) init() (db *sql_client.DB, err error) {
+func (sql *SQLDetail) init() (db *sql_client.DB, err error) {
 	var dsn string
 	sqlInfo := sql.SqlDatabaseInfo
 	switch sqlInfo.Type {
@@ -177,7 +202,7 @@ func (sql *SQL) init() (db *sql_client.DB, err error) {
 	return
 }
 
-func (sql *SQL) TestConnection() (db *sql_client.DB, err error) {
+func (sql *SQLDetail) TestConnection() (db *sql_client.DB, err error) {
 	db, err = sql.init()
 	if err != nil {
 		return
@@ -189,12 +214,12 @@ func (sql *SQL) TestConnection() (db *sql_client.DB, err error) {
 	return
 }
 
-func (sql *SQL) Asser(results map[string]interface{}) (assertionList []AssertionMsg) {
+func (sql *SQLDetail) Asser(results map[string]interface{}) (assertionList []AssertionMsg) {
 	if sql.Assert == nil || len(sql.Assert) < 1 {
 		return
 	}
 	for _, assert := range sql.Assert {
-		if assert.IsChecked != Open {
+		if assert.IsChecked != constant.Open {
 			continue
 		}
 		assertionMsg := AssertionMsg{}
@@ -206,7 +231,7 @@ func (sql *SQL) Asser(results map[string]interface{}) (assertionList []Assertion
 			continue
 		}
 		switch assert.Compare {
-		case Equal:
+		case constant.Equal:
 
 			if value, ok := results[assert.Field]; !ok {
 				assertionMsg.Code = 10001
@@ -376,12 +401,12 @@ func (sql *SQL) Asser(results map[string]interface{}) (assertionList []Assertion
 	return
 }
 
-func (sql *SQL) RegexSql(results map[string]interface{}, globalVar *sync.Map) (regexs []map[string]interface{}) {
+func (sql *SQLDetail) RegexSql(results map[string]interface{}, globalVar *sync.Map) (regexs []map[string]interface{}) {
 	if sql.Regex == nil || len(sql.Regex) <= 0 || results == nil {
 		return
 	}
 	for _, regex := range sql.Regex {
-		if regex.IsChecked != Open {
+		if regex.IsChecked != constant.Open {
 			continue
 		}
 		reg := make(map[string]interface{})

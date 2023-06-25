@@ -4,6 +4,7 @@ import (
 	"context"
 	"dubbo.apache.org/dubbo-go/v3/config/generic"
 	"encoding/json"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/constant"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/server/client"
@@ -23,20 +24,20 @@ func SendDubbo(dubbo model.DubboDetail, mongoCollection *mongo.Collection) {
 	rpcServer, err := client.NewRpcServer(dubbo)
 
 	for _, parame := range dubbo.DubboParam {
-		if parame.IsChecked != model.Open {
+		if parame.IsChecked != constant.Open {
 			break
 		}
 		var val interface{}
 		switch parame.ParamType {
-		case model.JavaInteger:
+		case constant.JavaInteger:
 			val, err = strconv.Atoi(parame.Val)
 			if err != nil {
 				val = parame
 				continue
 			}
-		case model.JavaString:
+		case constant.JavaString:
 			val = parame.Val
-		case model.JavaBoolean:
+		case constant.JavaBoolean:
 			switch parame.Val {
 			case "true":
 				val = true
@@ -45,30 +46,30 @@ func SendDubbo(dubbo model.DubboDetail, mongoCollection *mongo.Collection) {
 			default:
 				val = parame.Val
 			}
-		case model.JavaByte:
+		case constant.JavaByte:
 
-		case model.JavaCharacter:
-		case model.JavaDouble:
+		case constant.JavaCharacter:
+		case constant.JavaDouble:
 			val, err = strconv.ParseFloat(parame.Val, 64)
 			if err != nil {
 				val = parame.Val
 				continue
 			}
-		case model.JavaFloat:
+		case constant.JavaFloat:
 			val, err = strconv.ParseFloat(parame.Val, 64)
 			if err != nil {
 				val = parame.Val
 				continue
 			}
 			val = float32(val.(float64))
-		case model.JavaLong:
+		case constant.JavaLong:
 			val, err = strconv.ParseInt(parame.Val, 10, 64)
 			if err != nil {
 				val = parame.Val
 				continue
 			}
-		case model.JavaMap:
-		case model.JavaList:
+		case constant.JavaMap:
+		case constant.JavaList:
 		default:
 			val = parame.Val
 		}

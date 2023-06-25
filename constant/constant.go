@@ -1,4 +1,4 @@
-package model
+package constant
 
 const (
 	NILSTRING = ""
@@ -9,7 +9,9 @@ const (
 const (
 	FormTypeHTTP      = "api"       // http协议
 	FormTypeWebSocket = "websocket" // webSocket协议
-	FormTypeGRPC      = "grpc"      // grpc协议
+	FormTypeDubbo     = "dubbo"     // grpc协议
+	FormTypeTcp       = "tcp"
+	FormTypeSql       = "sql"
 	HTTP              = "http:"
 	HTTPS             = "https:"
 )

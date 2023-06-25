@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/constant"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
@@ -35,8 +36,8 @@ func HTTPRequest(method, url string, body *model.Body, query *model.Query, heade
 	header.SetHeader(req)
 	cookie.SetCookie(req)
 	urls := strings.Split(url, "//")
-	if !strings.EqualFold(urls[0], model.HTTP) && !strings.EqualFold(urls[0], model.HTTPS) {
-		url = model.HTTP + "//" + url
+	if !strings.EqualFold(urls[0], constant.HTTP) && !strings.EqualFold(urls[0], constant.HTTPS) {
+		url = constant.HTTP + "//" + url
 
 	}
 
@@ -44,7 +45,7 @@ func HTTPRequest(method, url string, body *model.Body, query *model.Query, heade
 
 	if query.Parameter != nil {
 		for _, v := range query.Parameter {
-			if v.IsChecked != model.Open {
+			if v.IsChecked != constant.Open {
 				continue
 			}
 			if !strings.Contains(url, v.Key) {
@@ -84,7 +85,7 @@ func fastClient(httpApiSetup *model.HttpApiSetup, auth *model.Auth) (fc *fasthtt
 	tr := &tls.Config{InsecureSkipVerify: true}
 	if auth != nil || auth.Bidirectional != nil {
 		switch auth.Type {
-		case model.Bidirectional:
+		case constant.Bidirectional:
 			tr.InsecureSkipVerify = false
 			if auth.Bidirectional.CaCert != "" {
 				if strings.HasPrefix(auth.Bidirectional.CaCert, "https://") || strings.HasPrefix(auth.Bidirectional.CaCert, "http://") {
@@ -108,7 +109,7 @@ func fastClient(httpApiSetup *model.HttpApiSetup, auth *model.Auth) (fc *fasthtt
 					}
 				}
 			}
-		case model.Unidirectional:
+		case constant.Unidirectional:
 			tr.InsecureSkipVerify = false
 		}
 	}
@@ -142,7 +143,7 @@ func newKeepAlive(httpApiSetup *model.HttpApiSetup, auth *model.Auth) {
 		tr := &tls.Config{InsecureSkipVerify: true}
 		if auth != nil && auth.Bidirectional != nil {
 			switch auth.Type {
-			case model.Bidirectional:
+			case constant.Bidirectional:
 				tr.InsecureSkipVerify = false
 				if auth.Bidirectional.CaCert != "" {
 					if strings.HasPrefix(auth.Bidirectional.CaCert, "https://") || strings.HasPrefix(auth.Bidirectional.CaCert, "http://") {
@@ -166,7 +167,7 @@ func newKeepAlive(httpApiSetup *model.HttpApiSetup, auth *model.Auth) {
 						}
 					}
 				}
-			case model.Unidirectional:
+			case constant.Unidirectional:
 				tr.InsecureSkipVerify = false
 			}
 		}
