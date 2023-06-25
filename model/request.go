@@ -46,6 +46,10 @@ type Api struct {
 	HttpApiSetup   *HttpApiSetup        `json:"http_api_setup"`
 }
 
+func (api *Api) Send() {
+
+}
+
 func (api *Api) GlobalToRequest() {
 	if api.GlobalVariable.Cookie != nil && len(api.GlobalVariable.Cookie.Parameter) > 0 {
 		if api.Request.Cookie == nil {

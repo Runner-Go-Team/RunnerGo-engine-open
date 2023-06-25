@@ -14,22 +14,22 @@ import (
 )
 
 type SQL struct {
-	TargetId          string            `json:"target_id"`
-	Uuid              uuid.UUID         `json:"uuid"`
-	Name              string            `json:"name"`
-	TeamId            string            `json:"team_id"`
-	TargetType        string            `json:"target_type"` // api/webSocket/tcp/grpc
-	SqlString         string            `json:"sql_string"`
-	MysqlDatabaseInfo MysqlDatabaseInfo `json:"mysql_database_info"`
-	Assert            []*MysqlAssert    `json:"assert"`  // 验证的方法(断言)
-	Timeout           int64             `json:"timeout"` // 请求超时时间
-	Regex             []*MysqlRegex     `json:"regex"`   // 关联提取
-	Debug             string            `json:"debug"`   // 是否开启Debug模式
-	Configuration     *Configuration    `json:"configuration"`
-	SqlVariable       *GlobalVariable   `json:"sql_variable"`    // 全局变量
-	GlobalVariable    *GlobalVariable   `json:"global_variable"` // 全局变量
+	TargetId        string          `json:"target_id"`
+	Uuid            uuid.UUID       `json:"uuid"`
+	Name            string          `json:"name"`
+	TeamId          string          `json:"team_id"`
+	TargetType      string          `json:"target_type"` // api/webSocket/tcp/grpc
+	SqlString       string          `json:"sql_string"`
+	SqlDatabaseInfo SqlDatabaseInfo `json:"sql_database_info"`
+	Assert          []*SqlAssert    `json:"assert"`  // 验证的方法(断言)
+	Timeout         int64           `json:"timeout"` // 请求超时时间
+	Regex           []*SqlRegex     `json:"regex"`   // 关联提取
+	Debug           string          `json:"debug"`   // 是否开启Debug模式
+	Configuration   *Configuration  `json:"configuration"`
+	SqlVariable     *GlobalVariable `json:"sql_variable"`    // 全局变量
+	GlobalVariable  *GlobalVariable `json:"global_variable"` // 全局变量
 }
-type MysqlDatabaseInfo struct {
+type SqlDatabaseInfo struct {
 	Type     string `json:"type"`
 	Host     string `json:"host"`
 	User     string `json:"user"`
@@ -38,7 +38,7 @@ type MysqlDatabaseInfo struct {
 	DbName   string `json:"db_name"`
 	Charset  string `json:"charset"`
 }
-type MysqlAssert struct {
+type SqlAssert struct {
 	IsChecked int    `json:"is_checked"`
 	Field     string `json:"field"`
 	Compare   string `json:"compare"`
@@ -46,7 +46,7 @@ type MysqlAssert struct {
 	Index     int    `json:"index"` // 断言时提取第几个值
 }
 
-type MysqlRegex struct {
+type SqlRegex struct {
 	IsChecked int    `json:"is_checked"` // 1 选中, -1未选
 	Var       string `json:"var"`
 	Field     string `json:"field"`
@@ -83,7 +83,7 @@ func (sql *SQL) Send(mongoCollection *mongo.Collection, globalVar *sync.Map) (is
 		results["sql_result"] = result
 		results["assertion"] = assertionList
 		results["status"] = isSucceed
-		by, _ := json.Marshal(sql.MysqlDatabaseInfo)
+		by, _ := json.Marshal(sql.SqlDatabaseInfo)
 		if by != nil {
 			results["database"] = string(by)
 		}
@@ -158,7 +158,7 @@ func (sql *SQL) Request() (db *sql_client.DB, result map[string]interface{}, err
 
 func (sql *SQL) init() (db *sql_client.DB, err error) {
 	var dsn string
-	sqlInfo := sql.MysqlDatabaseInfo
+	sqlInfo := sql.SqlDatabaseInfo
 	switch sqlInfo.Type {
 	case "oracle":
 		sqlInfo.Type = "oci8"
