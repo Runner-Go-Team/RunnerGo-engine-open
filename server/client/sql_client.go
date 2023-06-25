@@ -17,7 +17,9 @@ func SqlRequest(sqlInfo model.MysqlDatabaseInfo, sqls string) (db *sql.DB, resul
 	if db == nil || err != nil {
 		return
 	}
-
+	// 不区分大小写,去除空格，去除回车符/换行符
+	sqls = strings.ToLower(strings.TrimSpace(strings.NewReplacer("\r", "", "\n", "").Replace(sqls)))
+	//strings.EqualFold
 	startTime = time.Now()
 	result = make(map[string]interface{})
 	if strings.HasPrefix(sqls, "select") {

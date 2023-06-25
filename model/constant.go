@@ -103,6 +103,7 @@ const (
 	JSMode        = "javascript"
 	PlainMode     = "plain"
 	HtmlMode      = "html"
+	MysqlMode     = "mysql"
 )
 
 // 时间运行状态

@@ -14,11 +14,11 @@ type Preposition struct {
 }
 
 func (p *Preposition) Exec(globalVariable *sync.Map, tempVariable *GlobalVariable) {
-	//if p == nil {
-	//	return
-	//}
+	if p == nil {
+		return
+	}
 	//var val interface{}
-	//switch p.Type {
+	switch p.Type {
 	//case JSMode:
 	//	if p.JsScript == NILSTRING {
 	//		return
@@ -46,5 +46,13 @@ func (p *Preposition) Exec(globalVariable *sync.Map, tempVariable *GlobalVariabl
 	//		tempVariable.Variable = append(tempVariable.Variable, varForm)
 	//
 	//	}
-	//}
+	//case MysqlMode:
+	//	db, result, err, _, _, _ := client.SqlRequest(p.Event.SQL.MysqlDatabaseInfo, p.Event.SQL.SqlString)
+	//	defer db.Close()
+	//	if err != nil {
+	//		return
+	//	}
+	//	results := make(map[string]interface{})
+
+	}
 }
