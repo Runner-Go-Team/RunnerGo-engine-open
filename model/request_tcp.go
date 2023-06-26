@@ -8,6 +8,7 @@ import (
 	"github.com/go-redis/redis"
 	"go.mongodb.org/mongo-driver/mongo"
 	"net"
+	"strings"
 	"sync"
 	"time"
 )
@@ -57,6 +58,7 @@ func (tcp TCPDetail) Send(debug string, debugMsg map[string]interface{}, mongoCo
 	connectionResults["team_id"] = debugMsg["team_id"]
 	connectionResults["target_id"] = debugMsg["target_id"]
 
+	tcp.Url = strings.TrimSpace(tcp.Url)
 	for i := 0; i < tcp.TcpConfig.RetryNum; i++ {
 		conn, err = NewTcpClient(tcp.Url)
 		if conn != nil {

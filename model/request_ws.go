@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/shopspring/decimal"
 	"go.mongodb.org/mongo-driver/mongo"
+	"strings"
 	"sync"
 	"time"
 )
@@ -99,6 +100,7 @@ func (ws WebsocketDetail) Request(debug string, debugMsg map[string]interface{},
 	}
 	recvResults["type"] = "recv"
 	wsConfig := ws.WsConfig
+	ws.Url = strings.TrimSpace(ws.Url)
 	for i := 0; i < wsConfig.RetryNum; i++ {
 		conn, _, err = websocket.DefaultDialer.Dial(ws.Url, headers)
 		if conn != nil {
