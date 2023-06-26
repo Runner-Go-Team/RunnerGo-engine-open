@@ -49,10 +49,6 @@ type Api struct {
 	ApiVariable    *GlobalVariable `json:"api_variable"`
 }
 
-func (api *Api) Send() {
-
-}
-
 func (api *Api) GlobalToRequest() {
 	if api.GlobalVariable.Cookie != nil && len(api.GlobalVariable.Cookie.Parameter) > 0 {
 		if api.Request.Cookie == nil {

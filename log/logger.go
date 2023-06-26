@@ -5,6 +5,7 @@ import (
 	"github.com/natefinch/lumberjack"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"os"
 )
 
 var Logger *zap.SugaredLogger
@@ -17,11 +18,11 @@ func InitLogger() {
 		MaxBackups: 5,                    // 保留旧文件的最大个数
 		Compress:   false,                // 是否压缩/归档旧文件
 	}
-	//consoleSyncer := zapcore.AddSync(os.Stdout)
+	consoleSyncer := zapcore.AddSync(os.Stdout)
 	writeSync := zapcore.AddSync(lumberJackLogger)
 	core := zapcore.NewTee(
 		zapcore.NewCore(encoder, writeSync, zap.DebugLevel),
-		//zapcore.NewCore(encoder, consoleSyncer, zap.DebugLevel),
+		zapcore.NewCore(encoder, consoleSyncer, zap.DebugLevel),
 	)
 	Logger = zap.New(core, zap.AddCaller()).Sugar()
 }

@@ -91,7 +91,7 @@ func RunApi(c *gin.Context) {
 
 	requestJson, _ := json.Marshal(&runApi)
 
-	log.Logger.Info(fmt.Sprintf("机器ip:%s, 调试接口", middlewares.LocalIp), string(requestJson))
+	log.Logger.Info(fmt.Sprintf("机器ip:%s, 调试测试对象", middlewares.LocalIp), string(requestJson))
 	_, _ = json.Marshal(runApi.Request.Body.Mode)
 	go server.DebugApi(runApi)
 	global.ReturnMsg(c, http.StatusOK, "调试接口", uid)

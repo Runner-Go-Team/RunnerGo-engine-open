@@ -415,7 +415,7 @@ func DebugApi(debugApi model.Api) {
 	mongoCollection := model.NewCollection(config.Conf.Mongo.DataBase, config.Conf.Mongo.ApiDebugTable, mongoClient)
 
 	golink.DisposeRequest(nil, nil, nil, globalVar, event, mongoCollection)
-	log.Logger.Info(fmt.Sprintf("机器ip:%s, 团队：%s, 接口：%s, 调试结束！", middlewares.LocalIp, debugApi.TeamId, debugApi.Name))
+	log.Logger.Info(fmt.Sprintf("机器ip:%s, 团队：%s, 测试对象：%s, 调试结束！", middlewares.LocalIp, debugApi.TeamId, debugApi.Name))
 
 }
 
