@@ -176,25 +176,25 @@ func RunApi(c *gin.Context) {
 //	global.ReturnMsg(c, http.StatusOK, "调试tcp", uid)
 //}
 
-func RunDubbo(c *gin.Context) {
-	var runTcp = model.DubboDetail{}
-	err := c.ShouldBindJSON(&runTcp)
-
-	if err != nil {
-		global.ReturnMsg(c, http.StatusBadRequest, "数据格式不正确", err.Error())
-		return
-	}
-
-	uid := uuid.NewV4()
-	runTcp.Uuid = uid
-	runTcp.Debug = constant.All
-
-	requestJson, _ := json.Marshal(&runTcp)
-
-	log.Logger.Info(fmt.Sprintf("机器ip:%s, 调试dubbo：    ", middlewares.LocalIp), string(requestJson))
-	go server.DebugDubbo(runTcp)
-	global.ReturnMsg(c, http.StatusOK, "调试tcp", uid)
-}
+//func RunDubbo(c *gin.Context) {
+//	var runTcp = model.DubboDetail{}
+//	err := c.ShouldBindJSON(&runTcp)
+//
+//	if err != nil {
+//		global.ReturnMsg(c, http.StatusBadRequest, "数据格式不正确", err.Error())
+//		return
+//	}
+//
+//	uid := uuid.NewV4()
+//	runTcp.Uuid = uid
+//	runTcp.Debug = constant.All
+//
+//	requestJson, _ := json.Marshal(&runTcp)
+//
+//	log.Logger.Info(fmt.Sprintf("机器ip:%s, 调试dubbo：    ", middlewares.LocalIp), string(requestJson))
+//	go server.DebugDubbo(runTcp)
+//	global.ReturnMsg(c, http.StatusOK, "调试tcp", uid)
+//}
 
 func RunMysqlConnection(c *gin.Context) {
 

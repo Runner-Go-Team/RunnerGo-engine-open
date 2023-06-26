@@ -592,7 +592,8 @@ func DisposeRequest(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.
 	case constant.FormTypeWebSocket:
 		isSucceed, errCode, requestTime, sendBytes, receivedBytes = api.Ws.Send(api.Debug, debugMsg, mongoCollection, globalVar)
 	case constant.FormTypeDubbo:
-		//isSucceed, errCode, requestTime, sendBytes, contentLength := rpcSend(request)
+		//isSucceed, errCode, requestTime, sendBytes, contentLength := api.DubboDetail.Send(api.Debug, debugMsg, mongoCollection, globalVar)
+		api.DubboDetail.Send(api.Debug, debugMsg, mongoCollection, globalVar)
 	case constant.FormTypeTcp:
 		api.TCP.Send(api.Debug, debugMsg, mongoCollection)
 	case constant.FormTypeSql:
@@ -841,66 +842,66 @@ func setControllerDebugMsg(preNodeMap *sync.Map, eventResult model.EventResult, 
 //}
 
 // DisposeDubbo 开始对请求进行处理
-func DisposeDubbo(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestResults *model.ResultDataMsg, globalVar *sync.Map,
-	event model.Event, mongoCollection *mongo.Collection, options ...int64) {
-	dubbo := event.Api.DubboDetail
-	dubbo.TeamId = event.TeamId
-	dubbo.Debug = event.Debug
-	if requestResults != nil {
-		requestResults.PlanId = reportMsg.PlanId
-		requestResults.PlanName = reportMsg.PlanName
-		requestResults.EventId = event.Id
-		requestResults.PercentAge = event.PercentAge
-		requestResults.ResponseThreshold = event.ResponseThreshold
-		requestResults.TeamId = event.TeamId
-		requestResults.SceneId = reportMsg.SceneId
-		requestResults.MachineIp = reportMsg.MachineIp
-		requestResults.Concurrency = options[1]
-		requestResults.SceneName = reportMsg.SceneName
-		requestResults.ReportId = reportMsg.ReportId
-		requestResults.ReportName = reportMsg.ReportName
-		requestResults.PercentAge = event.PercentAge
-		requestResults.RequestThreshold = event.RequestThreshold
-		requestResults.ResponseThreshold = event.ResponseThreshold
-		requestResults.ErrorThreshold = event.ErrorThreshold
-		requestResults.TargetId = dubbo.TargetId
-		requestResults.Name = dubbo.Name
-		requestResults.MachineNum = reportMsg.MachineNum
-	}
-
-	var (
-		isSucceed          = false
-		errCode            = int64(0)
-		requestTime        = uint64(0)
-		sendBytes          = float64(0)
-		receivedBytes      = float64(0)
-		errMsg             = ""
-		startTime, endTime = time.Time{}, time.Time{}
-	)
-	if event.Prepositions != nil && len(event.Prepositions) > 0 {
-		for _, preposition := range event.Prepositions {
-			preposition.Exec()
-		}
-	}
-
-	SendDubbo(dubbo, mongoCollection)
-	//isSucceed, requestTime, startTime, endTime = TcpConnection(tcp)
-
-	if resultDataMsgCh != nil {
-		requestResults.Name = dubbo.Name
-		requestResults.RequestTime = requestTime
-		requestResults.ErrorType = errCode
-		requestResults.IsSucceed = isSucceed
-		requestResults.SendBytes = sendBytes
-		requestResults.ReceivedBytes = receivedBytes
-		requestResults.ErrorMsg = errMsg
-		requestResults.Timestamp = time.Now().UnixMilli()
-		requestResults.StartTime = startTime.UnixMilli()
-		requestResults.EndTime = endTime.UnixMilli()
-		resultDataMsgCh <- requestResults
-	}
-
-}
+//func DisposeDubbo(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestResults *model.ResultDataMsg, globalVar *sync.Map,
+//	event model.Event, mongoCollection *mongo.Collection, options ...int64) {
+//	dubbo := event.Api.DubboDetail
+//	dubbo.TeamId = event.TeamId
+//	dubbo.Debug = event.Debug
+//	if requestResults != nil {
+//		requestResults.PlanId = reportMsg.PlanId
+//		requestResults.PlanName = reportMsg.PlanName
+//		requestResults.EventId = event.Id
+//		requestResults.PercentAge = event.PercentAge
+//		requestResults.ResponseThreshold = event.ResponseThreshold
+//		requestResults.TeamId = event.TeamId
+//		requestResults.SceneId = reportMsg.SceneId
+//		requestResults.MachineIp = reportMsg.MachineIp
+//		requestResults.Concurrency = options[1]
+//		requestResults.SceneName = reportMsg.SceneName
+//		requestResults.ReportId = reportMsg.ReportId
+//		requestResults.ReportName = reportMsg.ReportName
+//		requestResults.PercentAge = event.PercentAge
+//		requestResults.RequestThreshold = event.RequestThreshold
+//		requestResults.ResponseThreshold = event.ResponseThreshold
+//		requestResults.ErrorThreshold = event.ErrorThreshold
+//		requestResults.TargetId = dubbo.TargetId
+//		requestResults.Name = dubbo.Name
+//		requestResults.MachineNum = reportMsg.MachineNum
+//	}
+//
+//	var (
+//		isSucceed          = false
+//		errCode            = int64(0)
+//		requestTime        = uint64(0)
+//		sendBytes          = float64(0)
+//		receivedBytes      = float64(0)
+//		errMsg             = ""
+//		startTime, endTime = time.Time{}, time.Time{}
+//	)
+//	if event.Prepositions != nil && len(event.Prepositions) > 0 {
+//		for _, preposition := range event.Prepositions {
+//			preposition.Exec()
+//		}
+//	}
+//
+//	SendDubbo(dubbo, mongoCollection)
+//	//isSucceed, requestTime, startTime, endTime = TcpConnection(tcp)
+//
+//	if resultDataMsgCh != nil {
+//		requestResults.Name = dubbo.Name
+//		requestResults.RequestTime = requestTime
+//		requestResults.ErrorType = errCode
+//		requestResults.IsSucceed = isSucceed
+//		requestResults.SendBytes = sendBytes
+//		requestResults.ReceivedBytes = receivedBytes
+//		requestResults.ErrorMsg = errMsg
+//		requestResults.Timestamp = time.Now().UnixMilli()
+//		requestResults.StartTime = startTime.UnixMilli()
+//		requestResults.EndTime = endTime.UnixMilli()
+//		resultDataMsgCh <- requestResults
+//	}
+//
+//}
 
 // DisposeMqtt 开始对请求进行处理
 //func DisposeMqtt(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestResults *model.ResultDataMsg, globalVar *sync.Map,
