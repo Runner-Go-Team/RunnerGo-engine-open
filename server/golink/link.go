@@ -577,6 +577,7 @@ func DisposeRequest(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.
 	debugMsg["api_id"] = api.TargetId
 	debugMsg["api_name"] = api.Name
 	debugMsg["next_list"] = event.NextList
+	debugMsg["request_type"] = api.TargetType
 
 	switch api.TargetType {
 	case constant.FormTypeHTTP:
@@ -588,6 +589,7 @@ func DisposeRequest(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.
 		}
 		// 请求中所有的变量替换成真正的值
 		api.ReplaceQueryParameterizes(globalVar)
+
 		isSucceed, errCode, requestTime, sendBytes, receivedBytes, errMsg, startTime, endTime = api.Request.Send(api.Debug, debugMsg, mongoCollection, globalVar)
 	case constant.FormTypeWebSocket:
 		isSucceed, errCode, requestTime, sendBytes, receivedBytes = api.Ws.Send(api.Debug, debugMsg, mongoCollection, globalVar)

@@ -45,18 +45,21 @@ func (tcp TCPDetail) Send(debug string, debugMsg map[string]interface{}, mongoCo
 	recvResults["name"] = debugMsg["name"]
 	recvResults["team_id"] = debugMsg["team_id"]
 	recvResults["target_id"] = debugMsg["target_id"]
+	recvResults["request_type"] = debugMsg["request_type"]
 
 	writeResults["type"] = "send"
 	writeResults["uuid"] = debugMsg["uuid"]
 	writeResults["name"] = debugMsg["name"]
 	writeResults["team_id"] = debugMsg["team_id"]
 	writeResults["target_id"] = debugMsg["target_id"]
+	writeResults["request_type"] = debugMsg["request_type"]
 
 	connectionResults["type"] = "connection"
 	connectionResults["uuid"] = debugMsg["uuid"]
 	connectionResults["name"] = debugMsg["name"]
 	connectionResults["team_id"] = debugMsg["team_id"]
 	connectionResults["target_id"] = debugMsg["target_id"]
+	connectionResults["request_type"] = debugMsg["request_type"]
 
 	tcp.Url = strings.TrimSpace(tcp.Url)
 	for i := 0; i < tcp.TcpConfig.RetryNum; i++ {
@@ -110,13 +113,12 @@ func (tcp TCPDetail) Send(debug string, debugMsg map[string]interface{}, mongoCo
 	case constant.ShortConnection:
 		msg := []byte(tcp.SendMessage)
 		_, err := conn.Write(msg)
-		writeResults["request_body"] = msg
 		if err != nil {
 			writeResults["status"] = false
 			writeResults["request_body"] = err.Error()
 		} else {
 			writeResults["status"] = true
-			writeResults["send_err"] = err
+			writeResults["request_body"] = msg
 		}
 		writeResults["is_stop"] = true
 		Insert(mongoCollection, writeResults, middlewares.LocalIp)

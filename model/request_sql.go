@@ -65,9 +65,9 @@ func (sql *SQLDetail) Send(debug string, debugMsg map[string]interface{}, mongoC
 	switch debug {
 	case constant.All:
 		if err != nil {
-			debugMsg["sql_result"] = err.Error()
+			debugMsg["response_body"] = err.Error()
 		} else {
-			debugMsg["sql_result"] = result
+			debugMsg["response_body"] = result
 		}
 		debugMsg["request_time"] = requestTime / uint64(time.Millisecond)
 
@@ -77,14 +77,14 @@ func (sql *SQLDetail) Send(debug string, debugMsg map[string]interface{}, mongoC
 		if by != nil {
 			debugMsg["database"] = string(by)
 		}
-		debugMsg["sql"] = sql.SqlString
+		debugMsg["request_body"] = sql.SqlString
 		debugMsg["regex"] = regex
 		Insert(mongoCollection, debugMsg, middlewares.LocalIp)
 	case constant.OnlyError:
 		if err == nil {
 			return
 		}
-		debugMsg["sql_result"] = err.Error()
+		debugMsg["response_body"] = err.Error()
 		debugMsg["request_time"] = requestTime / uint64(time.Millisecond)
 
 		debugMsg["assertion"] = assertionList
@@ -93,15 +93,14 @@ func (sql *SQLDetail) Send(debug string, debugMsg map[string]interface{}, mongoC
 		if by != nil {
 			debugMsg["database"] = string(by)
 		}
-		debugMsg["sql"] = sql.SqlString
+		debugMsg["request_body"] = sql.SqlString
 		debugMsg["regex"] = regex
 		Insert(mongoCollection, debugMsg, middlewares.LocalIp)
 	case constant.OnlySuccess:
 		if err != nil {
 			return
 		}
-
-		debugMsg["sql_result"] = result
+		debugMsg["response_body"] = result
 		debugMsg["request_time"] = requestTime / uint64(time.Millisecond)
 
 		debugMsg["assertion"] = assertionList
@@ -110,7 +109,7 @@ func (sql *SQLDetail) Send(debug string, debugMsg map[string]interface{}, mongoC
 		if by != nil {
 			debugMsg["database"] = string(by)
 		}
-		debugMsg["sql"] = sql.SqlString
+		debugMsg["request_body"] = sql.SqlString
 		debugMsg["regex"] = regex
 		Insert(mongoCollection, debugMsg, middlewares.LocalIp)
 	}
