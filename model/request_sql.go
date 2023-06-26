@@ -14,7 +14,6 @@ import (
 )
 
 type SQLDetail struct {
-	TargetType      string          `json:"target_type"` // mysql/oracle/postgresql
 	SqlString       string          `json:"sql_string"`
 	SqlDatabaseInfo SqlDatabaseInfo `json:"sql_database_info"`
 	Assert          []*SqlAssert    `json:"assert"`  // 验证的方法(断言)
