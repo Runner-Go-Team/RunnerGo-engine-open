@@ -182,19 +182,33 @@ func TaskDecomposition(plan *model.Plan, wg *sync.WaitGroup, resultDataMsgCh cha
 		scene.Configuration.ParameterizedFile.VariableNames.VarMapList = make(map[string][]string)
 	}
 	configuration := scene.Configuration
-	if configuration.ParameterizedFile != nil {
-		p := configuration.ParameterizedFile
-		p.VariableNames.Mu = sync.Mutex{}
-		//teamId := strconv.FormatInt(plan.TeamId, 10)
-		//p.DownLoadFile(teamId, plan.ReportId)
-		p.UseFile()
+	if configuration.ParameterizedFile == nil {
+		configuration.ParameterizedFile = new(model.ParameterizedFile)
 
 	}
+
+	p := configuration.ParameterizedFile
+	p.VariableNames.Mu = sync.Mutex{}
+	//teamId := strconv.FormatInt(plan.TeamId, 10)
+	//p.DownLoadFile(teamId, plan.ReportId)
+	p.UseFile()
+
+	var sqlMap = new(sync.Map)
 	if scene.Prepositions != nil && len(scene.Prepositions) > 0 {
 		for _, preposition := range scene.Prepositions {
-			preposition.Exec()
+			preposition.Exec(mongoCollection, sqlMap)
 		}
 	}
+
+	sqlMap.Range(func(key, value any) bool {
+		if _, ok := p.VariableNames.VarMapList[key.(string)]; ok {
+			p.VariableNames.VarMapList[key.(string)] = append(p.VariableNames.VarMapList[key.(string)], value.([]string)...)
+		} else {
+			p.VariableNames.VarMapList[key.(string)] = value.([]string)
+		}
+		return true
+	})
+
 	var reportMsg = &model.ResultDataMsg{}
 	if plan.MachineNum <= 0 {
 		plan.MachineNum = 1
@@ -311,15 +325,33 @@ func DebugScene(scene model.Scene) {
 	}
 
 	configuration := scene.Configuration
-	if configuration.ParameterizedFile != nil {
-		p := scene.Configuration.ParameterizedFile
-		p.VariableNames.Mu = sync.Mutex{}
-		p.UseFile()
+	if configuration.ParameterizedFile == nil {
+		configuration.ParameterizedFile = new(model.ParameterizedFile)
 	}
+	p := scene.Configuration.ParameterizedFile
+	p.VariableNames.Mu = sync.Mutex{}
+	p.UseFile()
 
 	scene.Debug = constant.All
 	defer mongoClient.Disconnect(context.TODO())
 	mongoCollection := model.NewCollection(config.Conf.Mongo.DataBase, config.Conf.Mongo.SceneDebugTable, mongoClient)
+
+	var sqlMap = new(sync.Map)
+	if scene.Prepositions != nil && len(scene.Prepositions) > 0 {
+		for _, preposition := range scene.Prepositions {
+			preposition.Exec(mongoCollection, sqlMap)
+		}
+	}
+
+	sqlMap.Range(func(key, value any) bool {
+		if _, ok := p.VariableNames.VarMapList[key.(string)]; ok {
+			p.VariableNames.VarMapList[key.(string)] = append(p.VariableNames.VarMapList[key.(string)], value.([]string)...)
+		} else {
+			p.VariableNames.VarMapList[key.(string)] = value.([]string)
+		}
+		return true
+	})
+
 	var sceneWg = &sync.WaitGroup{}
 	golink.DisposeScene(wg, sceneWg, constant.SceneType, scene, configuration, nil, nil, mongoCollection)
 	wg.Wait()

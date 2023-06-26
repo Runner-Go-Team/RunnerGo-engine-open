@@ -559,11 +559,11 @@ func DisposeRequest(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.
 		errMsg             = ""
 		startTime, endTime = time.Time{}, time.Time{}
 	)
-	if event.Prepositions != nil && len(event.Prepositions) > 0 {
-		for _, preposition := range event.Prepositions {
-			preposition.Exec()
-		}
-	}
+	//if event.Prepositions != nil && len(event.Prepositions) > 0 {
+	//	for _, preposition := range event.Prepositions {
+	//		preposition.Exec()
+	//	}
+	//}
 
 	var debugMsg = make(map[string]interface{})
 	debugMsg["team_id"] = event.TeamId

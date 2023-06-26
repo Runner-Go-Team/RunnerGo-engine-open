@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/constant"
+	"go.mongodb.org/mongo-driver/mongo"
 	"sync"
 )
 
@@ -15,7 +16,7 @@ type Preposition struct {
 	TempMap   sync.Map
 }
 
-func (p *Preposition) Exec() {
+func (p *Preposition) Exec(mongoCollection *mongo.Collection, variable *sync.Map) {
 	if p == nil {
 		return
 	}
@@ -49,16 +50,9 @@ func (p *Preposition) Exec() {
 	//
 	//	}
 	case constant.MysqlMode:
-		//db, result, err, _, _, _ := client.SqlRequest(p.Event.SQL.MysqlDatabaseInfo, p.Event.SQL.SqlString)
-		//defer db.Close()
-		//if err != nil {
-		//	return
-		//}
-		//if result != nil {
-		//	for k, v := range result {
-		//		p.TempMap.Store(k, v)
-		//	}
-		//}
+		a := p.Event.Api
+		debugMsg := make(map[string]interface{})
+		a.SQL.Send(a.Debug, debugMsg, mongoCollection, variable)
 
 	}
 }
