@@ -247,6 +247,8 @@ func TaskDecomposition(plan *model.Plan, wg *sync.WaitGroup, resultDataMsgCh cha
 		msg = execution.RTModel(wg, scene, configuration, reportMsg, resultDataMsgCh, mongoCollection)
 	case model.RpsModel:
 		msg = execution.RPSModel(wg, scene, configuration, reportMsg, resultDataMsgCh, mongoCollection)
+	case model.RoundModel:
+		msg = execution.RoundModel(wg, scene, configuration, reportMsg, resultDataMsgCh, mongoCollection)
 	default:
 		var machines []string
 		msg = "任务类型不存在"

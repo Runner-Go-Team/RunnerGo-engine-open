@@ -1,3 +1,9 @@
+// Package execution -----------------------------
+// @file      : roundModel.go
+// @author    : 被测试耽误的大厨
+// @contact   : 13383088061@163.com
+// @time      : 2023/6/26 16:12
+// -------------------------------------------
 package execution
 
 import (
@@ -13,8 +19,8 @@ import (
 	"time"
 )
 
-// ConcurrentModel 并发模式
-func ConcurrentModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Configuration, reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestCollection *mongo.Collection) string {
+// RoundModel 轮次模式
+func RoundModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Configuration, reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestCollection *mongo.Collection) string {
 
 	concurrent := scene.ConfigTask.ModeConf.Concurrency
 	// 订阅redis中消息  任务状态：包括：报告停止；debug日志状态；任务配置变更
@@ -26,22 +32,17 @@ func ConcurrentModel(wg *sync.WaitGroup, scene model.Scene, configuration *model
 	currentWg := &sync.WaitGroup{}
 	// 定义一个map，管理并发
 	concurrentMap := new(sync.Map)
-
-	// 按时长压测
-	if scene.ConfigTask.ModeConf.Concurrency == 0 && scene.ConfigTask.ModeConf.Duration == 0 {
-		return fmt.Sprintf("并发模式参数错误：无运行时间或无并发数！无法运行！")
+	currentTime := time.Now().UnixMilli()
+	// 按轮次压测
+	if scene.ConfigTask.ModeConf.Concurrency == 0 || scene.ConfigTask.ModeConf.RoundNum == 0 {
+		return fmt.Sprintf("轮次模式参数错误：无并发数或无运行轮次！无法运行！")
 	}
-
-	// 并发模式根据时间进行压测
-	log.Logger.Info(fmt.Sprintf("机器ip:%s, 开始性能测试,持续时间 %d秒", middlewares.LocalIp, scene.ConfigTask.ModeConf.Duration))
-	duration := scene.ConfigTask.ModeConf.Duration
-	targetTime, startTime := time.Now().Unix(), time.Now().Unix()
-
+	log.Logger.Info(fmt.Sprintf("机器ip:%s, 开始性能测试,轮次 %d轮", middlewares.LocalIp, scene.ConfigTask.ModeConf.RoundNum))
+	rounds := scene.ConfigTask.ModeConf.RoundNum
+	targetTime := time.Now().Unix()
 	switch scene.ConfigTask.ControlMode {
-	// 集中模式
 	case constant.CentralizedMode:
-
-		for startTime+duration >= time.Now().Unix() {
+		for i := int64(0); i < rounds; i++ {
 			select {
 			case c := <-statusCh:
 				log.Logger.Debug("接收到manage消息：  ", c.String())
@@ -54,7 +55,7 @@ func ConcurrentModel(wg *sync.WaitGroup, scene model.Scene, configuration *model
 				switch subscriptionStressPlanStatusChange.Type {
 				case constant.StopPlan:
 					if subscriptionStressPlanStatusChange.StopPlan == "stop" {
-						return fmt.Sprintf("并发数：%d, 总运行时长%ds, 任务手动结束！", concurrent, time.Now().Unix()-targetTime)
+						return fmt.Sprintf("并发数：%d， 运行了%d轮次, 任务手动结束！", concurrent, i-1)
 					}
 				case constant.DebugStatus:
 					debug = subscriptionStressPlanStatusChange.Debug
@@ -64,54 +65,51 @@ func ConcurrentModel(wg *sync.WaitGroup, scene model.Scene, configuration *model
 						continue
 					}
 					modeConf := MachineModeConf.ModeConf
-					if modeConf.Duration > 0 {
-						startTime = time.Now().Unix()
-						duration = modeConf.Duration
+					if modeConf.RoundNum > 0 {
+						rounds = modeConf.RoundNum
 					}
-					if modeConf.Concurrency > 0 {
+					if modeConf.Concurrency > 0 && modeConf.Concurrency != concurrent {
 						// 如果修改后的并发小于当前并发
 						if modeConf.Concurrency < concurrent {
 							diff := concurrent - modeConf.Concurrency
 							// 将最后的几个并发从map中去掉
-							for i := int64(0); i < diff; i++ {
-								//stopGo := fmt.Sprintf("stop:%d", concurrent-1-i)
-								//concurrentMap.Store(stopGo, true)
-								concurrentMap.Delete(concurrent - 1 - i)
+							for j := int64(0); j < diff; j++ {
+								concurrentMap.Delete(concurrent - 1 - j)
 							}
 						}
 						concurrent = modeConf.Concurrency
 					}
 				}
 			default:
-				for i := int64(0); i < concurrent; i++ {
-					if _, isOk := concurrentMap.Load(i); isOk {
+				for j := int64(0); j < concurrent; j++ {
+					if _, isOk := concurrentMap.Load(j); isOk {
 						continue
 					}
-					concurrentMap.Store(i, true)
+					concurrentMap.Store(j, true)
 					wg.Add(1)
 					currentWg.Add(1)
 					scene.Debug = debug
 					go func(concurrentId, concurrent int64, useConfiguration *model.Configuration, currentScene model.Scene) {
 						var sceneWg = &sync.WaitGroup{}
-						golink.DisposeScene(wg, sceneWg, constant.PlanType, currentScene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
-
+						golink.DisposeScene(wg, sceneWg, constant.PlanType, currentScene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent, currentTime)
 						sceneWg.Wait()
 						concurrentMap.Delete(concurrentId)
 						currentWg.Done()
 						wg.Done()
 
-					}(i, concurrent, configuration, scene)
+					}(j, concurrent, configuration, scene)
 				}
-
 				currentWg.Wait()
 			}
-
 		}
-	//单独模式
+		return fmt.Sprintf("并发数：%d， 运行了%d轮次, 任务正常结束！", concurrent, rounds)
+
 	case constant.AloneMode:
-		for startTime+duration >= time.Now().Unix() {
+		var stop bool
+		for !stop {
 			select {
 			case c := <-statusCh:
+				log.Logger.Debug("接收到manage消息：  ", c.String())
 				var subscriptionStressPlanStatusChange = new(model.SubscriptionStressPlanStatusChange)
 				_ = json.Unmarshal([]byte(c.Payload), subscriptionStressPlanStatusChange)
 				if subscriptionStressPlanStatusChange.MachineModeConf == nil {
@@ -121,12 +119,7 @@ func ConcurrentModel(wg *sync.WaitGroup, scene model.Scene, configuration *model
 				switch subscriptionStressPlanStatusChange.Type {
 				case constant.StopPlan:
 					if subscriptionStressPlanStatusChange.StopPlan == "stop" {
-						concurrentMap.Range(func(key, value any) bool {
-							concurrentMap.Delete(key)
-							return true
-						})
-						return fmt.Sprintf("并发数：%d, 总运行时长%ds, 任务手动结束！", concurrent, time.Now().Unix()-targetTime)
-
+						return fmt.Sprintf("并发数：%d， 运行了%ds, 任务手动结束！", concurrent, time.Now().Unix()-targetTime)
 					}
 				case constant.DebugStatus:
 					debug = subscriptionStressPlanStatusChange.Debug
@@ -136,63 +129,64 @@ func ConcurrentModel(wg *sync.WaitGroup, scene model.Scene, configuration *model
 						continue
 					}
 					modeConf := MachineModeConf.ModeConf
-					if modeConf.Duration > 0 {
-						startTime = time.Now().Unix()
-						duration = modeConf.Duration
+					if modeConf.RoundNum > 0 {
+						rounds = modeConf.RoundNum
 					}
-					if modeConf.Concurrency > 0 {
-
+					if modeConf.Concurrency > 0 && modeConf.Concurrency != concurrent {
 						// 如果修改后的并发小于当前并发
 						if modeConf.Concurrency < concurrent {
 							diff := concurrent - modeConf.Concurrency
 							// 将最后的几个并发从map中去掉
-							for i := int64(0); i < diff; i++ {
-								//stopGo := fmt.Sprintf("stop:%d", concurrent-1-i)
-								//concurrentMap.Store(stopGo, true)
-								concurrentMap.Delete(concurrent - 1 - i)
+							for j := int64(0); j < diff; j++ {
+								concurrentMap.Store(concurrent-1-j, false)
 							}
 						}
 						concurrent = modeConf.Concurrency
 					}
 				}
-
 			default:
 				for i := int64(0); i < concurrent; i++ {
-					if _, ok := concurrentMap.Load(i); ok {
+					if _, isOk := concurrentMap.Load(i); isOk {
 						continue
+					} else {
+						concurrentMap.Store(i, true)
 					}
-					concurrentMap.Store(i, true)
+					wg.Add(1)
 					currentWg.Add(1)
 					go func(concurrentId int64, useConfiguration *model.Configuration, currentScene model.Scene) {
-						for startTime+duration >= time.Now().Unix() {
-
-							// 如果当前并发的id不在map中，那么就停止该goroutine
-							if _, isOk := concurrentMap.Load(concurrentId); !isOk {
+						for j := int64(0); j < rounds; j++ {
+							if status, isOk := concurrentMap.Load(concurrentId); !isOk {
 								break
+							} else {
+								if !status.(bool) {
+									break
+								}
 							}
-							// 查询是否开启debug
 							currentScene.Debug = debug
 							var sceneWg = &sync.WaitGroup{}
-							golink.DisposeScene(wg, sceneWg, constant.PlanType, currentScene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
+							golink.DisposeScene(wg, sceneWg, constant.PlanType, currentScene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent, currentTime)
 							sceneWg.Wait()
 						}
-						concurrentMap.Delete(concurrentId)
+						concurrentMap.Store(concurrentId, false)
+						wg.Done()
 						currentWg.Done()
 					}(i, configuration, scene)
-
-					//if reheatTime > 0 && index == 0 && i != 0 {
-					//	index++
-					//	durationTime := time.Now().UnixMilli() - currentTime
-					//	if (concurrent/reheatTime) > 0 && i%(concurrent/reheatTime) == 0 && durationTime < 1000 {
-					//		time.Sleep(time.Duration(durationTime) * time.Millisecond)
-					//	}
-					//
-					//}
 				}
-
+			}
+			time.Sleep(50 * time.Millisecond)
+			concurrentMapLen := 0
+			concurrentMap.Range(func(key, value any) bool {
+				if value.(bool) {
+					concurrentMapLen++
+				}
+				return true
+			})
+			if concurrentMapLen == 0 {
+				stop = true
 			}
 		}
 		currentWg.Wait()
+
 	}
 	return fmt.Sprintf("并发数：%d, 总运行时长%ds, 任务正常结束!", concurrent, time.Now().Unix()-targetTime)
 

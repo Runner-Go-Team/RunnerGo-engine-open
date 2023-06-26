@@ -6,6 +6,7 @@ const (
 	ErrorRateModel  = 3 // 错误率模式
 	RTModel         = 4 // 响应时间模式
 	RpsModel        = 5 // 每秒请求数模式
+	RoundModel      = 6 // 轮次模式
 
 )
 
