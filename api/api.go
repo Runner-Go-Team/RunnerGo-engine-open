@@ -97,64 +97,64 @@ func RunApi(c *gin.Context) {
 	global.ReturnMsg(c, http.StatusOK, "调试接口", uid)
 }
 
-func RunSql(c *gin.Context) {
-	var runSql = model.SQLDetail{}
-	err := c.ShouldBindJSON(&runSql)
+//func RunSql(c *gin.Context) {
+//	var runSql = model.SQLDetail{}
+//	err := c.ShouldBindJSON(&runSql)
+//
+//	if err != nil {
+//		global.ReturnMsg(c, http.StatusBadRequest, "数据格式不正确", err.Error())
+//		return
+//	}
+//
+//	uid := uuid.NewV4()
+//	//runSql.Uuid = uid
+//	//runSql.Debug = constant.All
+//
+//	requestJson, _ := json.Marshal(&runSql)
+//
+//	log.Logger.Info(fmt.Sprintf("机器ip:%s, 调试sql：    ", middlewares.LocalIp), string(requestJson))
+//	go server.DebugSql(runSql)
+//	global.ReturnMsg(c, http.StatusOK, "调试sql", uid)
+//}
 
-	if err != nil {
-		global.ReturnMsg(c, http.StatusBadRequest, "数据格式不正确", err.Error())
-		return
-	}
-
-	uid := uuid.NewV4()
-	//runSql.Uuid = uid
-	//runSql.Debug = constant.All
-
-	requestJson, _ := json.Marshal(&runSql)
-
-	log.Logger.Info(fmt.Sprintf("机器ip:%s, 调试sql：    ", middlewares.LocalIp), string(requestJson))
-	go server.DebugSql(runSql)
-	global.ReturnMsg(c, http.StatusOK, "调试sql", uid)
-}
-
-func RunTcp(c *gin.Context) {
-	var runTcp = model.TCPDetail{}
-	err := c.ShouldBindJSON(&runTcp)
-
-	if err != nil {
-		global.ReturnMsg(c, http.StatusBadRequest, "数据格式不正确", err.Error())
-		return
-	}
-
-	uid := uuid.NewV4()
-	runTcp.Uuid = uid
-	runTcp.Debug = constant.All
-
-	requestJson, _ := json.Marshal(&runTcp)
-
-	log.Logger.Info(fmt.Sprintf("机器ip:%s, 调试tcp：    ", middlewares.LocalIp), string(requestJson))
-	go server.DebugTcp(runTcp)
-	global.ReturnMsg(c, http.StatusOK, "调试tcp", uid)
-}
-func RunWs(c *gin.Context) {
-	var runWs = model.WebsocketDetail{}
-	err := c.ShouldBindJSON(&runWs)
-
-	if err != nil {
-		global.ReturnMsg(c, http.StatusBadRequest, "数据格式不正确", err.Error())
-		return
-	}
-
-	uid := uuid.NewV4()
-	runWs.Uuid = uid
-	runWs.Debug = constant.All
-
-	requestJson, _ := json.Marshal(&runWs)
-
-	log.Logger.Info(fmt.Sprintf("机器ip:%s, 调试websocket：    ", middlewares.LocalIp), string(requestJson))
-	go server.DebugWs(runWs)
-	global.ReturnMsg(c, http.StatusOK, "调试ws", uid)
-}
+//func RunTcp(c *gin.Context) {
+//	var runTcp = model.TCPDetail{}
+//	err := c.ShouldBindJSON(&runTcp)
+//
+//	if err != nil {
+//		global.ReturnMsg(c, http.StatusBadRequest, "数据格式不正确", err.Error())
+//		return
+//	}
+//
+//	uid := uuid.NewV4()
+//	runTcp.Uuid = uid
+//	runTcp.Debug = constant.All
+//
+//	requestJson, _ := json.Marshal(&runTcp)
+//
+//	log.Logger.Info(fmt.Sprintf("机器ip:%s, 调试tcp：    ", middlewares.LocalIp), string(requestJson))
+//	go server.DebugTcp(runTcp)
+//	global.ReturnMsg(c, http.StatusOK, "调试tcp", uid)
+//}
+//func RunWs(c *gin.Context) {
+//	var runWs = model.WebsocketDetail{}
+//	err := c.ShouldBindJSON(&runWs)
+//
+//	if err != nil {
+//		global.ReturnMsg(c, http.StatusBadRequest, "数据格式不正确", err.Error())
+//		return
+//	}
+//
+//	uid := uuid.NewV4()
+//	runWs.Uuid = uid
+//	runWs.Debug = constant.All
+//
+//	requestJson, _ := json.Marshal(&runWs)
+//
+//	log.Logger.Info(fmt.Sprintf("机器ip:%s, 调试websocket：    ", middlewares.LocalIp), string(requestJson))
+//	go server.DebugWs(runWs)
+//	global.ReturnMsg(c, http.StatusOK, "调试ws", uid)
+//}
 
 //func RunMQTT(c *gin.Context) {
 //	var mqtt = model.MQTT{}

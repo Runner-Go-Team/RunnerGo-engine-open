@@ -7,7 +7,6 @@ import (
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	"github.com/go-redis/redis"
 	"github.com/gorilla/websocket"
-	uuid "github.com/satori/go.uuid"
 	"github.com/shopspring/decimal"
 	"go.mongodb.org/mongo-driver/mongo"
 	"sync"
@@ -15,10 +14,6 @@ import (
 )
 
 type WebsocketDetail struct {
-	TargetId       string          `json:"target_id"`
-	Uuid           uuid.UUID       `json:"uuid"`
-	Name           string          `json:"name"`
-	TeamId         string          `json:"team_id"`
 	Url            string          `json:"url"`
 	Debug          string          `json:"debug"`
 	SendMessage    string          `json:"send_message"`
@@ -56,7 +51,7 @@ func (ws WebsocketDetail) Send(debug string, debugMsg map[string]interface{}, mo
 		receivedBytes = float64(0)
 	)
 
-	resp, requestTime, sendBytes, err := ws.Request(mongoCollection)
+	resp, requestTime, sendBytes, err := ws.Request(debug, debugMsg, mongoCollection, globalVar)
 
 	if err != nil {
 		isSucceed = false
@@ -68,27 +63,27 @@ func (ws WebsocketDetail) Send(debug string, debugMsg map[string]interface{}, mo
 	return isSucceed, errCode, requestTime, float64(sendBytes), receivedBytes
 }
 
-func (ws WebsocketDetail) Request(mongoCollection *mongo.Collection) (resp []byte, requestTime uint64, sendBytes uint, err error) {
+func (ws WebsocketDetail) Request(debug string, debugMsg map[string]interface{}, mongoCollection *mongo.Collection, globalVar *sync.Map) (resp []byte, requestTime uint64, sendBytes uint, err error) {
 	var conn *websocket.Conn
 	//  api.Request.Body.ToString()
 	connectionResults, recvResults, writeResults := make(map[string]interface{}), make(map[string]interface{}), make(map[string]interface{})
 	recvResults["type"] = "recv"
-	recvResults["uuid"] = ws.Uuid.String()
-	recvResults["name"] = ws.Name
-	recvResults["team_id"] = ws.TeamId
-	recvResults["target_id"] = ws.TargetId
+	recvResults["uuid"] = debugMsg["uuid"]
+	recvResults["name"] = debugMsg["name"]
+	recvResults["team_id"] = debugMsg["team_id"]
+	recvResults["target_id"] = debugMsg["target_id"]
 
 	writeResults["type"] = "send"
-	writeResults["uuid"] = ws.Uuid.String()
-	writeResults["name"] = ws.Name
-	writeResults["team_id"] = ws.TeamId
-	writeResults["target_id"] = ws.TargetId
+	writeResults["uuid"] = debugMsg["uuid"]
+	writeResults["name"] = debugMsg["name"]
+	writeResults["team_id"] = debugMsg["team_id"]
+	writeResults["target_id"] = debugMsg["target_id"]
 
 	connectionResults["type"] = "connection"
-	connectionResults["uuid"] = ws.Uuid.String()
-	connectionResults["name"] = ws.Name
-	connectionResults["team_id"] = ws.TeamId
-	connectionResults["target_id"] = ws.TargetId
+	connectionResults["uuid"] = debugMsg["uuid"]
+	connectionResults["name"] = debugMsg["name"]
+	connectionResults["team_id"] = debugMsg["team_id"]
+	connectionResults["target_id"] = debugMsg["target_id"]
 	headers := map[string][]string{}
 	for _, header := range ws.WsHeader {
 		if header.IsChecked != constant.Open {
@@ -129,8 +124,10 @@ func (ws WebsocketDetail) Request(mongoCollection *mongo.Collection) (resp []byt
 		writeResults["response_body"] = ""
 		recvResults["is_stop"] = true
 		writeResults["is_stop"] = true
-		Insert(mongoCollection, writeResults, middlewares.LocalIp)
-		Insert(mongoCollection, recvResults, middlewares.LocalIp)
+		if debug != "stop" {
+			Insert(mongoCollection, writeResults, middlewares.LocalIp)
+			Insert(mongoCollection, recvResults, middlewares.LocalIp)
+		}
 
 	}
 
@@ -147,7 +144,7 @@ func (ws WebsocketDetail) Request(mongoCollection *mongo.Collection) (resp []byt
 	// 长连接
 	case constant.LongConnection:
 		// 订阅redis中消息  任务状态：包括：报告停止；debug日志状态；任务配置变更
-		adjustKey := fmt.Sprintf("WsStatusChange:%s", ws.Uuid.String())
+		adjustKey := fmt.Sprintf("WsStatusChange:%s", debugMsg["uuid"])
 		pubSub := SubscribeMsg(adjustKey)
 		statusCh := pubSub.Channel()
 		var wsStatusChange = new(ConnectionStatusChange)

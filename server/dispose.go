@@ -420,274 +420,274 @@ func DebugApi(debugApi model.Api) {
 }
 
 // DebugSql sql调试
-func DebugSql(debugSql model.SQLDetail) {
-
-	var globalVar = new(sync.Map)
-
-	if debugSql.GlobalVariable != nil {
-		debugSql.GlobalVariable.InitReplace()
-		if debugSql.Configuration == nil {
-			debugSql.Configuration = new(model.Configuration)
-		}
-		if debugSql.Configuration.SceneVariable == nil {
-			debugSql.Configuration.SceneVariable = new(model.GlobalVariable)
-		}
-		debugSql.GlobalVariable.SupToSub(debugSql.Configuration.SceneVariable)
-		debugSql.SqlVariable = new(model.GlobalVariable)
-		debugSql.Configuration.SceneVariable.SupToSub(debugSql.SqlVariable)
-		debugSql.SqlVariable.InitReplace()
-	} else {
-		if debugSql.Configuration != nil && debugSql.Configuration.SceneVariable != nil {
-			debugSql.Configuration.SceneVariable.InitReplace()
-			debugSql.SqlVariable = new(model.GlobalVariable)
-			debugSql.Configuration.SceneVariable.SupToSub(debugSql.SqlVariable)
-
-		}
-	}
-
-	if debugSql.Configuration != nil {
-		if debugSql.Configuration.ParameterizedFile != nil {
-			if debugSql.Configuration.ParameterizedFile.VariableNames == nil {
-				debugSql.Configuration.ParameterizedFile.VariableNames = new(model.VariableNames)
-			}
-			debugSql.Configuration.ParameterizedFile.UseFile()
-
-			if debugSql.Configuration.ParameterizedFile.VariableNames.VarMapList != nil {
-				for k, v := range debugSql.Configuration.ParameterizedFile.VariableNames.VarMapList {
-					globalVar.Store(k, v[0])
-				}
-			}
-		}
-	}
-
-	if debugSql.SqlVariable.Variable != nil {
-		for _, variable := range debugSql.Configuration.SceneVariable.Variable {
-			if variable.IsChecked != constant.Open {
-				continue
-			}
-			globalVar.Store(variable.Key, variable.Value)
-		}
-
-	}
-
-	event := model.Event{}
-	event.Api.SQL = debugSql
-	//event.TeamId = debugSql.TeamId
-	event.Weight = 100
-	event.Id = "接口调试"
-	event.Debug = constant.All
-	// 新建mongo客户端连接，用于发送debug数据
-	mongoClient, err := model.NewMongoClient(
-		config.Conf.Mongo.DSN,
-		middlewares.LocalIp)
-	if err != nil {
-		log.Logger.Error(fmt.Sprintf("机器ip:%s, 连接mongo错误：%s", middlewares.LocalIp, err.Error()))
-		return
-	}
-	globalVar.Range(func(key, value any) bool {
-		values := tools.FindAllDestStr(value.(string), "{{(.*?)}}")
-		if values == nil {
-			return true
-		}
-		for _, v := range values {
-			if len(v) < 2 {
-				return true
-			}
-			realVar := tools.ParsFunc(v[1])
-			if realVar != v[1] {
-				value = strings.Replace(value.(string), v[0], realVar, -1)
-				globalVar.Store(key, value)
-			}
-		}
-		return true
-	})
-	defer mongoClient.Disconnect(context.TODO())
-	mongoCollection := model.NewCollection(config.Conf.Mongo.DataBase, config.Conf.Mongo.SqlDebugTable, mongoClient)
-
-	golink.DisposeSql(nil, nil, nil, globalVar, event, mongoCollection)
-	//log.Logger.Info(fmt.Sprintf("机器ip:%s, 团队：%s, sql：%s, 调试结束！", middlewares.LocalIp, debugSql.TeamId, debugSql.Name))
-
-}
+//func DebugSql(debugSql model.SQLDetail) {
+//
+//	var globalVar = new(sync.Map)
+//
+//	if debugSql.GlobalVariable != nil {
+//		debugSql.GlobalVariable.InitReplace()
+//		if debugSql.Configuration == nil {
+//			debugSql.Configuration = new(model.Configuration)
+//		}
+//		if debugSql.Configuration.SceneVariable == nil {
+//			debugSql.Configuration.SceneVariable = new(model.GlobalVariable)
+//		}
+//		debugSql.GlobalVariable.SupToSub(debugSql.Configuration.SceneVariable)
+//		debugSql.SqlVariable = new(model.GlobalVariable)
+//		debugSql.Configuration.SceneVariable.SupToSub(debugSql.SqlVariable)
+//		debugSql.SqlVariable.InitReplace()
+//	} else {
+//		if debugSql.Configuration != nil && debugSql.Configuration.SceneVariable != nil {
+//			debugSql.Configuration.SceneVariable.InitReplace()
+//			debugSql.SqlVariable = new(model.GlobalVariable)
+//			debugSql.Configuration.SceneVariable.SupToSub(debugSql.SqlVariable)
+//
+//		}
+//	}
+//
+//	if debugSql.Configuration != nil {
+//		if debugSql.Configuration.ParameterizedFile != nil {
+//			if debugSql.Configuration.ParameterizedFile.VariableNames == nil {
+//				debugSql.Configuration.ParameterizedFile.VariableNames = new(model.VariableNames)
+//			}
+//			debugSql.Configuration.ParameterizedFile.UseFile()
+//
+//			if debugSql.Configuration.ParameterizedFile.VariableNames.VarMapList != nil {
+//				for k, v := range debugSql.Configuration.ParameterizedFile.VariableNames.VarMapList {
+//					globalVar.Store(k, v[0])
+//				}
+//			}
+//		}
+//	}
+//
+//	if debugSql.SqlVariable.Variable != nil {
+//		for _, variable := range debugSql.Configuration.SceneVariable.Variable {
+//			if variable.IsChecked != constant.Open {
+//				continue
+//			}
+//			globalVar.Store(variable.Key, variable.Value)
+//		}
+//
+//	}
+//
+//	event := model.Event{}
+//	event.Api.SQL = debugSql
+//	//event.TeamId = debugSql.TeamId
+//	event.Weight = 100
+//	event.Id = "接口调试"
+//	event.Debug = constant.All
+//	// 新建mongo客户端连接，用于发送debug数据
+//	mongoClient, err := model.NewMongoClient(
+//		config.Conf.Mongo.DSN,
+//		middlewares.LocalIp)
+//	if err != nil {
+//		log.Logger.Error(fmt.Sprintf("机器ip:%s, 连接mongo错误：%s", middlewares.LocalIp, err.Error()))
+//		return
+//	}
+//	globalVar.Range(func(key, value any) bool {
+//		values := tools.FindAllDestStr(value.(string), "{{(.*?)}}")
+//		if values == nil {
+//			return true
+//		}
+//		for _, v := range values {
+//			if len(v) < 2 {
+//				return true
+//			}
+//			realVar := tools.ParsFunc(v[1])
+//			if realVar != v[1] {
+//				value = strings.Replace(value.(string), v[0], realVar, -1)
+//				globalVar.Store(key, value)
+//			}
+//		}
+//		return true
+//	})
+//	defer mongoClient.Disconnect(context.TODO())
+//	mongoCollection := model.NewCollection(config.Conf.Mongo.DataBase, config.Conf.Mongo.SqlDebugTable, mongoClient)
+//
+//	golink.DisposeSql(nil, nil, nil, globalVar, event, mongoCollection)
+//	//log.Logger.Info(fmt.Sprintf("机器ip:%s, 团队：%s, sql：%s, 调试结束！", middlewares.LocalIp, debugSql.TeamId, debugSql.Name))
+//
+//}
 
 // DebugTcp tcp调试
-func DebugTcp(debugTcp model.TCPDetail) {
-
-	var globalVar = new(sync.Map)
-
-	if debugTcp.GlobalVariable != nil {
-		debugTcp.GlobalVariable.InitReplace()
-		if debugTcp.Configuration == nil {
-			debugTcp.Configuration = new(model.Configuration)
-		}
-		if debugTcp.Configuration.SceneVariable == nil {
-			debugTcp.Configuration.SceneVariable = new(model.GlobalVariable)
-		}
-		debugTcp.GlobalVariable.SupToSub(debugTcp.Configuration.SceneVariable)
-		debugTcp.SqlVariable = new(model.GlobalVariable)
-		debugTcp.Configuration.SceneVariable.SupToSub(debugTcp.SqlVariable)
-		debugTcp.SqlVariable.InitReplace()
-	} else {
-		if debugTcp.Configuration != nil && debugTcp.Configuration.SceneVariable != nil {
-			debugTcp.Configuration.SceneVariable.InitReplace()
-			debugTcp.SqlVariable = new(model.GlobalVariable)
-			debugTcp.Configuration.SceneVariable.SupToSub(debugTcp.SqlVariable)
-
-		}
-	}
-
-	if debugTcp.Configuration != nil {
-		if debugTcp.Configuration.ParameterizedFile != nil {
-			if debugTcp.Configuration.ParameterizedFile.VariableNames == nil {
-				debugTcp.Configuration.ParameterizedFile.VariableNames = new(model.VariableNames)
-			}
-			debugTcp.Configuration.ParameterizedFile.UseFile()
-
-			if debugTcp.Configuration.ParameterizedFile.VariableNames.VarMapList != nil {
-				for k, v := range debugTcp.Configuration.ParameterizedFile.VariableNames.VarMapList {
-					globalVar.Store(k, v[0])
-				}
-			}
-		}
-	}
-
-	if debugTcp.SqlVariable.Variable != nil {
-		for _, variable := range debugTcp.Configuration.SceneVariable.Variable {
-			if variable.IsChecked != constant.Open {
-				continue
-			}
-			globalVar.Store(variable.Key, variable.Value)
-		}
-
-	}
-
-	event := model.Event{}
-	event.Api.TCP = debugTcp
-	event.TeamId = debugTcp.TeamId
-	event.Weight = 100
-	event.Id = "接口调试"
-	event.Debug = constant.All
-	// 新建mongo客户端连接，用于发送debug数据
-	mongoClient, err := model.NewMongoClient(
-		config.Conf.Mongo.DSN,
-		middlewares.LocalIp)
-	if err != nil {
-		log.Logger.Error(fmt.Sprintf("机器ip:%s, 连接mongo错误：%s", middlewares.LocalIp, err.Error()))
-		return
-	}
-	globalVar.Range(func(key, value any) bool {
-		values := tools.FindAllDestStr(value.(string), "{{(.*?)}}")
-		if values == nil {
-			return true
-		}
-		for _, v := range values {
-			if len(v) < 2 {
-				return true
-			}
-			realVar := tools.ParsFunc(v[1])
-			if realVar != v[1] {
-				value = strings.Replace(value.(string), v[0], realVar, -1)
-				globalVar.Store(key, value)
-			}
-		}
-		return true
-	})
-	defer mongoClient.Disconnect(context.TODO())
-	mongoCollection := model.NewCollection(config.Conf.Mongo.DataBase, config.Conf.Mongo.TcpDebugTable, mongoClient)
-
-	golink.DisposeTcp(nil, nil, nil, globalVar, event, mongoCollection)
-	log.Logger.Info(fmt.Sprintf("机器ip:%s, 团队：%s, sql：%s, 调试结束！", middlewares.LocalIp, debugTcp.TeamId, debugTcp.Name))
-
-}
+//func DebugTcp(debugTcp model.TCPDetail) {
+//
+//	var globalVar = new(sync.Map)
+//
+//	if debugTcp.GlobalVariable != nil {
+//		debugTcp.GlobalVariable.InitReplace()
+//		if debugTcp.Configuration == nil {
+//			debugTcp.Configuration = new(model.Configuration)
+//		}
+//		if debugTcp.Configuration.SceneVariable == nil {
+//			debugTcp.Configuration.SceneVariable = new(model.GlobalVariable)
+//		}
+//		debugTcp.GlobalVariable.SupToSub(debugTcp.Configuration.SceneVariable)
+//		debugTcp.SqlVariable = new(model.GlobalVariable)
+//		debugTcp.Configuration.SceneVariable.SupToSub(debugTcp.SqlVariable)
+//		debugTcp.SqlVariable.InitReplace()
+//	} else {
+//		if debugTcp.Configuration != nil && debugTcp.Configuration.SceneVariable != nil {
+//			debugTcp.Configuration.SceneVariable.InitReplace()
+//			debugTcp.SqlVariable = new(model.GlobalVariable)
+//			debugTcp.Configuration.SceneVariable.SupToSub(debugTcp.SqlVariable)
+//
+//		}
+//	}
+//
+//	if debugTcp.Configuration != nil {
+//		if debugTcp.Configuration.ParameterizedFile != nil {
+//			if debugTcp.Configuration.ParameterizedFile.VariableNames == nil {
+//				debugTcp.Configuration.ParameterizedFile.VariableNames = new(model.VariableNames)
+//			}
+//			debugTcp.Configuration.ParameterizedFile.UseFile()
+//
+//			if debugTcp.Configuration.ParameterizedFile.VariableNames.VarMapList != nil {
+//				for k, v := range debugTcp.Configuration.ParameterizedFile.VariableNames.VarMapList {
+//					globalVar.Store(k, v[0])
+//				}
+//			}
+//		}
+//	}
+//
+//	if debugTcp.SqlVariable.Variable != nil {
+//		for _, variable := range debugTcp.Configuration.SceneVariable.Variable {
+//			if variable.IsChecked != constant.Open {
+//				continue
+//			}
+//			globalVar.Store(variable.Key, variable.Value)
+//		}
+//
+//	}
+//
+//	event := model.Event{}
+//	event.Api.TCP = debugTcp
+//	event.TeamId = debugTcp.TeamId
+//	event.Weight = 100
+//	event.Id = "接口调试"
+//	event.Debug = constant.All
+//	// 新建mongo客户端连接，用于发送debug数据
+//	mongoClient, err := model.NewMongoClient(
+//		config.Conf.Mongo.DSN,
+//		middlewares.LocalIp)
+//	if err != nil {
+//		log.Logger.Error(fmt.Sprintf("机器ip:%s, 连接mongo错误：%s", middlewares.LocalIp, err.Error()))
+//		return
+//	}
+//	globalVar.Range(func(key, value any) bool {
+//		values := tools.FindAllDestStr(value.(string), "{{(.*?)}}")
+//		if values == nil {
+//			return true
+//		}
+//		for _, v := range values {
+//			if len(v) < 2 {
+//				return true
+//			}
+//			realVar := tools.ParsFunc(v[1])
+//			if realVar != v[1] {
+//				value = strings.Replace(value.(string), v[0], realVar, -1)
+//				globalVar.Store(key, value)
+//			}
+//		}
+//		return true
+//	})
+//	defer mongoClient.Disconnect(context.TODO())
+//	mongoCollection := model.NewCollection(config.Conf.Mongo.DataBase, config.Conf.Mongo.TcpDebugTable, mongoClient)
+//
+//	golink.DisposeTcp(nil, nil, nil, globalVar, event, mongoCollection)
+//	log.Logger.Info(fmt.Sprintf("机器ip:%s, 团队：%s, sql：%s, 调试结束！", middlewares.LocalIp, debugTcp.TeamId, debugTcp.Name))
+//
+//}
 
 // DebugWs websocket调试
-func DebugWs(debugWs model.WebsocketDetail) {
-
-	var globalVar = new(sync.Map)
-
-	if debugWs.GlobalVariable != nil {
-		debugWs.GlobalVariable.InitReplace()
-		if debugWs.Configuration == nil {
-			debugWs.Configuration = new(model.Configuration)
-		}
-		if debugWs.Configuration.SceneVariable == nil {
-			debugWs.Configuration.SceneVariable = new(model.GlobalVariable)
-		}
-		debugWs.GlobalVariable.SupToSub(debugWs.Configuration.SceneVariable)
-		debugWs.WsVariable = new(model.GlobalVariable)
-		debugWs.Configuration.SceneVariable.SupToSub(debugWs.WsVariable)
-		debugWs.WsVariable.InitReplace()
-	} else {
-		if debugWs.Configuration != nil && debugWs.Configuration.SceneVariable != nil {
-			debugWs.Configuration.SceneVariable.InitReplace()
-			debugWs.WsVariable = new(model.GlobalVariable)
-			debugWs.Configuration.SceneVariable.SupToSub(debugWs.WsVariable)
-
-		}
-	}
-
-	if debugWs.Configuration != nil {
-		if debugWs.Configuration.ParameterizedFile != nil {
-			if debugWs.Configuration.ParameterizedFile.VariableNames == nil {
-				debugWs.Configuration.ParameterizedFile.VariableNames = new(model.VariableNames)
-			}
-			debugWs.Configuration.ParameterizedFile.UseFile()
-
-			if debugWs.Configuration.ParameterizedFile.VariableNames.VarMapList != nil {
-				for k, v := range debugWs.Configuration.ParameterizedFile.VariableNames.VarMapList {
-					globalVar.Store(k, v[0])
-				}
-			}
-		}
-	}
-
-	if debugWs.WsVariable.Variable != nil {
-		for _, variable := range debugWs.Configuration.SceneVariable.Variable {
-			if variable.IsChecked != constant.Open {
-				continue
-			}
-			globalVar.Store(variable.Key, variable.Value)
-		}
-
-	}
-
-	event := model.Event{}
-	event.Api.Ws = debugWs
-	event.TeamId = debugWs.TeamId
-	event.Weight = 100
-	event.Id = "接口调试"
-	event.Debug = constant.All
-	// 新建mongo客户端连接，用于发送debug数据
-	mongoClient, err := model.NewMongoClient(
-		config.Conf.Mongo.DSN,
-		middlewares.LocalIp)
-	if err != nil {
-		log.Logger.Error(fmt.Sprintf("机器ip:%s, 连接mongo错误：%s", middlewares.LocalIp, err.Error()))
-		return
-	}
-	globalVar.Range(func(key, value any) bool {
-		values := tools.FindAllDestStr(value.(string), "{{(.*?)}}")
-		if values == nil {
-			return true
-		}
-		for _, v := range values {
-			if len(v) < 2 {
-				return true
-			}
-			realVar := tools.ParsFunc(v[1])
-			if realVar != v[1] {
-				value = strings.Replace(value.(string), v[0], realVar, -1)
-				globalVar.Store(key, value)
-			}
-		}
-		return true
-	})
-	defer mongoClient.Disconnect(context.TODO())
-	mongoCollection := model.NewCollection(config.Conf.Mongo.DataBase, config.Conf.Mongo.WsDebugTable, mongoClient)
-
-	golink.DisposeWs(nil, nil, nil, globalVar, event, mongoCollection)
-	log.Logger.Info(fmt.Sprintf("机器ip:%s, 团队：%s, sql：%s, 调试结束！", middlewares.LocalIp, debugWs.TeamId, debugWs.Name))
-
-}
+//func DebugWs(debugWs model.WebsocketDetail) {
+//
+//	var globalVar = new(sync.Map)
+//
+//	if debugWs.GlobalVariable != nil {
+//		debugWs.GlobalVariable.InitReplace()
+//		if debugWs.Configuration == nil {
+//			debugWs.Configuration = new(model.Configuration)
+//		}
+//		if debugWs.Configuration.SceneVariable == nil {
+//			debugWs.Configuration.SceneVariable = new(model.GlobalVariable)
+//		}
+//		debugWs.GlobalVariable.SupToSub(debugWs.Configuration.SceneVariable)
+//		debugWs.WsVariable = new(model.GlobalVariable)
+//		debugWs.Configuration.SceneVariable.SupToSub(debugWs.WsVariable)
+//		debugWs.WsVariable.InitReplace()
+//	} else {
+//		if debugWs.Configuration != nil && debugWs.Configuration.SceneVariable != nil {
+//			debugWs.Configuration.SceneVariable.InitReplace()
+//			debugWs.WsVariable = new(model.GlobalVariable)
+//			debugWs.Configuration.SceneVariable.SupToSub(debugWs.WsVariable)
+//
+//		}
+//	}
+//
+//	if debugWs.Configuration != nil {
+//		if debugWs.Configuration.ParameterizedFile != nil {
+//			if debugWs.Configuration.ParameterizedFile.VariableNames == nil {
+//				debugWs.Configuration.ParameterizedFile.VariableNames = new(model.VariableNames)
+//			}
+//			debugWs.Configuration.ParameterizedFile.UseFile()
+//
+//			if debugWs.Configuration.ParameterizedFile.VariableNames.VarMapList != nil {
+//				for k, v := range debugWs.Configuration.ParameterizedFile.VariableNames.VarMapList {
+//					globalVar.Store(k, v[0])
+//				}
+//			}
+//		}
+//	}
+//
+//	if debugWs.WsVariable.Variable != nil {
+//		for _, variable := range debugWs.Configuration.SceneVariable.Variable {
+//			if variable.IsChecked != constant.Open {
+//				continue
+//			}
+//			globalVar.Store(variable.Key, variable.Value)
+//		}
+//
+//	}
+//
+//	event := model.Event{}
+//	event.Api.Ws = debugWs
+//	event.TeamId = debugWs.TeamId
+//	event.Weight = 100
+//	event.Id = "接口调试"
+//	event.Debug = constant.All
+//	// 新建mongo客户端连接，用于发送debug数据
+//	mongoClient, err := model.NewMongoClient(
+//		config.Conf.Mongo.DSN,
+//		middlewares.LocalIp)
+//	if err != nil {
+//		log.Logger.Error(fmt.Sprintf("机器ip:%s, 连接mongo错误：%s", middlewares.LocalIp, err.Error()))
+//		return
+//	}
+//	globalVar.Range(func(key, value any) bool {
+//		values := tools.FindAllDestStr(value.(string), "{{(.*?)}}")
+//		if values == nil {
+//			return true
+//		}
+//		for _, v := range values {
+//			if len(v) < 2 {
+//				return true
+//			}
+//			realVar := tools.ParsFunc(v[1])
+//			if realVar != v[1] {
+//				value = strings.Replace(value.(string), v[0], realVar, -1)
+//				globalVar.Store(key, value)
+//			}
+//		}
+//		return true
+//	})
+//	defer mongoClient.Disconnect(context.TODO())
+//	mongoCollection := model.NewCollection(config.Conf.Mongo.DataBase, config.Conf.Mongo.WsDebugTable, mongoClient)
+//
+//	golink.DisposeWs(nil, nil, nil, globalVar, event, mongoCollection)
+//	log.Logger.Info(fmt.Sprintf("机器ip:%s, 团队：%s, sql：%s, 调试结束！", middlewares.LocalIp, debugWs.TeamId, debugWs.Name))
+//
+//}
 
 // DebugDubbo dubbo调试
 func DebugDubbo(dubbo model.DubboDetail) {
