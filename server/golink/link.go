@@ -592,10 +592,11 @@ func DisposeRequest(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.
 		api.ReplaceQueryParameterizes(globalVar)
 		isSucceed, errCode, requestTime, sendBytes, receivedBytes, errMsg, startTime, endTime = api.Request.Send(api.Debug, debugMsg, mongoCollection, globalVar)
 	case constant.FormTypeWebSocket:
-		//isSucceed, errCode, requestTime, sendBytes, receivedBytes = webSocketSend(api)
+		isSucceed, errCode, requestTime, sendBytes, receivedBytes = api.Ws.Send(api.Debug, debugMsg, mongoCollection, globalVar)
 	case constant.FormTypeDubbo:
 		//isSucceed, errCode, requestTime, sendBytes, contentLength := rpcSend(request)
 	case constant.FormTypeTcp:
+
 	case constant.FormTypeSql:
 		isSucceed, requestTime, startTime, endTime = api.SQL.Send(event.Api.Debug, debugMsg, mongoCollection, globalVar)
 	default:

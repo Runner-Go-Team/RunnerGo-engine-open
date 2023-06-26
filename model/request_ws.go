@@ -48,7 +48,7 @@ type WsQuery struct {
 	Val       string `json:"val"`
 }
 
-func (ws WebsocketDetail) Send(mongoCollection *mongo.Collection) (bool, int64, uint64, float64, float64) {
+func (ws WebsocketDetail) Send(debug string, debugMsg map[string]interface{}, mongoCollection *mongo.Collection, globalVar *sync.Map) (bool, int64, uint64, float64, float64) {
 	var (
 		// startTime = time.Now()
 		isSucceed     = true
