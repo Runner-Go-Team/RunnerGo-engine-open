@@ -588,7 +588,7 @@ func DisposeRequest(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.
 			api.GlobalToRequest()
 		}
 		// 请求中所有的变量替换成真正的值
-		api.ReplaceQueryParameterizes(globalVar)
+		api.Request.ReplaceQueryParameterizes(globalVar)
 
 		isSucceed, errCode, requestTime, sendBytes, receivedBytes, errMsg, startTime, endTime = api.Request.Send(api.Debug, debugMsg, mongoCollection, globalVar)
 	case constant.FormTypeWebSocket:
