@@ -748,7 +748,7 @@ func DisposeRequest(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.
 //
 //}
 
-func setControllerDebugMsg(preNodeMap *sync.Map, eventResult model.EventResult, scene model.Scene, event model.Event, collection *mongo.Collection, msg, status, controllerType string) {
+func setControllerDebugMsg(preNodeMap *sync.Map, eventResult model.EventResult, scene model.Scene, event model.Event, collection *mongo.Collection, msg string, status bool, controllerType string) {
 	if scene.Debug != "" {
 		debugMsg := make(map[string]interface{})
 		debugMsg["team_id"] = event.TeamId

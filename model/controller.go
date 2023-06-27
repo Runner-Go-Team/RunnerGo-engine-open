@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func (ic *Event) PerForm(value string) (result, msg string) {
+func (ic *Event) PerForm(value string) (result bool, msg string) {
 	switch ic.Compare {
 	case constant.Equal:
 		if strings.Compare(ic.Val, value) == 0 {
