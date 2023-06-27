@@ -66,7 +66,11 @@ func (ws WebsocketDetail) Send(debug string, debugMsg map[string]interface{}, mo
 
 func (ws WebsocketDetail) Request(debug string, debugMsg map[string]interface{}, mongoCollection *mongo.Collection, globalVar *sync.Map) (resp []byte, requestTime uint64, sendBytes uint, err error) {
 	var conn *websocket.Conn
-	//  api.Request.Body.ToString()
+	defer func() {
+		if conn != nil {
+			conn.Close()
+		}
+	}()
 	connectionResults, recvResults, writeResults := make(map[string]interface{}), make(map[string]interface{}), make(map[string]interface{})
 	recvResults["type"] = "recv"
 	recvResults["uuid"] = debugMsg["uuid"]

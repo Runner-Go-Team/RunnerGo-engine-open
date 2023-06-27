@@ -12,6 +12,7 @@ import (
 	dubboConfig "dubbo.apache.org/dubbo-go/v3/config"
 	"dubbo.apache.org/dubbo-go/v3/config/generic"
 	"encoding/json"
+	"fmt"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/constant"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/tools"
@@ -73,9 +74,19 @@ type DubboParam struct {
 	Val       string `json:"val"`
 }
 
+var RpcServerMap = new(sync.Map)
+
 func (d DubboDetail) Send(debug string, debugMsg map[string]interface{}, mongoCollection *mongo.Collection, globalVariable *sync.Map) {
 	parameterTypes, parameterValues := []string{}, []hessian.Object{}
-	rpcServer, err := d.init()
+	var err error
+	var rpcServer common.RPCService
+	soleKey := fmt.Sprintf("%s://%s/%s/%s", d.DubboProtocol, d.DubboConfig.RegistrationCenterAddress, d.ApiName, d.FunctionName)
+	if s, ok := RpcServerMap.Load(soleKey); !ok {
+		rpcServer, err = d.init(soleKey)
+	} else {
+		rpcServer = s
+	}
+	//rpcServer, err := d.init()
 	for _, parame := range d.DubboParam {
 		if parame.IsChecked != constant.Open {
 			break
@@ -131,7 +142,7 @@ func (d DubboDetail) Send(debug string, debugMsg map[string]interface{}, mongoCo
 
 	}
 	requestType, _ := json.Marshal(parameterTypes)
-	debugMsg["request_type"] = string(requestType)
+	debugMsg["request_parameter_type"] = string(requestType)
 	requestBody, _ := json.Marshal(parameterValues)
 	debugMsg["request_body"] = string(requestBody)
 	if err != nil {
@@ -156,15 +167,17 @@ func (d DubboDetail) Send(debug string, debugMsg map[string]interface{}, mongoCo
 		}
 
 	}
+	debugMsg["request_type"] = d.DubboProtocol
 	Insert(mongoCollection, debugMsg, middlewares.LocalIp)
 }
 
-func (d DubboDetail) init() (rpcServer common.RPCService, err error) {
+func (d DubboDetail) init(soleKey string) (rpcServer common.RPCService, err error) {
 	defer tools.DeferPanic("初始化dubbo配置失败")
 	registryConfig := &dubboConfig.RegistryConfig{
 		Protocol: d.DubboConfig.RegistrationCenterName,
 		Address:  d.DubboConfig.RegistrationCenterAddress,
 	}
+
 	var zk string
 	if d.DubboConfig.RegistrationCenterName == "zookeeper" {
 		zk = "zk"
@@ -197,7 +210,14 @@ func (d DubboDetail) init() (rpcServer common.RPCService, err error) {
 		return
 	}
 
-	refConf.GenericLoad(d.ApiName)
-	rpcServer = refConf.GetRPCService()
+	if s, ok := RpcServerMap.Load(soleKey); !ok {
+		refConf.GenericLoad(uuid.NewV4().String())
+		//rpcServer = refConf.GetRPCService()
+
+		rpcServer = refConf.GetRPCService()
+		RpcServerMap.Store(soleKey, rpcServer)
+	} else {
+		rpcServer = s
+	}
 	return
 }

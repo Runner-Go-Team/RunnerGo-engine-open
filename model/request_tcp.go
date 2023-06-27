@@ -38,6 +38,12 @@ type TcpConfig struct {
 func (tcp TCPDetail) Send(debug string, debugMsg map[string]interface{}, mongoCollection *mongo.Collection) {
 	var conn net.Conn
 	var err error
+
+	defer func() {
+		if conn != nil {
+			conn.Close()
+		}
+	}()
 	connectionResults, recvResults, writeResults := make(map[string]interface{}), make(map[string]interface{}), make(map[string]interface{})
 
 	recvResults["type"] = "recv"
