@@ -81,7 +81,11 @@ func (d DubboDetail) Send(debug string, debugMsg map[string]interface{}, mongoCo
 	parameterTypes, parameterValues := []string{}, []hessian.Object{}
 	var err error
 	var rpcServer common.RPCService
-	soleKey := fmt.Sprintf("%s://%s/%s/%s", d.DubboProtocol, d.DubboConfig.RegistrationCenterAddress, d.ApiName, d.FunctionName)
+	d.DubboConfig.RegistrationCenterName = strings.TrimSpace(d.DubboConfig.RegistrationCenterName)
+	d.DubboConfig.RegistrationCenterAddress = strings.TrimSpace(d.DubboConfig.RegistrationCenterAddress)
+	d.ApiName = strings.TrimSpace(d.ApiName)
+	d.DubboConfig.Version = strings.TrimSpace(d.DubboConfig.Version)
+	soleKey := fmt.Sprintf("%s://%s/%s", d.DubboProtocol, d.DubboConfig.RegistrationCenterAddress, d.ApiName)
 	if s, ok := RpcServerMap.Load(soleKey); !ok {
 		rpcServer, err = d.init(soleKey)
 	} else {
@@ -230,6 +234,7 @@ func (d DubboDetail) init(soleKey string) (rpcServer common.RPCService, err erro
 	} else {
 		zk = d.DubboConfig.RegistrationCenterName
 	}
+
 	refConf := &dubboConfig.ReferenceConfig{
 		InterfaceName:  d.ApiName, // 服务接口名，如：org.apache.dubbo.sample.UserProvider
 		Cluster:        "failover",
