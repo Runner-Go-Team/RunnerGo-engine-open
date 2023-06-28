@@ -85,7 +85,7 @@ func (sql *SQLDetail) Send(debug string, debugMsg map[string]interface{}, mongoC
 		debugMsg["regex"] = regex
 		Insert(mongoCollection, debugMsg, middlewares.LocalIp)
 	case constant.OnlyError:
-		if err == nil {
+		if isSucceed {
 			return
 		}
 		debugMsg["response_body"] = err.Error()
@@ -101,7 +101,7 @@ func (sql *SQLDetail) Send(debug string, debugMsg map[string]interface{}, mongoC
 		debugMsg["regex"] = regex
 		Insert(mongoCollection, debugMsg, middlewares.LocalIp)
 	case constant.OnlySuccess:
-		if err != nil {
+		if !isSucceed {
 			return
 		}
 		debugMsg["response_body"] = result
