@@ -412,22 +412,22 @@ func Read(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Conn
 }
 
 func (tcpConfig *TcpConfig) Init() {
-	if tcpConfig.RetryInterval == 0 {
+	if tcpConfig.RetryInterval <= 0 {
 		tcpConfig.RetryInterval = 1
 	}
-	if tcpConfig.ConnectTimeoutTime == 0 {
+	if tcpConfig.ConnectTimeoutTime <= 0 {
 		tcpConfig.ConnectTimeoutTime = 1
 	}
-	if tcpConfig.RetryNum == 0 {
-		tcpConfig.RetryNum = 1
+	if tcpConfig.RetryNum < 0 {
+		tcpConfig.RetryNum = 0
 	}
-	if tcpConfig.ConnectDurationTime == 0 {
+	if tcpConfig.ConnectDurationTime <= 0 {
 		tcpConfig.ConnectDurationTime = 1
 	}
-	if tcpConfig.SendMsgDurationTime == 0 {
+	if tcpConfig.SendMsgDurationTime <= 0 {
 		tcpConfig.SendMsgDurationTime = 1
 	}
-	if tcpConfig.RetryInterval == 0 {
+	if tcpConfig.RetryInterval <= 0 {
 		tcpConfig.RetryInterval = 1
 	}
 }

@@ -138,12 +138,7 @@ func (ws WebsocketDetail) Request(debug string, debugMsg map[string]interface{},
 
 	}
 
-	if wsConfig.ConnectDurationTime == 0 {
-		wsConfig.ConnectDurationTime = 1
-	}
-	if wsConfig.SendMsgDurationTime == 0 {
-		wsConfig.SendMsgDurationTime = 1
-	}
+	wsConfig.init()
 	readTimeAfter, writeTimeAfter := time.After(time.Duration(wsConfig.ConnectDurationTime)*time.Second), time.After(time.Duration(wsConfig.ConnectDurationTime)*time.Second)
 	ticker := time.NewTicker(time.Duration(wsConfig.SendMsgDurationTime) * time.Millisecond)
 	defer ticker.Stop()
@@ -404,4 +399,13 @@ func (ws WebsocketDetail) Request(debug string, debugMsg map[string]interface{},
 		writeResults["is_stop"] = true
 	}
 	return
+}
+
+func (wsC *WsConfig) init() {
+	if wsC.ConnectDurationTime <= 0 {
+		wsC.ConnectDurationTime = 1
+	}
+	if wsC.SendMsgDurationTime <= 0 {
+		wsC.SendMsgDurationTime = 1
+	}
 }
