@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/constant"
-	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	"go.mongodb.org/mongo-driver/mongo"
 	"strings"
@@ -51,7 +50,11 @@ func (sql *SQLDetail) Send(debug string, debugMsg map[string]interface{}, mongoC
 	isSucceed = true
 	sql.SqlString = strings.ToLower(strings.TrimSpace(strings.NewReplacer("\r", " ", "\n", " ").Replace(sql.SqlString)))
 	db, result, err, startTime, endTime, requestTime := sql.Request()
-	defer db.Close()
+	defer func() {
+		if db != nil {
+			db.Close()
+		}
+	}()
 	if err != nil {
 		isSucceed = false
 	}
@@ -114,7 +117,6 @@ func (sql *SQLDetail) Send(debug string, debugMsg map[string]interface{}, mongoC
 		debugMsg["regex"] = regex
 		Insert(mongoCollection, debugMsg, middlewares.LocalIp)
 	}
-
 	return
 }
 
@@ -192,10 +194,6 @@ func (sql *SQLDetail) init() (db *sql_client.DB, err error) {
 	}
 
 	db, err = sql_client.Open(sqlInfo.Type, dsn)
-	if err != nil {
-		log.Logger.Error(fmt.Sprintf("%s数据库连接失败： %s", sqlInfo.Type, err.Error()))
-		return
-	}
 	return
 }
 
