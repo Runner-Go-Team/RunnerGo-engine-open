@@ -49,6 +49,7 @@ type SqlRegex struct {
 
 func (sql *SQLDetail) Send(debug string, debugMsg map[string]interface{}, mongoCollection *mongo.Collection, globalVar *sync.Map) (isSucceed bool, requestTime uint64, startTime, endTime time.Time) {
 	isSucceed = true
+	sql.SqlString = strings.ToLower(strings.TrimSpace(strings.NewReplacer("\r", " ", "\n", " ").Replace(sql.SqlString)))
 	db, result, err, startTime, endTime, requestTime := sql.Request()
 	defer db.Close()
 	if err != nil {
@@ -122,13 +123,11 @@ func (sql *SQLDetail) Request() (db *sql_client.DB, result map[string]interface{
 	if db == nil || err != nil {
 		return
 	}
-	// 不区分大小写,去除空格，去除回车符/换行符
-	sqls := strings.ToLower(strings.TrimSpace(strings.NewReplacer("\r", "", "\n", "").Replace(sql.SqlString)))
 	//strings.EqualFold
 	startTime = time.Now()
 	result = make(map[string]interface{})
-	if strings.HasPrefix(sqls, "select") {
-		rows, errQuery := db.Query(sqls)
+	if strings.HasPrefix(sql.SqlString, "select") {
+		rows, errQuery := db.Query(sql.SqlString)
 		requestTime = uint64(time.Since(startTime))
 		if errQuery != nil || rows == nil {
 			err = errQuery
@@ -158,7 +157,7 @@ func (sql *SQLDetail) Request() (db *sql_client.DB, result map[string]interface{
 		return
 
 	} else {
-		results, errExec := db.Exec(sqls)
+		results, errExec := db.Exec(sql.SqlString)
 		requestTime = uint64(time.Since(startTime))
 		if errExec != nil || result == nil {
 			err = errExec
