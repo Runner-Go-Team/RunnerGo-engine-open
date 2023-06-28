@@ -1048,7 +1048,7 @@ func (re RegularExpression) Extract(resp *fasthttp.Response, globalVar *sync.Map
 			return
 		}
 		value = tools.FindAllDestStr(string(resp.Body()), re.Express)
-		if value == nil && len(value.([][]string)) < 1 {
+		if value == nil || len(value.([][]string)) < 1 {
 			value = ""
 		} else {
 			value = value.([][]string)[0][1]
