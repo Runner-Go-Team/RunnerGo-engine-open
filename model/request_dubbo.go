@@ -153,7 +153,7 @@ func (d DubboDetail) Send(debug string, debugMsg map[string]interface{}, mongoCo
 	requestBody, _ := json.Marshal(parameterValues)
 	debugMsg["request_body"] = string(requestBody)
 	if err != nil {
-		debugMsg["status"] = false
+		debugMsg["status"] = constant.Failed
 		debugMsg["response_body"] = err.Error()
 	} else {
 		resp, err = rpcServer.(*generic.GenericService).Invoke(
@@ -163,12 +163,12 @@ func (d DubboDetail) Send(debug string, debugMsg map[string]interface{}, mongoCo
 			parameterValues, // 实参
 		)
 		if err != nil {
-			debugMsg["status"] = false
+			debugMsg["status"] = constant.Failed
 			debugMsg["response_body"] = err.Error()
 		}
 		if resp != nil {
 			response, _ = json.Marshal(resp)
-			debugMsg["status"] = true
+			debugMsg["status"] = constant.Success
 			debugMsg["response_body"] = string(response)
 
 		}

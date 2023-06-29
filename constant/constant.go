@@ -110,8 +110,8 @@ const (
 
 // 时间运行状态
 const (
-	Success = true      // 成功
-	Failed  = false     // 失败
+	Success = "success" // 成功
+	Failed  = "failed"  // 失败
 	End     = "end"     // 结束
 	NotHit  = "not_hit" // 未命中
 	NotRun  = "not_run" // 未运行
