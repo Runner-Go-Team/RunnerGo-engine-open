@@ -111,7 +111,7 @@ func (ws WebsocketDetail) Request(debug string, debugMsg map[string]interface{},
 	for i := 0; i < wsConfig.RetryNum; i++ {
 		conn, _, err = websocket.DefaultDialer.Dial(ws.Url, headers)
 		if conn != nil {
-			connectionResults["status"] = true
+			connectionResults["status"] = constant.Success
 			connectionResults["is_stop"] = false
 			break
 		}
@@ -120,13 +120,13 @@ func (ws WebsocketDetail) Request(debug string, debugMsg map[string]interface{},
 		if err != nil {
 			recvResults["response_body"] = err.Error()
 			writeResults["response_body"] = err.Error()
-			recvResults["status"] = false
-			writeResults["status"] = false
+			recvResults["status"] = constant.Failed
+			writeResults["status"] = constant.Failed
 		} else {
 			recvResults["request_body"] = "连接为空"
 			writeResults["response_body"] = "连接为空"
-			recvResults["status"] = true
-			writeResults["status"] = true
+			recvResults["status"] = constant.Success
+			writeResults["status"] = constant.Success
 		}
 
 		recvResults["is_stop"] = true
@@ -171,7 +171,7 @@ func (ws WebsocketDetail) Request(debug string, debugMsg map[string]interface{},
 							} else {
 								writeResults["request_body"] = ""
 							}
-							writeResults["status"] = false
+							writeResults["status"] = constant.Failed
 							writeResults["is_stop"] = true
 							Insert(mongoCollection, writeResults, middlewares.LocalIp)
 							return
@@ -180,7 +180,7 @@ func (ws WebsocketDetail) Request(debug string, debugMsg map[string]interface{},
 					}
 					select {
 					case <-writeTimeAfter:
-						writeResults["status"] = false
+						writeResults["status"] = constant.Failed
 						writeResults["is_stop"] = true
 						Insert(mongoCollection, writeResults, middlewares.LocalIp)
 						return
@@ -188,7 +188,7 @@ func (ws WebsocketDetail) Request(debug string, debugMsg map[string]interface{},
 
 						_ = json.Unmarshal([]byte(c.Payload), wsStatusChange)
 						if wsStatusChange.Type == 1 {
-							writeResults["status"] = false
+							writeResults["status"] = constant.Failed
 							writeResults["is_stop"] = true
 							Insert(mongoCollection, writeResults, middlewares.LocalIp)
 							return
@@ -197,11 +197,11 @@ func (ws WebsocketDetail) Request(debug string, debugMsg map[string]interface{},
 						bodyBytes := []byte(ws.SendMessage)
 						err = conn.WriteMessage(websocket.TextMessage, bodyBytes)
 						writeResults["request_body"] = ws.SendMessage
-						writeResults["status"] = true
+						writeResults["status"] = constant.Success
 						writeResults["is_stop"] = false
 						if err != nil {
 							writeResults["request_body"] = err.Error()
-							writeResults["status"] = false
+							writeResults["status"] = constant.Failed
 							Insert(mongoCollection, writeResults, middlewares.LocalIp)
 							continue
 						}
@@ -230,7 +230,7 @@ func (ws WebsocketDetail) Request(debug string, debugMsg map[string]interface{},
 							} else {
 								writeResults["request_body"] = ""
 							}
-							writeResults["status"] = false
+							writeResults["status"] = constant.Failed
 							writeResults["is_stop"] = true
 							Insert(mongoCollection, writeResults, middlewares.LocalIp)
 							return

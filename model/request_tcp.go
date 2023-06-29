@@ -71,15 +71,15 @@ func (tcp TCPDetail) Send(debug string, debugMsg map[string]interface{}, mongoCo
 	for i := 0; i < tcp.TcpConfig.RetryNum; i++ {
 		conn, err = NewTcpClient(tcp.Url)
 		if conn != nil {
-			connectionResults["status"] = true
+			connectionResults["status"] = constant.Success
 			connectionResults["is_stop"] = false
 			break
 		}
 	}
 
 	if err != nil {
-		recvResults["status"] = false
-		writeResults["status"] = false
+		recvResults["status"] = constant.Failed
+		writeResults["status"] = constant.Failed
 		recvResults["is_stop"] = true
 		writeResults["is_stop"] = true
 		recvResults["response_body"] = err.Error()
@@ -88,8 +88,8 @@ func (tcp TCPDetail) Send(debug string, debugMsg map[string]interface{}, mongoCo
 	}
 
 	if tcp.TcpConfig == nil {
-		recvResults["status"] = false
-		writeResults["status"] = false
+		recvResults["status"] = constant.Failed
+		writeResults["status"] = constant.Failed
 		recvResults["is_stop"] = true
 		writeResults["is_stop"] = true
 		recvResults["response_body"] = "tcpConfig is nil"
@@ -120,21 +120,20 @@ func (tcp TCPDetail) Send(debug string, debugMsg map[string]interface{}, mongoCo
 		msg := []byte(tcp.SendMessage)
 		_, err := conn.Write(msg)
 		if err != nil {
-			writeResults["status"] = false
+			writeResults["status"] = constant.Failed
 			writeResults["request_body"] = err.Error()
 		} else {
-			writeResults["status"] = true
+			writeResults["status"] = constant.Success
 			writeResults["request_body"] = msg
 		}
 		writeResults["is_stop"] = true
 		Insert(mongoCollection, writeResults, middlewares.LocalIp)
 		n, err := conn.Read(buf)
 		if err != nil {
-			recvResults["status"] = false
+			recvResults["status"] = constant.Failed
 			recvResults["response_body"] = err.Error()
 		} else {
-			recvResults["status"] = true
-			recvResults["status"] = true
+			recvResults["status"] = constant.Success
 		}
 		var result string
 		if n != 0 {
@@ -183,7 +182,7 @@ func Write(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Con
 		for {
 			select {
 			case <-timeAfter:
-				results["status"] = true
+				results["status"] = constant.Failed
 				results["is_stop"] = true
 				Insert(mongoCollection, results, middlewares.LocalIp)
 				return
@@ -191,16 +190,17 @@ func Write(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Con
 
 				_ = json.Unmarshal([]byte(c.Payload), tcpStatusChange)
 				if tcpStatusChange.Type == 1 {
-					results["status"] = true
+					results["status"] = constant.Failed
 					results["is_stop"] = true
 					Insert(mongoCollection, results, middlewares.LocalIp)
 					return
 				}
 			case <-ticker.C:
 				msg := []byte(tcp.SendMessage)
+				results["request_body"] = tcp.SendMessage
 				if conn == nil {
 					conn, err = ReConnection(tcp, connChan)
-					results["status"] = false
+					results["status"] = constant.Failed
 					results["is_stop"] = true
 					results["response_body"] = err.Error()
 					Insert(mongoCollection, results, middlewares.LocalIp)
@@ -210,15 +210,14 @@ func Write(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Con
 				case conn = <-connChan:
 					_, err := conn.Write(msg)
 					if err != nil {
-						results["status"] = false
+						results["status"] = constant.Failed
 						results["is_stop"] = true
 						results["response_body"] = err.Error()
 						Insert(mongoCollection, results, middlewares.LocalIp)
 						break
 					}
-					results["request_body"] = tcp.SendMessage
 					if err != nil {
-						results["status"] = false
+						results["status"] = constant.Failed
 						results["request_body"] = err.Error()
 					} else {
 						results["status"] = true
@@ -229,19 +228,15 @@ func Write(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Con
 				default:
 					_, err := conn.Write(msg)
 					if err != nil {
-						results["status"] = false
+						results["status"] = constant.Failed
 						results["is_stop"] = true
 						results["response_body"] = err.Error()
 						Insert(mongoCollection, results, middlewares.LocalIp)
 						break
-					}
-					results["request_body"] = tcp.SendMessage
-					if err != nil {
-						results["status"] = false
-						results["request_body"] = err.Error()
 					} else {
-						results["status"] = true
+						results["status"] = constant.Success
 					}
+
 					results["is_stop"] = false
 					Insert(mongoCollection, results, middlewares.LocalIp)
 					//log.Logger.Debug(fmt.Sprintf("tcp写入消息: %s", tcp.SendMessage))
@@ -250,13 +245,13 @@ func Write(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Con
 			}
 		}
 	case constant.ConnectionAndSend:
-		connectionResults["status"] = true
+		connectionResults["status"] = constant.Success
 		connectionResults["is_stop"] = false
 		Insert(mongoCollection, connectionResults, middlewares.LocalIp)
 		for {
 			select {
 			case <-timeAfter:
-				results["status"] = true
+				results["status"] = constant.Success
 				results["is_stop"] = true
 				Insert(mongoCollection, results, middlewares.LocalIp)
 				return
@@ -264,16 +259,17 @@ func Write(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Con
 				_ = json.Unmarshal([]byte(c.Payload), tcpStatusChange)
 				switch tcpStatusChange.Type {
 				case constant.UnConnection:
-					results["status"] = true
+					results["status"] = constant.Success
 					results["is_stop"] = true
 					Insert(mongoCollection, results, middlewares.LocalIp)
 					return
 				case constant.SendMessage:
 					tcp.SendMessage = tcpStatusChange.Message
+					results["request_body"] = tcp.SendMessage
 					msg := []byte(tcp.SendMessage)
 					if conn == nil {
 						conn, err = ReConnection(tcp, connChan)
-						results["status"] = false
+						results["status"] = constant.Failed
 						results["is_stop"] = true
 						results["response_body"] = err.Error()
 						Insert(mongoCollection, results, middlewares.LocalIp)
@@ -283,36 +279,28 @@ func Write(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Con
 					case conn = <-connChan:
 						_, err := conn.Write(msg)
 						if err != nil {
-							results["status"] = false
+							results["status"] = constant.Failed
 							results["is_stop"] = true
 							results["response_body"] = err.Error()
 							Insert(mongoCollection, results, middlewares.LocalIp)
 							break
-						}
-						results["request_body"] = tcp.SendMessage
-						if err != nil {
-							results["status"] = false
-							results["request_body"] = err.Error()
 						} else {
-							results["status"] = true
+							results["status"] = constant.Success
 						}
 						results["is_stop"] = false
 						Insert(mongoCollection, results, middlewares.LocalIp)
 					default:
 						_, err := conn.Write(msg)
+						responseTime := time.Now().Format("2006-01-02 15:04:05")
+						results["response_time"] = responseTime
 						if err != nil {
-							results["status"] = false
+							results["status"] = constant.Failed
 							results["is_stop"] = true
 							results["response_body"] = err.Error()
 							Insert(mongoCollection, results, middlewares.LocalIp)
 							break
-						}
-						results["request_body"] = tcp.SendMessage
-						if err != nil {
-							results["status"] = false
-							results["request_body"] = err.Error()
 						} else {
-							results["status"] = true
+							results["status"] = constant.Success
 						}
 						results["is_stop"] = false
 						Insert(mongoCollection, results, middlewares.LocalIp)
@@ -323,10 +311,11 @@ func Write(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Con
 			}
 		}
 	default:
-
-		results["status"] = false
+		results["status"] = constant.Success
 		results["is_stop"] = true
 		results["response_body"] = err.Error()
+		responseTime := time.Now().Format("2006-01-02 15:04:05")
+		results["response_time"] = responseTime
 		Insert(mongoCollection, results, middlewares.LocalIp)
 		return
 	}
@@ -345,15 +334,19 @@ func Read(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Conn
 	for {
 		select {
 		case <-timeAfter:
-			results["status"] = true
+			results["status"] = constant.Success
 			results["is_stop"] = true
+			responseTime := time.Now().Format("2006-01-02 15:04:05")
+			results["response_time"] = responseTime
 			Insert(mongoCollection, results, middlewares.LocalIp)
 			return
 		case c := <-statusCh:
 			_ = json.Unmarshal([]byte(c.Payload), tcpStatusChange)
 			switch tcpStatusChange.Type {
 			case 1:
-				results["status"] = true
+				responseTime := time.Now().Format("2006-01-02 15:04:05")
+				results["response_time"] = responseTime
+				results["status"] = constant.Success
 				results["is_stop"] = true
 				Insert(mongoCollection, results, middlewares.LocalIp)
 				return
@@ -362,17 +355,21 @@ func Read(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Conn
 			if conn == nil {
 				conn, err = ReConnection(tcp, connChan)
 				if err != nil {
-					results["status"] = false
+					results["status"] = constant.Failed
 					results["is_stop"] = true
 					results["response_body"] = err.Error()
+					responseTime := time.Now().Format("2006-01-02 15:04:05")
+					results["response_time"] = responseTime
 					Insert(mongoCollection, results, middlewares.LocalIp)
 				}
 			}
 			select {
 			case conn = <-connChan:
 				n, err := conn.Read(buf)
+				responseTime := time.Now().Format("2006-01-02 15:04:05")
+				results["response_time"] = responseTime
 				if err != nil {
-					results["status"] = false
+					results["status"] = constant.Failed
 					results["response_body"] = err.Error()
 					results["is_stop"] = false
 					Insert(mongoCollection, results, middlewares.LocalIp)
@@ -389,14 +386,17 @@ func Read(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Conn
 				Insert(mongoCollection, results, middlewares.LocalIp)
 			default:
 				n, err := conn.Read(buf)
+				responseTime := time.Now().Format("2006-01-02 15:04:05")
+				results["response_time"] = responseTime
 				if err != nil {
-					results["status"] = false
+					results["status"] = constant.Failed
 					results["response_body"] = err.Error()
 					results["is_stop"] = false
+
 					Insert(mongoCollection, results, middlewares.LocalIp)
 					break
 				} else {
-					results["status"] = true
+					results["status"] = constant.Success
 				}
 				var msg string
 				if n != 0 {

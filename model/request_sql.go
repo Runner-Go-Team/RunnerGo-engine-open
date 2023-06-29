@@ -50,6 +50,7 @@ func (sql *SQLDetail) Send(debug string, debugMsg map[string]interface{}, mongoC
 	isSucceed = true
 	sql.SqlString = strings.ToLower(strings.TrimSpace(strings.NewReplacer("\r", " ", "\n", " ").Replace(sql.SqlString)))
 	db, result, err, startTime, endTime, requestTime := sql.Request()
+	responseTime := endTime.Format("2006-01-02 15:04:05")
 	defer func() {
 		if db != nil {
 			db.Close()
@@ -83,6 +84,7 @@ func (sql *SQLDetail) Send(debug string, debugMsg map[string]interface{}, mongoC
 		}
 		debugMsg["request_body"] = sql.SqlString
 		debugMsg["regex"] = regex
+		debugMsg["response_time"] = responseTime
 		Insert(mongoCollection, debugMsg, middlewares.LocalIp)
 	case constant.OnlyError:
 		if isSucceed {
@@ -99,6 +101,7 @@ func (sql *SQLDetail) Send(debug string, debugMsg map[string]interface{}, mongoC
 		}
 		debugMsg["request_body"] = sql.SqlString
 		debugMsg["regex"] = regex
+		debugMsg["response_time"] = responseTime
 		Insert(mongoCollection, debugMsg, middlewares.LocalIp)
 	case constant.OnlySuccess:
 		if !isSucceed {
@@ -115,6 +118,7 @@ func (sql *SQLDetail) Send(debug string, debugMsg map[string]interface{}, mongoC
 		}
 		debugMsg["request_body"] = sql.SqlString
 		debugMsg["regex"] = regex
+		debugMsg["response_time"] = responseTime
 		Insert(mongoCollection, debugMsg, middlewares.LocalIp)
 	}
 	return
