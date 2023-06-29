@@ -108,6 +108,9 @@ func (ws WebsocketDetail) Request(debug string, debugMsg map[string]interface{},
 	recvResults["type"] = "recv"
 	wsConfig := ws.WsConfig
 	ws.Url = strings.TrimSpace(ws.Url)
+	recvResults["request_url"] = ws.Url
+	writeResults["request_url"] = ws.Url
+	connectionResults["request_url"] = ws.Url
 	for i := 0; i < wsConfig.RetryNum; i++ {
 		conn, _, err = websocket.DefaultDialer.Dial(ws.Url, headers)
 		if conn != nil {

@@ -1514,7 +1514,8 @@ func insertDebugMsg(regex []map[string]interface{}, debugMsg map[string]interfac
 	}
 }
 
-func makeDebugMsg(regex []map[string]interface{}, debugMsg map[string]interface{}, resp *fasthttp.Response, req *fasthttp.Request, requestTime uint64, responseTime string, receivedBytes float64, errMsg, str string, err error, isSucceed bool, assertionMsgList []AssertionMsg, assertNum, assertFailedNum int) {
+func makeDebugMsg(regex []map[string]interface{}, debugMsg map[string]interface{}, resp *fasthttp.Response, req *fasthttp.Request,
+	requestTime uint64, responseTime string, receivedBytes float64, errMsg, str string, err error, isSucceed bool, assertionMsgList []AssertionMsg, assertNum, assertFailedNum int) {
 
 	if req.Header.Method() != nil {
 		debugMsg["method"] = string(req.Header.Method())
@@ -1524,6 +1525,7 @@ func makeDebugMsg(regex []map[string]interface{}, debugMsg map[string]interface{
 	debugMsg["request_code"] = resp.StatusCode()
 	debugMsg["request_header"] = req.Header.String()
 	debugMsg["response_time"] = responseTime
+	debugMsg["request_url"] = req.URI().String()
 	if string(req.Body()) != "" {
 		var errBody error
 		debugMsg["request_body"], errBody = url.QueryUnescape(string(req.Body()))

@@ -80,7 +80,7 @@ func (sql *SQLDetail) Send(debug string, debugMsg map[string]interface{}, mongoC
 		debugMsg["status"] = constant.Success
 		by, _ := json.Marshal(sql.SqlDatabaseInfo)
 		if by != nil {
-			debugMsg["database"] = string(by)
+			debugMsg["request_url"] = string(by)
 		}
 		debugMsg["request_body"] = sql.SqlString
 		debugMsg["regex"] = regex
@@ -97,7 +97,7 @@ func (sql *SQLDetail) Send(debug string, debugMsg map[string]interface{}, mongoC
 		debugMsg["status"] = constant.Success
 		by, _ := json.Marshal(sql.SqlDatabaseInfo)
 		if by != nil {
-			debugMsg["database"] = string(by)
+			debugMsg["request_url"] = string(by)
 		}
 		debugMsg["request_body"] = sql.SqlString
 		debugMsg["regex"] = regex
@@ -114,7 +114,7 @@ func (sql *SQLDetail) Send(debug string, debugMsg map[string]interface{}, mongoC
 		debugMsg["status"] = constant.Success
 		by, _ := json.Marshal(sql.SqlDatabaseInfo)
 		if by != nil {
-			debugMsg["database"] = string(by)
+			debugMsg["request_url"] = string(by)
 		}
 		debugMsg["request_body"] = sql.SqlString
 		debugMsg["regex"] = regex

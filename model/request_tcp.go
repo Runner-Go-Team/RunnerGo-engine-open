@@ -68,6 +68,9 @@ func (tcp TCPDetail) Send(debug string, debugMsg map[string]interface{}, mongoCo
 	connectionResults["request_type"] = debugMsg["request_type"]
 
 	tcp.Url = strings.TrimSpace(tcp.Url)
+	recvResults["request_url"] = tcp.Url
+	writeResults["request_url"] = tcp.Url
+	connectionResults["request_url"] = tcp.Url
 	for i := 0; i < tcp.TcpConfig.RetryNum; i++ {
 		conn, err = NewTcpClient(tcp.Url)
 		if conn != nil {
