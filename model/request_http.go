@@ -1532,7 +1532,6 @@ func makeDebugMsg(regex []map[string]interface{}, debugMsg map[string]interface{
 		if errBody != nil {
 			debugMsg["request_body"] = string(req.Body())
 		}
-		log.Logger.Debug()
 	} else {
 		debugMsg["request_body"] = str
 	}
