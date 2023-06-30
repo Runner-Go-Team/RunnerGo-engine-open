@@ -101,7 +101,6 @@ func DisposeScene(wg, sceneWg *sync.WaitGroup, runType string, scene model.Scene
 func disposePlanNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.Map, event model.Event, wg, sceneWg *sync.WaitGroup, reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestCollection *mongo.Collection, disOptions ...int64) {
 	defer wg.Done()
 	defer sceneWg.Done()
-	log.Logger.Debug("id:          ", disOptions[0])
 
 	var (
 		goroutineId int64 // 启动的第几个协程
@@ -213,6 +212,7 @@ func disposePlanNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.Ma
 		scene.Configuration.SceneVariable.SupToSub(event.Api.ApiVariable)
 		event.Api.ApiVariable.InitReplace()
 	}
+	log.Logger.Debug("id:          ", disOptions[0])
 	switch event.Type {
 	case constant.RequestType:
 		event.Api.Uuid = scene.Uuid
