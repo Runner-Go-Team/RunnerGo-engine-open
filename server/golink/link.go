@@ -212,7 +212,7 @@ func disposePlanNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.Ma
 		scene.Configuration.SceneVariable.SupToSub(event.Api.ApiVariable)
 		event.Api.ApiVariable.InitReplace()
 	}
-	log.Logger.Debug("id:          ", disOptions[0])
+
 	switch event.Type {
 	case constant.RequestType:
 		event.Api.Uuid = scene.Uuid
@@ -582,7 +582,7 @@ func DisposeRequest(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.
 	debugMsg["api_name"] = api.Name
 	debugMsg["next_list"] = event.NextList
 	debugMsg["request_type"] = api.TargetType
-
+	log.Logger.Debug("id:          ", options[0])
 	switch api.TargetType {
 	case constant.FormTypeHTTP:
 		api.Request.PreUrl = strings.TrimSpace(api.Request.PreUrl)
@@ -591,6 +591,7 @@ func DisposeRequest(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.
 		if api.ApiVariable != nil {
 			api.GlobalToRequest()
 		}
+		log.Logger.Debug("id33333333:          ", options[0])
 		// 请求中所有的变量替换成真正的值
 		api.Request.ReplaceQueryParameterizes(globalVar)
 
