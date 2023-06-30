@@ -101,9 +101,7 @@ func ConcurrentModel(wg *sync.WaitGroup, scene model.Scene, configuration *model
 
 					}(i, concurrent, configuration, scene)
 				}
-				log.Logger.Debug("11111111111111")
 				currentWg.Wait()
-				log.Logger.Debug("222222222222")
 			}
 
 		}

@@ -71,7 +71,6 @@ func DisposeScene(wg, sceneWg *sync.WaitGroup, runType string, scene model.Scene
 			node.Uuid = scene.Uuid
 			wg.Add(1)
 			sceneWg.Add(1)
-			log.Logger.Debug("333333333333333")
 			switch runType {
 			case constant.PlanType:
 				node.TeamId = reportMsg.TeamId
@@ -93,7 +92,9 @@ func DisposeScene(wg, sceneWg *sync.WaitGroup, runType string, scene model.Scene
 
 			}
 		}
+		log.Logger.Debug("11111111111111")
 		sceneWg.Wait()
+		log.Logger.Debug("22222222222222")
 	}
 
 }
