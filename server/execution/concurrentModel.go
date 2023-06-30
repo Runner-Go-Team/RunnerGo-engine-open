@@ -98,14 +98,13 @@ func ConcurrentModel(wg *sync.WaitGroup, scene model.Scene, configuration *model
 						sceneWg.Wait()
 						concurrentMap.Delete(concurrentId)
 						currentWg.Done()
+						log.Logger.Debug("id:      ", concurrentId, "      id,")
 						wg.Done()
 						log.Logger.Debug("id:      ", concurrentId)
 
 					}(i, concurrent, configuration, scene)
 				}
-				log.Logger.Debug("11111111111111111111")
 				currentWg.Wait()
-				log.Logger.Debug("22222222222222222222")
 			}
 
 		}

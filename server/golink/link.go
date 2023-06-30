@@ -88,6 +88,7 @@ func DisposeScene(wg, sceneWg *sync.WaitGroup, runType string, scene model.Scene
 			default:
 				wg.Done()
 				sceneWg.Done()
+
 			}
 		}
 		sceneWg.Wait()
@@ -97,7 +98,6 @@ func DisposeScene(wg, sceneWg *sync.WaitGroup, runType string, scene model.Scene
 
 // disposePlanNode 处理node节点
 func disposePlanNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.Map, event model.Event, wg, sceneWg *sync.WaitGroup, reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestCollection *mongo.Collection, disOptions ...int64) {
-	defer fmt.Println("done:    ", disOptions[0])
 	defer wg.Done()
 	defer sceneWg.Done()
 
