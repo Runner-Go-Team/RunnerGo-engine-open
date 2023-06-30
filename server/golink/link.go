@@ -582,7 +582,6 @@ func DisposeRequest(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.
 	debugMsg["api_name"] = api.Name
 	debugMsg["next_list"] = event.NextList
 	debugMsg["request_type"] = api.TargetType
-	log.Logger.Debug("id1111111111:          ", options[0])
 	switch api.TargetType {
 	case constant.FormTypeHTTP:
 		api.Request.PreUrl = strings.TrimSpace(api.Request.PreUrl)
