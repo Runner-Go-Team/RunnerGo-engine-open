@@ -92,9 +92,7 @@ func DisposeScene(wg, sceneWg *sync.WaitGroup, runType string, scene model.Scene
 
 			}
 		}
-		log.Logger.Debug("11111111111111")
 		sceneWg.Wait()
-		log.Logger.Debug("22222222222222")
 	}
 
 }
@@ -103,6 +101,7 @@ func DisposeScene(wg, sceneWg *sync.WaitGroup, runType string, scene model.Scene
 func disposePlanNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.Map, event model.Event, wg, sceneWg *sync.WaitGroup, reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestCollection *mongo.Collection, disOptions ...int64) {
 	defer wg.Done()
 	defer sceneWg.Done()
+	log.Logger.Debug("id:          ", disOptions[0])
 
 	var (
 		goroutineId int64 // 启动的第几个协程
@@ -328,6 +327,7 @@ func disposePlanNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.Ma
 	case constant.RedisType:
 
 	}
+	log.Logger.Debug("id2222222222:          ", disOptions[0])
 }
 
 func disposeDebugNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.Map, event model.Event, wg, sceneWg *sync.WaitGroup, reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestCollection *mongo.Collection) {
