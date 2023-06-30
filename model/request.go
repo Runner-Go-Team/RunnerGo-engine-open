@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/constant"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/tools"
 	uuid "github.com/satori/go.uuid"
 	"strings"
@@ -29,6 +30,7 @@ type Api struct {
 }
 
 func (api *Api) GlobalToRequest() {
+	log.Logger.Debug("111111111111111")
 	if api.GlobalVariable.Cookie != nil && len(api.GlobalVariable.Cookie.Parameter) > 0 {
 		if api.Request.Cookie == nil {
 			api.Request.Cookie = new(Cookie)
@@ -98,6 +100,7 @@ func (api *Api) GlobalToRequest() {
 
 		}
 	}
+	log.Logger.Debug("2222222222222222")
 
 }
 

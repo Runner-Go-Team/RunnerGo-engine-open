@@ -227,7 +227,6 @@ func (r *Request) ReplaceQueryParameterizes(globalVar *sync.Map) {
 	if globalVar == nil {
 		return
 	}
-	log.Logger.Debug("111111111111111")
 	r.ReplaceUrl(globalVar)
 	r.ReplaceBodyVarForm(globalVar)
 	r.ReplaceQueryVarForm(globalVar)
@@ -235,7 +234,6 @@ func (r *Request) ReplaceQueryParameterizes(globalVar *sync.Map) {
 	r.ReplaceCookieVarForm(globalVar)
 	r.ReplaceAuthVarForm(globalVar)
 	r.ReplaceAssertionVarForm(globalVar)
-	log.Logger.Debug("2222222222222222")
 
 }
 
