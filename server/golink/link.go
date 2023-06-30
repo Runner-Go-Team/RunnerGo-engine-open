@@ -328,7 +328,7 @@ func disposePlanNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.Ma
 	case constant.RedisType:
 
 	}
-	log.Logger.Debug("id2222222222:          ", disOptions[0])
+
 }
 
 func disposeDebugNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.Map, event model.Event, wg, sceneWg *sync.WaitGroup, reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestCollection *mongo.Collection) {
@@ -594,7 +594,7 @@ func DisposeRequest(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.
 		log.Logger.Debug("id33333333333:          ", options[0])
 		// 请求中所有的变量替换成真正的值
 		api.Request.ReplaceQueryParameterizes(globalVar)
-
+		log.Logger.Debug("id22222222222:          ", options[0])
 		isSucceed, errCode, requestTime, sendBytes, receivedBytes, errMsg, startTime, endTime = api.Request.Send(api.Debug, debugMsg, mongoCollection, globalVar)
 	case constant.FormTypeWebSocket:
 		isSucceed, errCode, requestTime, sendBytes, receivedBytes = api.Ws.Send(api.Debug, debugMsg, mongoCollection, globalVar)
