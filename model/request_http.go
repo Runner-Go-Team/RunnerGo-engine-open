@@ -143,7 +143,7 @@ func (r Request) Send(debug string, debugMsg map[string]interface{}, requestColl
 		receivedBytes = float64(len(resp.Body())) / 1024
 	}
 	// 开启debug模式后，将请求响应信息写入到mongodb中
-	if debug != "" && r.Debug != "stop" {
+	if debug == constant.All || debug == constant.OnlySuccess || debug == constant.OnlyError {
 		responseTime := endTime.Format("2006-01-02 15:04:05")
 		insertDebugMsg(regex, debugMsg, resp, req, requestTime, responseTime, receivedBytes, errMsg, debug, str, err, isSucceed, assertionMsgList, assertNum, assertFailedNum)
 		if requestCollection != nil {

@@ -564,7 +564,6 @@ func DisposeRequest(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.
 	//		preposition.Exec()
 	//	}
 	//}
-
 	var debugMsg = make(map[string]interface{})
 	debugMsg["team_id"] = event.TeamId
 	debugMsg["plan_id"] = event.PlanId
