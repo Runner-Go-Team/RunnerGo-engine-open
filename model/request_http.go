@@ -222,10 +222,12 @@ func (r Request) Request() (resp *fasthttp.Response, req *fasthttp.Request, requ
 
 // ReplaceQueryParameterizes 替换query中的变量
 func (r *Request) ReplaceQueryParameterizes(globalVar *sync.Map) {
+
 	// 将全局函数等，添加到api请求中
 	if globalVar == nil {
 		return
 	}
+	log.Logger.Debug("111111111111111")
 	r.ReplaceUrl(globalVar)
 	r.ReplaceBodyVarForm(globalVar)
 	r.ReplaceQueryVarForm(globalVar)
@@ -233,6 +235,7 @@ func (r *Request) ReplaceQueryParameterizes(globalVar *sync.Map) {
 	r.ReplaceCookieVarForm(globalVar)
 	r.ReplaceAuthVarForm(globalVar)
 	r.ReplaceAssertionVarForm(globalVar)
+	log.Logger.Debug("2222222222222222")
 
 }
 

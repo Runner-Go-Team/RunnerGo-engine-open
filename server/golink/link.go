@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/constant"
-	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/tools"
@@ -591,10 +590,9 @@ func DisposeRequest(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.
 		if api.ApiVariable != nil {
 			api.GlobalToRequest()
 		}
-		log.Logger.Debug("id33333333333:          ", options[0])
 		// 请求中所有的变量替换成真正的值
 		api.Request.ReplaceQueryParameterizes(globalVar)
-		log.Logger.Debug("id22222222222:          ", options[0])
+
 		isSucceed, errCode, requestTime, sendBytes, receivedBytes, errMsg, startTime, endTime = api.Request.Send(api.Debug, debugMsg, mongoCollection, globalVar)
 	case constant.FormTypeWebSocket:
 		isSucceed, errCode, requestTime, sendBytes, receivedBytes = api.Ws.Send(api.Debug, debugMsg, mongoCollection, globalVar)
