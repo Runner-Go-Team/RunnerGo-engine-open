@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/constant"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/tools"
@@ -70,6 +71,7 @@ func DisposeScene(wg, sceneWg *sync.WaitGroup, runType string, scene model.Scene
 			node.Uuid = scene.Uuid
 			wg.Add(1)
 			sceneWg.Add(1)
+			log.Logger.Debug("333333333333333")
 			switch runType {
 			case constant.PlanType:
 				node.TeamId = reportMsg.TeamId
