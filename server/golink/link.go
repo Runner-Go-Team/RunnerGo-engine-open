@@ -105,6 +105,7 @@ func disposePlanNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.Ma
 	var (
 		goroutineId int64 // 启动的第几个协程
 	)
+	goroutineId = disOptions[0]
 	var eventResult = model.EventResult{}
 
 	// 如果该事件上一级有事件，那么就一直查询上一级事件的状态，直到上一级所有事件全部完成
