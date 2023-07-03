@@ -18,7 +18,7 @@ type Api struct {
 	TeamId         string          `json:"team_id"`
 	TargetType     string          `json:"target_type"` // api/webSocket/tcp/grpc
 	Debug          string          `json:"debug"`       // 是否开启Debug模式
-	Request        Request         `json:"request"`
+	Request        RequestHttp     `json:"request"`
 	SQL            SQLDetail       `json:"sql_detail"`
 	TCP            TCPDetail       `json:"tcp_detail"`
 	Ws             WebsocketDetail `json:"ws_detail"`

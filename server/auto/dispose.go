@@ -104,12 +104,16 @@ func DisposeAutoPlan(plan *auto.Plan, c *gin.Context) {
 		}
 
 		sqlMap.Range(func(key, value any) bool {
+			if _, ok := p.VariableNames.VarMapLists[key.(string)]; !ok {
+				p.VariableNames.VarMapLists[key.(string)] = new(model.VarMapList)
+			}
 			switch fmt.Sprintf("%T", value) {
 			case "string":
 				p.VariableNames.VarMapLists[key.(string)].Value = append(p.VariableNames.VarMapLists[key.(string)].Value, value.(string))
 			case "[]string":
 				p.VariableNames.VarMapLists[key.(string)].Value = append(p.VariableNames.VarMapLists[key.(string)].Value, value.([]string)...)
 			}
+
 			return true
 		})
 	}

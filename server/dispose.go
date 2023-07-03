@@ -200,12 +200,16 @@ func TaskDecomposition(plan *model.Plan, wg *sync.WaitGroup, resultDataMsgCh cha
 	}
 
 	sqlMap.Range(func(key, value any) bool {
+		if _, ok := p.VariableNames.VarMapLists[key.(string)]; !ok {
+			p.VariableNames.VarMapLists[key.(string)] = new(model.VarMapList)
+		}
 		switch fmt.Sprintf("%T", value) {
 		case "string":
 			p.VariableNames.VarMapLists[key.(string)].Value = append(p.VariableNames.VarMapLists[key.(string)].Value, value.(string))
 		case "[]string":
 			p.VariableNames.VarMapLists[key.(string)].Value = append(p.VariableNames.VarMapLists[key.(string)].Value, value.([]string)...)
 		}
+
 		return true
 	})
 
@@ -346,12 +350,16 @@ func DebugScene(scene model.Scene) {
 	}
 
 	sqlMap.Range(func(key, value any) bool {
+		if _, ok := p.VariableNames.VarMapLists[key.(string)]; !ok {
+			p.VariableNames.VarMapLists[key.(string)] = new(model.VarMapList)
+		}
 		switch fmt.Sprintf("%T", value) {
 		case "string":
 			p.VariableNames.VarMapLists[key.(string)].Value = append(p.VariableNames.VarMapLists[key.(string)].Value, value.(string))
 		case "[]string":
 			p.VariableNames.VarMapLists[key.(string)].Value = append(p.VariableNames.VarMapLists[key.(string)].Value, value.([]string)...)
 		}
+
 		return true
 	})
 

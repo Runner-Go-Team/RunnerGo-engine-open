@@ -49,7 +49,7 @@ type HttpApiSetup struct {
 	MaxConnWaitTimeout  int64  `json:"max_conn_wait_timeout"`
 }
 
-type Request struct {
+type RequestHttp struct {
 	PreUrl       string               `json:"pre_url"`
 	URL          string               `json:"url"`
 	Method       string               `json:"method"` // 方法 GET/POST/PUT
@@ -71,7 +71,7 @@ type Body struct {
 	Parameter []*VarForm `json:"parameter"`
 }
 
-func (r Request) Send(debug string, debugMsg map[string]interface{}, requestCollection *mongo.Collection, globalVar *sync.Map) (bool, int64, uint64, float64, float64, string, time.Time, time.Time) {
+func (r RequestHttp) Send(debug string, debugMsg map[string]interface{}, requestCollection *mongo.Collection, globalVar *sync.Map) (bool, int64, uint64, float64, float64, string, time.Time, time.Time) {
 	var (
 		isSucceed       = true
 		errCode         = constant.NoError
@@ -160,7 +160,7 @@ var (
 	once            sync.Once
 )
 
-func (r Request) Request() (resp *fasthttp.Response, req *fasthttp.Request, requestTime uint64, sendBytes float64, err error, str string, startTime, endTime time.Time) {
+func (r RequestHttp) Request() (resp *fasthttp.Response, req *fasthttp.Request, requestTime uint64, sendBytes float64, err error, str string, startTime, endTime time.Time) {
 	var client *fasthttp.Client
 
 	req = fasthttp.AcquireRequest()
@@ -230,7 +230,7 @@ func (r Request) Request() (resp *fasthttp.Response, req *fasthttp.Request, requ
 }
 
 // ReplaceQueryParameterizes 替换query中的变量
-func (r *Request) ReplaceQueryParameterizes(globalVar *sync.Map) {
+func (r *RequestHttp) ReplaceQueryParameterizes(globalVar *sync.Map) {
 
 	// 将全局函数等，添加到api请求中
 	if globalVar == nil {
@@ -246,7 +246,7 @@ func (r *Request) ReplaceQueryParameterizes(globalVar *sync.Map) {
 
 }
 
-func (r *Request) ReplaceUrl(globalVar *sync.Map) {
+func (r *RequestHttp) ReplaceUrl(globalVar *sync.Map) {
 	urls := tools.FindAllDestStr(r.URL, "{{(.*?)}}")
 	if urls == nil {
 		return
@@ -283,7 +283,7 @@ func (r *Request) ReplaceUrl(globalVar *sync.Map) {
 	}
 }
 
-func (r *Request) ReplaceBodyVarForm(globalVar *sync.Map) {
+func (r *RequestHttp) ReplaceBodyVarForm(globalVar *sync.Map) {
 	if r.Body == nil {
 		return
 	}
@@ -444,7 +444,7 @@ func (r *Request) ReplaceBodyVarForm(globalVar *sync.Map) {
 
 }
 
-func (r *Request) ReplaceHeaderVarForm(globalVar *sync.Map) {
+func (r *RequestHttp) ReplaceHeaderVarForm(globalVar *sync.Map) {
 	if r.Header == nil || r.Header.Parameter == nil {
 		return
 	}
@@ -499,7 +499,7 @@ func (r *Request) ReplaceHeaderVarForm(globalVar *sync.Map) {
 	}
 }
 
-func (r *Request) ReplaceCookieVarForm(globalVar *sync.Map) {
+func (r *RequestHttp) ReplaceCookieVarForm(globalVar *sync.Map) {
 	if r.Cookie == nil || r.Cookie.Parameter == nil {
 		return
 	}
@@ -559,7 +559,7 @@ func (r *Request) ReplaceCookieVarForm(globalVar *sync.Map) {
 	}
 }
 
-func (r *Request) ReplaceQueryVarForm(globalVar *sync.Map) {
+func (r *RequestHttp) ReplaceQueryVarForm(globalVar *sync.Map) {
 	if r.Query == nil || r.Query.Parameter == nil {
 		return
 	}
@@ -617,7 +617,7 @@ func (r *Request) ReplaceQueryVarForm(globalVar *sync.Map) {
 
 }
 
-func (r *Request) ReplaceAuthVarForm(globalVar *sync.Map) {
+func (r *RequestHttp) ReplaceAuthVarForm(globalVar *sync.Map) {
 
 	if r.Auth == nil {
 		return
@@ -755,7 +755,7 @@ func (r *Request) ReplaceAuthVarForm(globalVar *sync.Map) {
 	}
 }
 
-func (r *Request) ReplaceAssertionVarForm(globalVar *sync.Map) {
+func (r *RequestHttp) ReplaceAssertionVarForm(globalVar *sync.Map) {
 	if r.Assert == nil || len(r.Assert) <= 0 {
 		return
 	}
