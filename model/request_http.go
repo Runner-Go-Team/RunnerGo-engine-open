@@ -85,9 +85,8 @@ func (r Request) Send(debug string, debugMsg map[string]interface{}, requestColl
 		r.HttpApiSetup = new(HttpApiSetup)
 	}
 
-	log.Logger.Debug("111111111111111")
 	resp, req, requestTime, sendBytes, err, str, startTime, endTime := r.Request()
-	log.Logger.Debug("2222222222222222")
+
 	defer fasthttp.ReleaseResponse(resp) // 用完需要释放资源
 	defer fasthttp.ReleaseRequest(req)
 	var regex []map[string]interface{}
@@ -171,7 +170,7 @@ func (r Request) Request() (resp *fasthttp.Response, req *fasthttp.Request, requ
 	} else {
 		client = fastClient(r.HttpApiSetup, r.Auth)
 	}
-
+	log.Logger.Debug("111111111111111")
 	// set method
 	req.Header.SetMethod(r.Method)
 	// set header
@@ -205,6 +204,7 @@ func (r Request) Request() (resp *fasthttp.Response, req *fasthttp.Request, requ
 
 	// set auth
 	r.Auth.SetAuth(req)
+	log.Logger.Debug("222222222222222")
 	resp = fasthttp.AcquireResponse()
 	startTime = time.Now()
 	// 发送请求
