@@ -121,7 +121,7 @@ func ExecutionPlan(plan *model.Plan, kafkaProducer sarama.SyncProducer, mongoCli
 	}
 	if scene.Configuration.ParameterizedFile.VariableNames == nil {
 		scene.Configuration.ParameterizedFile.VariableNames = new(model.VariableNames)
-		scene.Configuration.ParameterizedFile.VariableNames.VarMapList = make(map[string][]string)
+		scene.Configuration.ParameterizedFile.VariableNames.VarMapLists = make(map[string]*model.VarMapList)
 	}
 	if scene.Configuration.SceneVariable == nil {
 		scene.Configuration.SceneVariable = new(model.GlobalVariable)
@@ -178,13 +178,12 @@ func TaskDecomposition(plan *model.Plan, wg *sync.WaitGroup, resultDataMsgCh cha
 	if scene.Configuration.ParameterizedFile.VariableNames == nil {
 		scene.Configuration.ParameterizedFile.VariableNames = new(model.VariableNames)
 	}
-	if scene.Configuration.ParameterizedFile.VariableNames.VarMapList == nil {
-		scene.Configuration.ParameterizedFile.VariableNames.VarMapList = make(map[string][]string)
+	if scene.Configuration.ParameterizedFile.VariableNames.VarMapLists == nil {
+		scene.Configuration.ParameterizedFile.VariableNames.VarMapLists = make(map[string]*model.VarMapList)
 	}
 	configuration := scene.Configuration
 	if configuration.ParameterizedFile == nil {
 		configuration.ParameterizedFile = new(model.ParameterizedFile)
-
 	}
 
 	p := configuration.ParameterizedFile
@@ -201,19 +200,14 @@ func TaskDecomposition(plan *model.Plan, wg *sync.WaitGroup, resultDataMsgCh cha
 	}
 
 	sqlMap.Range(func(key, value any) bool {
-		log.Logger.Debug(fmt.Sprintf("key1: %s,   value1: %v", key, value))
 		switch fmt.Sprintf("%T", value) {
 		case "string":
-			p.VariableNames.VarMapList[key.(string)] = append(p.VariableNames.VarMapList[key.(string)], value.(string))
+			p.VariableNames.VarMapLists[key.(string)].Value = append(p.VariableNames.VarMapLists[key.(string)].Value, value.(string))
 		case "[]string":
-			p.VariableNames.VarMapList[key.(string)] = append(p.VariableNames.VarMapList[key.(string)], value.([]string)...)
+			p.VariableNames.VarMapLists[key.(string)].Value = append(p.VariableNames.VarMapLists[key.(string)].Value, value.([]string)...)
 		}
 		return true
 	})
-
-	for k, v := range p.VariableNames.VarMapList {
-		log.Logger.Debug(fmt.Sprintf("key: %s,   value: %v", k, v))
-	}
 
 	var reportMsg = &model.ResultDataMsg{}
 	if plan.MachineNum <= 0 {
@@ -298,7 +292,7 @@ func DebugScene(scene model.Scene) {
 	}
 	if scene.Configuration.ParameterizedFile.VariableNames == nil {
 		scene.Configuration.ParameterizedFile.VariableNames = new(model.VariableNames)
-		scene.Configuration.ParameterizedFile.VariableNames.VarMapList = make(map[string][]string)
+		scene.Configuration.ParameterizedFile.VariableNames.VarMapLists = make(map[string]*model.VarMapList)
 	}
 	if scene.Configuration.SceneVariable == nil {
 		scene.Configuration.SceneVariable = new(model.GlobalVariable)
@@ -354,9 +348,9 @@ func DebugScene(scene model.Scene) {
 	sqlMap.Range(func(key, value any) bool {
 		switch fmt.Sprintf("%T", value) {
 		case "string":
-			p.VariableNames.VarMapList[key.(string)] = append(p.VariableNames.VarMapList[key.(string)], value.(string))
+			p.VariableNames.VarMapLists[key.(string)].Value = append(p.VariableNames.VarMapLists[key.(string)].Value, value.(string))
 		case "[]string":
-			p.VariableNames.VarMapList[key.(string)] = append(p.VariableNames.VarMapList[key.(string)], value.([]string)...)
+			p.VariableNames.VarMapLists[key.(string)].Value = append(p.VariableNames.VarMapLists[key.(string)].Value, value.([]string)...)
 		}
 		return true
 	})
@@ -411,9 +405,9 @@ func DebugApi(debugApi model.Api) {
 			}
 			debugApi.Configuration.ParameterizedFile.UseFile()
 
-			if debugApi.Configuration.ParameterizedFile.VariableNames.VarMapList != nil {
-				for k, v := range debugApi.Configuration.ParameterizedFile.VariableNames.VarMapList {
-					globalVar.Store(k, v[0])
+			if debugApi.Configuration.ParameterizedFile.VariableNames.VarMapLists != nil {
+				for k, v := range debugApi.Configuration.ParameterizedFile.VariableNames.VarMapLists {
+					globalVar.Store(k, v.Value[0])
 				}
 			}
 		}

@@ -88,14 +88,30 @@ func DisposeAutoPlan(plan *auto.Plan, c *gin.Context) {
 		if scene.Configuration.ParameterizedFile.VariableNames == nil {
 			scene.Configuration.ParameterizedFile.VariableNames = new(model.VariableNames)
 		}
-		if scene.Configuration.ParameterizedFile.VariableNames.VarMapList == nil {
-			scene.Configuration.ParameterizedFile.VariableNames.VarMapList = make(map[string][]string)
+		if scene.Configuration.ParameterizedFile.VariableNames.VarMapLists == nil {
+			scene.Configuration.ParameterizedFile.VariableNames.VarMapLists = make(map[string]*model.VarMapList)
 		}
-		if scene.Configuration.ParameterizedFile != nil {
-			p := scene.Configuration.ParameterizedFile
-			p.VariableNames.Mu = sync.Mutex{}
-			p.UseFile()
+
+		p := scene.Configuration.ParameterizedFile
+		p.VariableNames.Mu = sync.Mutex{}
+		p.UseFile()
+
+		var sqlMap = new(sync.Map)
+		if scene.Prepositions != nil && len(scene.Prepositions) > 0 {
+			for _, preposition := range scene.Prepositions {
+				preposition.Exec(scene, collection, sqlMap)
+			}
 		}
+
+		sqlMap.Range(func(key, value any) bool {
+			switch fmt.Sprintf("%T", value) {
+			case "string":
+				p.VariableNames.VarMapLists[key.(string)].Value = append(p.VariableNames.VarMapLists[key.(string)].Value, value.(string))
+			case "[]string":
+				p.VariableNames.VarMapLists[key.(string)].Value = append(p.VariableNames.VarMapLists[key.(string)].Value, value.([]string)...)
+			}
+			return true
+		})
 	}
 
 	// 设置接收数据缓存

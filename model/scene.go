@@ -40,20 +40,20 @@ type Configuration struct {
 
 // VarToSceneKV 使用数据
 func (c *Configuration) VarToSceneKV() []*KV {
-	if c.ParameterizedFile.VariableNames.VarMapList == nil {
+	if c.ParameterizedFile.VariableNames.VarMapLists == nil {
 		return nil
 	}
 	var kvList []*KV
-	for k, v := range c.ParameterizedFile.VariableNames.VarMapList {
-		if c.ParameterizedFile.VariableNames.Index >= len(v) {
-			c.ParameterizedFile.VariableNames.Index = 0
+	for k, v := range c.ParameterizedFile.VariableNames.VarMapLists {
+		if v.Index >= len(v.Value) {
+			v.Index = 0
 		}
 		var kv = new(KV)
 		kv.Key = k
-		kv.Value = v[c.ParameterizedFile.VariableNames.Index]
+		kv.Value = v.Value[v.Index]
 		kvList = append(kvList, kv)
+		v.Index++
 	}
-	c.ParameterizedFile.VariableNames.Index++
 	return kvList
 }
 
