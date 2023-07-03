@@ -9,6 +9,7 @@ import (
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/tools"
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
+	"github.com/pyroscope-io/pyroscope/pkg/agent/profiler"
 	"go.uber.org/zap"
 	"net/http"
 	"os"
@@ -124,21 +125,20 @@ func main() {
 	flag.IntVar(&mode, "m", 0, "读取环境变量还是读取配置文件")
 	flag.Parse()
 	// 性能分析
-	//_, err := pyroscope.Start(
-	//	pyroscope.Config{
-	//		ApplicationName: "RunnerGo-engine-open",
-	//		ServerAddress:   "http://192.168.1.205:4040/",
-	//		Logger:          pyroscope.StandardLogger,
-	//		ProfileTypes: []pyroscope.ProfileType{
-	//			pyroscope.ProfileCPU,
-	//			pyroscope.ProfileAllocObjects,
-	//			pyroscope.ProfileAllocSpace,
-	//			pyroscope.ProfileInuseObjects,
-	//			pyroscope.ProfileInuseSpace,
-	//		},
-	//	})
-	//if err != nil {
-	//	log.Logger.Error("监控信息出错：   ", err.Error())
-	//}
+	_, err := profiler.Start(
+		profiler.Config{
+			ApplicationName: "RunnerGo-engine-open",
+			ServerAddress:   "http://192.168.1.205:4040/",
+			ProfileTypes: []profiler.ProfileType{
+				profiler.ProfileCPU,
+				profiler.ProfileAllocObjects,
+				profiler.ProfileAllocSpace,
+				profiler.ProfileInuseObjects,
+				profiler.ProfileInuseSpace,
+			},
+		})
+	if err != nil {
+		log.Logger.Error("监控信息出错：   ", err.Error())
+	}
 	initService()
 }

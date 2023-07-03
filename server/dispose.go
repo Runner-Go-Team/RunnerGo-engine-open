@@ -201,6 +201,7 @@ func TaskDecomposition(plan *model.Plan, wg *sync.WaitGroup, resultDataMsgCh cha
 	}
 
 	sqlMap.Range(func(key, value any) bool {
+		log.Logger.Debug(fmt.Sprintf("key1: %s,   value1: %v", key, value))
 		switch fmt.Sprintf("%T", value) {
 		case "string":
 			p.VariableNames.VarMapList[key.(string)] = append(p.VariableNames.VarMapList[key.(string)], value.(string))
@@ -209,6 +210,10 @@ func TaskDecomposition(plan *model.Plan, wg *sync.WaitGroup, resultDataMsgCh cha
 		}
 		return true
 	})
+
+	for k, v := range p.VariableNames.VarMapList {
+		log.Logger.Debug(fmt.Sprintf("key: %s,   value: %v", k, v))
+	}
 
 	var reportMsg = &model.ResultDataMsg{}
 	if plan.MachineNum <= 0 {

@@ -209,14 +209,14 @@ func (r Request) Request() (resp *fasthttp.Response, req *fasthttp.Request, requ
 
 	resp = fasthttp.AcquireResponse()
 	startTime = time.Now()
-	log.Logger.Debug("111111111111111")
+
 	// 发送请求
 	if r.HttpApiSetup.IsRedirects == 0 {
 		err = client.DoRedirects(req, resp, r.HttpApiSetup.RedirectsNum)
 	} else {
 		err = client.Do(req, resp)
 	}
-	log.Logger.Debug("222222222222222")
+
 	//err = client.Do(req, resp)
 	endTime = time.Now()
 	requestTime = uint64(time.Since(startTime))
