@@ -85,7 +85,9 @@ func (r Request) Send(debug string, debugMsg map[string]interface{}, requestColl
 		r.HttpApiSetup = new(HttpApiSetup)
 	}
 
+	log.Logger.Debug("111111111111111")
 	resp, req, requestTime, sendBytes, err, str, startTime, endTime := r.Request()
+	log.Logger.Debug("2222222222222222")
 	defer fasthttp.ReleaseResponse(resp) // 用完需要释放资源
 	defer fasthttp.ReleaseRequest(req)
 	var regex []map[string]interface{}
@@ -150,6 +152,7 @@ func (r Request) Send(debug string, debugMsg map[string]interface{}, requestColl
 			Insert(requestCollection, debugMsg, middlewares.LocalIp)
 		}
 	}
+
 	return isSucceed, errCode, requestTime, sendBytes, receivedBytes, errMsg, startTime, endTime
 }
 
