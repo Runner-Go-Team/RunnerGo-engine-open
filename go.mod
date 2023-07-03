@@ -5,10 +5,10 @@ go 1.18
 require (
 	dubbo.apache.org/dubbo-go/v3 v3.0.5
 	github.com/Shopify/sarama v1.38.1
-	github.com/ThomsonReutersEikon/go-ntlm v0.0.0-20181130171125-cf23bd1ecf18
 	github.com/apache/dubbo-go-hessian2 v1.12.1
 	github.com/comcast/go-edgegrid v0.0.1
 	github.com/eclipse/paho.mqtt.golang v1.4.2
+	github.com/gin-contrib/pprof v1.4.0
 	github.com/gin-gonic/gin v1.9.0
 	github.com/go-playground/locales v0.14.1
 	github.com/go-playground/universal-translator v0.18.1
@@ -21,11 +21,11 @@ require (
 	github.com/lib/pq v1.10.8
 	github.com/lixiangyun/go-ntlm v1.0.0
 	github.com/natefinch/lumberjack v2.0.0+incompatible
+	github.com/samuel/go-zookeeper v0.0.0-20201211165307-7117e9ea2414
 	github.com/satori/go.uuid v1.2.0
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/shopspring/decimal v1.3.1
 	github.com/spf13/viper v1.15.0
-	github.com/thedevsaddam/gojsonq v2.3.0+incompatible
 	github.com/tidwall/gjson v1.14.4
 	github.com/valyala/fasthttp v1.44.0
 	go.mongodb.org/mongo-driver v1.11.6
@@ -38,6 +38,7 @@ require (
 	cloud.google.com/go/compute v1.14.0 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	contrib.go.opencensus.io/exporter/prometheus v0.4.1 // indirect
+	github.com/BurntSushi/toml v0.4.1 // indirect
 	github.com/RoaringBitmap/roaring v1.2.3 // indirect
 	github.com/Workiva/go-datastructures v1.0.52 // indirect
 	github.com/afex/hystrix-go v0.0.0-20180502004556-fa1af6a1f4f5 // indirect
@@ -110,7 +111,6 @@ require (
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.17 // indirect
-	github.com/mattn/go-oci8 v0.1.1 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
@@ -137,13 +137,10 @@ require (
 	github.com/prometheus/common v0.42.0 // indirect
 	github.com/prometheus/procfs v0.9.0 // indirect
 	github.com/prometheus/statsd_exporter v0.23.1 // indirect
-	github.com/pyroscope-io/client v0.7.0 // indirect
-	github.com/pyroscope-io/godeltaprof v0.1.0 // indirect
-	github.com/pyroscope-io/pyroscope v0.37.2 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
-	github.com/samuel/go-zookeeper v0.0.0-20201211165307-7117e9ea2414 // indirect
 	github.com/shirou/gopsutil/v3 v3.22.2 // indirect
+	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/spf13/afero v1.9.3 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
@@ -185,5 +182,5 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	rogchap.com/v8go v0.9.0 // indirect
+	sigs.k8s.io/yaml v1.3.0 // indirect
 )

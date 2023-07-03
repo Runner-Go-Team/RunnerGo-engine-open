@@ -7,11 +7,13 @@ import (
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/tools"
+	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"net/http"
 	"os"
 	"os/signal"
+	"runtime"
 	"syscall"
 	"time"
 
@@ -87,11 +89,13 @@ func initService() {
 		}
 	}()
 
+	runtime.SetBlockProfileRate(1)     // 开启对阻塞操作的跟踪，block
+	runtime.SetMutexProfileFraction(1) // 开启对锁调用的跟踪，mutex
 	// pprof 监控
-	//go func() {
-	//	pprof.Register(GinRouter)
-	//	GinRouter.Run(":8003")
-	//}()
+	go func() {
+		pprof.Register(GinRouter)
+		GinRouter.Run(":8003")
+	}()
 	// 注册并发送心跳数据
 	field := middlewares.LocalIp + "_" + fmt.Sprintf("%d", config.Conf.Heartbeat.Port) + "_" + config.Conf.Heartbeat.Region
 	go func() {
