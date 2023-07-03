@@ -364,7 +364,6 @@ func DebugScene(scene model.Scene) {
 	var sceneWg = &sync.WaitGroup{}
 	golink.DisposeScene(wg, sceneWg, constant.SceneType, scene, configuration, nil, nil, mongoCollection)
 	wg.Wait()
-	sceneWg.Wait()
 	log.Logger.Info(fmt.Sprintf("机器ip:%s, 团队: %s, 场景：%s, 调试结束！", middlewares.LocalIp, scene.TeamId, scene.SceneName))
 
 }

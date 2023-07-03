@@ -88,7 +88,6 @@ func DisposeScene(wg, sceneWg *sync.WaitGroup, runType string, scene model.Scene
 			default:
 				wg.Done()
 				sceneWg.Done()
-
 			}
 		}
 		sceneWg.Wait()
