@@ -163,6 +163,7 @@ var (
 func (r Request) Request() (resp *fasthttp.Response, req *fasthttp.Request, requestTime uint64, sendBytes float64, err error, str string, startTime, endTime time.Time) {
 	var client *fasthttp.Client
 	req = fasthttp.AcquireRequest()
+	log.Logger.Debug("111111111111111")
 	if r.HttpApiSetup.KeepAlive {
 		newKeepAlive(r.HttpApiSetup, r.Auth)
 		client = KeepAliveClient
@@ -170,7 +171,8 @@ func (r Request) Request() (resp *fasthttp.Response, req *fasthttp.Request, requ
 	} else {
 		client = fastClient(r.HttpApiSetup, r.Auth)
 	}
-	log.Logger.Debug("111111111111111")
+	log.Logger.Debug("222222222222222")
+
 	// set method
 	req.Header.SetMethod(r.Method)
 	// set header
@@ -204,7 +206,7 @@ func (r Request) Request() (resp *fasthttp.Response, req *fasthttp.Request, requ
 
 	// set auth
 	r.Auth.SetAuth(req)
-	log.Logger.Debug("222222222222222")
+
 	resp = fasthttp.AcquireResponse()
 	startTime = time.Now()
 	// 发送请求
