@@ -198,6 +198,9 @@ func TaskDecomposition(plan *model.Plan, wg *sync.WaitGroup, resultDataMsgCh cha
 			preposition.Exec(scene, mongoCollection, sqlMap)
 		}
 	}
+	if p.VariableNames.VarMapLists == nil {
+		p.VariableNames.VarMapLists = make(map[string]*model.VarMapList)
+	}
 
 	sqlMap.Range(func(key, value any) bool {
 		if _, ok := p.VariableNames.VarMapLists[key.(string)]; !ok {
@@ -349,6 +352,9 @@ func DebugScene(scene model.Scene) {
 		}
 	}
 
+	if p.VariableNames.VarMapLists == nil {
+		p.VariableNames.VarMapLists = make(map[string]*model.VarMapList)
+	}
 	sqlMap.Range(func(key, value any) bool {
 		if _, ok := p.VariableNames.VarMapLists[key.(string)]; !ok {
 			p.VariableNames.VarMapLists[key.(string)] = new(model.VarMapList)
