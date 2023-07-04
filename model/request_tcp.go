@@ -87,6 +87,8 @@ func (tcp TCPDetail) Send(debug string, debugMsg map[string]interface{}, mongoCo
 		writeResults["is_stop"] = true
 		recvResults["response_body"] = err.Error()
 		writeResults["request_body"] = err.Error()
+		Insert(mongoCollection, recvResults, middlewares.LocalIp)
+		Insert(mongoCollection, writeResults, middlewares.LocalIp)
 		return
 	}
 
@@ -97,6 +99,8 @@ func (tcp TCPDetail) Send(debug string, debugMsg map[string]interface{}, mongoCo
 		writeResults["is_stop"] = true
 		recvResults["response_body"] = "tcpConfig is nil"
 		writeResults["request_body"] = "tcpConfig is nil"
+		Insert(mongoCollection, recvResults, middlewares.LocalIp)
+		Insert(mongoCollection, writeResults, middlewares.LocalIp)
 		return
 	}
 	tcp.TcpConfig.Init()
