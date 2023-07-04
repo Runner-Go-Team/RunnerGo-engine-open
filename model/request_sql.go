@@ -76,7 +76,7 @@ func (sql *SQLDetail) Send(debug string, debugMsg map[string]interface{}, mongoC
 		}
 		debugMsg["request_time"] = requestTime / uint64(time.Millisecond)
 
-		debugMsg["assertion"] = assertionList
+		debugMsg["assert"] = assertionList
 		debugMsg["status"] = constant.Success
 		by, _ := json.Marshal(sql.SqlDatabaseInfo)
 		if by != nil {
@@ -93,7 +93,7 @@ func (sql *SQLDetail) Send(debug string, debugMsg map[string]interface{}, mongoC
 		debugMsg["response_body"] = err.Error()
 		debugMsg["request_time"] = requestTime / uint64(time.Millisecond)
 
-		debugMsg["assertion"] = assertionList
+		debugMsg["assert"] = assertionList
 		debugMsg["status"] = constant.Success
 		by, _ := json.Marshal(sql.SqlDatabaseInfo)
 		if by != nil {
@@ -110,7 +110,7 @@ func (sql *SQLDetail) Send(debug string, debugMsg map[string]interface{}, mongoC
 		debugMsg["response_body"] = result
 		debugMsg["request_time"] = requestTime / uint64(time.Millisecond)
 
-		debugMsg["assertion"] = assertionList
+		debugMsg["assert"] = assertionList
 		debugMsg["status"] = constant.Success
 		by, _ := json.Marshal(sql.SqlDatabaseInfo)
 		if by != nil {

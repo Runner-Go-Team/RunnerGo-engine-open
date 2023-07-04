@@ -50,7 +50,12 @@ func (c *Configuration) VarToSceneKV() []*KV {
 		}
 		var kv = new(KV)
 		kv.Key = k
-		kv.Value = v.Value[v.Index]
+		if len(v.Value) > 0 {
+			kv.Value = v.Value[v.Index]
+		} else {
+			kv.Value = ""
+		}
+
 		kvList = append(kvList, kv)
 		v.Index++
 	}
