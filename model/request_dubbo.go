@@ -216,7 +216,7 @@ func (d DubboDetail) Send(debug string, debugMsg map[string]interface{}, mongoCo
 			assertNum++
 		}
 	}
-	debugMsg["assertion"] = assertionMsgList
+	debugMsg["assert"] = assertionMsgList
 	debugMsg["request_type"] = d.DubboProtocol
 	Insert(mongoCollection, debugMsg, middlewares.LocalIp)
 }

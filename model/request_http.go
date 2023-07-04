@@ -1567,9 +1567,9 @@ func makeDebugMsg(regex []map[string]interface{}, debugMsg map[string]interface{
 	case true:
 		debugMsg["status"] = constant.Success
 	}
-	debugMsg["assertion"] = assertionMsgList
-	debugMsg["assertion_num"] = assertNum
-	debugMsg["assertion_failed_num"] = assertFailedNum
+	debugMsg["assert"] = assertionMsgList
+	debugMsg["assert_num"] = assertNum
+	debugMsg["assert_failed_num"] = assertFailedNum
 	debugMsg["regex"] = regex
 }
 
