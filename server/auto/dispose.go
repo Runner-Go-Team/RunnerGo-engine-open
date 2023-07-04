@@ -103,6 +103,10 @@ func DisposeAutoPlan(plan *auto.Plan, c *gin.Context) {
 			}
 		}
 
+		if p.VariableNames.VarMapLists == nil {
+			p.VariableNames.VarMapLists = make(map[string]*model.VarMapList)
+		}
+
 		sqlMap.Range(func(key, value any) bool {
 			if _, ok := p.VariableNames.VarMapLists[key.(string)]; !ok {
 				p.VariableNames.VarMapLists[key.(string)] = new(model.VarMapList)
