@@ -21,7 +21,7 @@ func NewMongoClient(dsn, ip string) (mongoClient *mongo.Client, err error) {
 	if err != nil {
 		return
 	}
-	log.Logger.Info(fmt.Sprintf("机器ip:%s, mongo数据库建连成功!", ip))
+	//log.Logger.Info(fmt.Sprintf("机器ip:%s, mongo数据库建连成功!", ip))
 	return
 }
 

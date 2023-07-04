@@ -9,7 +9,7 @@ import (
 func TestQueryDebugStatus(t *testing.T) {
 
 	mongoClient, err := NewMongoClient(
-		"mongodb://runnergo_open:czYNsm6LmfZ0XU3E@172.17.18.255:27017/runnergo_open",
+		"mongodb://runnergo:hello123456@192.168.1.205:27017/runnergo",
 		"")
 	if err != nil {
 		fmt.Println("连接mongo错误：", err)
