@@ -22,6 +22,7 @@ import (
 	"github.com/hiyosi/hawk"
 	"github.com/lixiangyun/go-ntlm"
 	"github.com/lixiangyun/go-ntlm/messages"
+	uuid "github.com/satori/go.uuid"
 	"github.com/valyala/fasthttp"
 	"go.mongodb.org/mongo-driver/mongo"
 	"io"
@@ -1536,6 +1537,9 @@ func makeDebugMsg(regex []map[string]interface{}, debugMsg map[string]interface{
 	debugMsg["request_header"] = req.Header.String()
 	debugMsg["response_time"] = responseTime
 	debugMsg["request_url"] = req.URI().String()
+	if debugMsg["uuid"] == "00000000-0000-0000-0000-000000000000" {
+		debugMsg["uuid"] = uuid.NewV4().String()
+	}
 	if string(req.Body()) != "" {
 		var errBody error
 		debugMsg["request_body"], errBody = url.QueryUnescape(string(req.Body()))
