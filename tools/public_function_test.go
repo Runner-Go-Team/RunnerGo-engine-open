@@ -34,3 +34,7 @@ func TestParsFunc(t *testing.T) {
 	m.Store("a", 123)
 	wg.Wait()
 }
+
+func TestToStandardTime(t *testing.T) {
+	fmt.Println("     FJDJSF     ", ToStandardTime(1))
+}

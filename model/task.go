@@ -6,13 +6,8 @@ const (
 	ErrorRateModel  = 3 // 错误率模式
 	RTModel         = 4 // 响应时间模式
 	RpsModel        = 5 // 每秒请求数模式
+	RoundModel      = 6 // 轮次模式
 
-)
-
-const (
-	CommonTaskType = 1
-	TimingTaskType = 2
-	CICDTaskType   = 3
 )
 
 // ConfigTask 任务配置
@@ -47,4 +42,10 @@ type SubscriptionStressPlanStatusChange struct {
 type MachineModeConf struct {
 	Machine  string    `json:"machine"`
 	ModeConf *ModeConf `json:"mode_conf"`
+}
+
+type ConnectionStatusChange struct {
+	Type        int32  `json:"type"` // 1: 断开连接； 2： 发送消息
+	MessageType string `json:"message_type"`
+	Message     string `json:"message"`
 }

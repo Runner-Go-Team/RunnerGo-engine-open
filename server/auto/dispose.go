@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/config"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/constant"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/global"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
@@ -87,14 +88,34 @@ func DisposeAutoPlan(plan *auto.Plan, c *gin.Context) {
 		if scene.Configuration.ParameterizedFile.VariableNames == nil {
 			scene.Configuration.ParameterizedFile.VariableNames = new(model.VariableNames)
 		}
-		if scene.Configuration.ParameterizedFile.VariableNames.VarMapList == nil {
-			scene.Configuration.ParameterizedFile.VariableNames.VarMapList = make(map[string][]string)
+		if scene.Configuration.ParameterizedFile.VariableNames.VarMapLists == nil {
+			scene.Configuration.ParameterizedFile.VariableNames.VarMapLists = make(map[string]*model.VarMapList)
 		}
-		if scene.Configuration.ParameterizedFile != nil {
-			p := scene.Configuration.ParameterizedFile
-			p.VariableNames.Mu = sync.Mutex{}
-			p.UseFile()
+
+		p := scene.Configuration.ParameterizedFile
+		p.VariableNames.Mu = sync.Mutex{}
+		p.UseFile()
+
+		var sqlMap = new(sync.Map)
+		if scene.Prepositions != nil && len(scene.Prepositions) > 0 {
+			for _, preposition := range scene.Prepositions {
+				preposition.Exec(scene, collection, sqlMap)
+			}
 		}
+
+		sqlMap.Range(func(key, value any) bool {
+			if _, ok := p.VariableNames.VarMapLists[key.(string)]; !ok {
+				p.VariableNames.VarMapLists[key.(string)] = new(model.VarMapList)
+			}
+			switch fmt.Sprintf("%T", value) {
+			case "string":
+				p.VariableNames.VarMapLists[key.(string)].Value = append(p.VariableNames.VarMapLists[key.(string)].Value, value.(string))
+			case "[]string":
+				p.VariableNames.VarMapLists[key.(string)].Value = append(p.VariableNames.VarMapLists[key.(string)].Value, value.([]string)...)
+			}
+
+			return true
+		})
 	}
 
 	// 设置接收数据缓存
@@ -115,7 +136,7 @@ func sceneDecomposition(plan *auto.Plan, wg *sync.WaitGroup, reportMsg *model.Re
 	defer mongoClient.Disconnect(context.TODO())
 	startTime := time.Now().UnixMilli()
 	switch plan.ConfigTask.SceneRunMode {
-	case model.AuToOrderMode:
+	case constant.AuToOrderMode:
 		for _, scene := range plan.Scenes {
 			key := fmt.Sprintf("StopAutoPlan:%s:%s:%s", scene.TeamId, scene.PlanId, scene.ReportId)
 			err, stop := model.QueryPlanStatus(key)
@@ -129,7 +150,7 @@ func sceneDecomposition(plan *auto.Plan, wg *sync.WaitGroup, reportMsg *model.Re
 
 			disposeCase(scene, plan.ConfigTask.SceneRunMode, plan.ConfigTask.CaseRunMode, wg, configuration, reportMsg, resultDataMsgCh, collection)
 		}
-	case model.AuToSameMode:
+	case constant.AuToSameMode:
 		for _, scene := range plan.Scenes {
 			key := fmt.Sprintf("StopAutoPlan:%s:%s:%s", scene.TeamId, scene.PlanId, scene.ReportId)
 			err, stop := model.QueryPlanStatus(key)
@@ -152,7 +173,7 @@ func sceneDecomposition(plan *auto.Plan, wg *sync.WaitGroup, reportMsg *model.Re
 }
 
 func disposeCase(scene model.Scene, sceneRunMode, caseMode int64, wg *sync.WaitGroup, configuration *model.Configuration, reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, collection *mongo.Collection) {
-	if sceneRunMode == model.AuToSameMode {
+	if sceneRunMode == constant.AuToSameMode {
 		defer wg.Done()
 	}
 	if scene.Cases == nil || len(scene.Cases) < 1 {
@@ -165,21 +186,21 @@ func disposeCase(scene model.Scene, sceneRunMode, caseMode int64, wg *sync.WaitG
 		if err == nil && stop == "stop" {
 			return
 		}
-		if c.IsChecked != model.Open {
+		if c.IsChecked != constant.Open {
 			continue
 		}
 		c.PlanId = scene.PlanId
 		c.TeamId = scene.TeamId
 		c.ReportId = scene.ReportId
 		c.ParentId = scene.SceneId
-		c.Debug = model.All
+		c.Debug = constant.All
 		if scene.Configuration != nil {
 			c.Configuration = scene.Configuration
 		}
 		switch caseMode {
-		case model.AuToOrderMode:
+		case constant.AuToOrderMode:
 			var sceneWg = &sync.WaitGroup{}
-			golink.DisposeScene(wg, sceneWg, model.SceneType, c, configuration, reportMsg, resultDataMsgCh, collection)
+			golink.DisposeScene(wg, sceneWg, constant.SceneType, c, configuration, reportMsg, resultDataMsgCh, collection)
 			sceneWg.Wait()
 		}
 	}

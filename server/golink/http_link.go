@@ -3,6 +3,8 @@ package golink
 
 import (
 	"fmt"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/constant"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/server/client"
@@ -19,25 +21,25 @@ import (
 func HttpSend(event model.Event, api model.Api, globalVar *sync.Map, requestCollection *mongo.Collection) (bool, int64, uint64, float64, float64, string, time.Time, time.Time) {
 	var (
 		isSucceed       = true
-		errCode         = model.NoError
+		errCode         = constant.NoError
 		receivedBytes   = float64(0)
 		errMsg          = ""
 		assertNum       = 0
 		assertFailedNum = 0
 	)
 
-	if api.HttpApiSetup == nil {
-		api.HttpApiSetup = new(model.HttpApiSetup)
+	if api.Request.HttpApiSetup == nil {
+		api.Request.HttpApiSetup = new(model.HttpApiSetup)
 	}
 
-	resp, req, requestTime, sendBytes, err, str, startTime, endTime := client.HTTPRequest(api.Method, api.Request.URL, api.Request.Body, api.Request.Query,
-		api.Request.Header, api.Request.Cookie, api.Request.Auth, api.HttpApiSetup)
+	resp, req, requestTime, sendBytes, err, str, startTime, endTime := client.HTTPRequest(api.Request.Method, api.Request.URL, api.Request.Body, api.Request.Query,
+		api.Request.Header, api.Request.Cookie, api.Request.Auth, api.Request.HttpApiSetup)
 	defer fasthttp.ReleaseResponse(resp) // 用完需要释放资源
 	defer fasthttp.ReleaseRequest(req)
 	var regex []map[string]interface{}
-	if api.Regex != nil {
-		for _, regular := range api.Regex {
-			if regular.IsChecked != model.Open {
+	if api.Request.Regex != nil {
+		for _, regular := range api.Request.Regex {
+			if regular.IsChecked != constant.Open {
 				continue
 			}
 			reg := make(map[string]interface{})
@@ -56,15 +58,15 @@ func HttpSend(event model.Event, api model.Api, globalVar *sync.Map, requestColl
 	var assertionMsgList []model.AssertionMsg
 	// 断言验证
 
-	if api.Assert != nil {
+	if api.Request.Assert != nil {
 		var assertionMsg = model.AssertionMsg{}
 		var (
 			code    = int64(10000)
 			succeed = true
 			msg     = ""
 		)
-		for _, v := range api.Assert {
-			if v.IsChecked != model.Open {
+		for _, v := range api.Request.Assert {
+			if v.IsChecked != constant.Open {
 				continue
 			}
 			code, succeed, msg = v.VerifyAssertionText(resp)
@@ -102,14 +104,14 @@ func HttpSend(event model.Event, api model.Api, globalVar *sync.Map, requestColl
 
 func insertDebugMsg(regex []map[string]interface{}, debugMsg map[string]interface{}, debugType string, event model.Event, api model.Api, resp *fasthttp.Response, req *fasthttp.Request, requestTime uint64, responseTime string, receivedBytes float64, errMsg, str string, err error, isSucceed bool, assertionMsgList []model.AssertionMsg, assertNum, assertFailedNum int) {
 	switch debugType {
-	case model.All:
+	case constant.All:
 		makeDebugMsg(regex, debugMsg, event, api, resp, req, requestTime, responseTime, receivedBytes, errMsg, str, err, isSucceed, assertionMsgList, assertNum, assertFailedNum)
-	case model.OnlySuccess:
+	case constant.OnlySuccess:
 		if isSucceed == true {
 			makeDebugMsg(regex, debugMsg, event, api, resp, req, requestTime, responseTime, receivedBytes, errMsg, str, err, isSucceed, assertionMsgList, assertNum, assertFailedNum)
 		}
 
-	case model.OnlyError:
+	case constant.OnlyError:
 		if isSucceed == false {
 			makeDebugMsg(regex, debugMsg, event, api, resp, req, requestTime, responseTime, receivedBytes, errMsg, str, err, isSucceed, assertionMsgList, assertNum, assertFailedNum)
 		}
@@ -134,7 +136,7 @@ func makeDebugMsg(regex []map[string]interface{}, debugMsg map[string]interface{
 	if req.Header.Method() != nil {
 		debugMsg["method"] = string(req.Header.Method())
 	}
-	debugMsg["type"] = model.RequestType
+	debugMsg["type"] = constant.RequestType
 	debugMsg["request_time"] = requestTime / uint64(time.Millisecond)
 	debugMsg["request_code"] = resp.StatusCode()
 	debugMsg["request_header"] = req.Header.String()
@@ -145,6 +147,7 @@ func makeDebugMsg(regex []map[string]interface{}, debugMsg map[string]interface{
 		if errBody != nil {
 			debugMsg["request_body"] = string(req.Body())
 		}
+		log.Logger.Debug()
 	} else {
 		debugMsg["request_body"] = str
 	}
@@ -162,9 +165,9 @@ func makeDebugMsg(regex []map[string]interface{}, debugMsg map[string]interface{
 	}
 	switch isSucceed {
 	case false:
-		debugMsg["status"] = model.Failed
+		debugMsg["status"] = constant.Failed
 	case true:
-		debugMsg["status"] = model.Success
+		debugMsg["status"] = constant.Success
 	}
 
 	debugMsg["next_list"] = event.NextList

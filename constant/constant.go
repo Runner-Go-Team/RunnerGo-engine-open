@@ -1,10 +1,17 @@
-package model
+package constant
+
+const (
+	NILSTRING = ""
+	NILINT    = 0
+)
 
 // Form 支持协议类型
 const (
 	FormTypeHTTP      = "api"       // http协议
 	FormTypeWebSocket = "websocket" // webSocket协议
-	FormTypeGRPC      = "grpc"      // grpc协议
+	FormTypeDubbo     = "dubbo"     // grpc协议
+	FormTypeTcp       = "tcp"
+	FormTypeSql       = "sql"
 	HTTP              = "http:"
 	HTTPS             = "https:"
 )
@@ -21,12 +28,19 @@ const (
 	ServiceError = int64(10003)
 )
 
-// 断言类型
+// Dubbo 值类型
 const (
-	Text    = iota // 文本断言
-	Regular        // 正则表达式
-	Json           // json断言
-	XPath          // xpath断言
+	JavaString    = "java.lang.String"
+	JavaInteger   = "java.lang.Integer"
+	JavaDouble    = "java.lang.Double"
+	JavaShort     = "java.lang.Short"
+	JavaLong      = "java.lang.Long"
+	JavaFloat     = "java.lang.Float"
+	JavaByte      = "java.lang.Byte"
+	JavaBoolean   = "java.lang.Boolean"
+	JavaCharacter = "java.lang.Character"
+	JavaMap       = "java.lang.Map"
+	JavaList      = "java.lang.List"
 )
 
 // 文本断言类型
@@ -41,7 +55,10 @@ const (
 	RequestType        = "api"                  // 接口请求
 	IfControllerType   = "condition_controller" // if控制器
 	WaitControllerType = "wait_controller"      // 等待控制器
-
+	SqlType            = "sql"                  // sql
+	RedisType          = "redis"
+	MqttType           = "mqtt"
+	KafkaType          = "kafka"
 )
 
 // 逻辑运算符
@@ -88,6 +105,7 @@ const (
 	JSMode        = "javascript"
 	PlainMode     = "plain"
 	HtmlMode      = "html"
+	MysqlMode     = "sql"
 )
 
 // 时间运行状态
@@ -158,4 +176,18 @@ const (
 	StopPlan     = 1
 	DebugStatus  = 2
 	ReportChange = 3
+)
+
+// tcp/ws 消息类型
+const (
+	MsBinary           = "Binary"
+	MsText             = "Text"
+	MsJson             = "Json"
+	MsXml              = "Xml"
+	LongConnection     = int32(1)
+	ShortConnection    = int32(2)
+	AutoConnectionSend = int32(1)
+	ConnectionAndSend  = int32(0)
+	UnConnection       = int32(1)
+	SendMessage        = int32(2)
 )

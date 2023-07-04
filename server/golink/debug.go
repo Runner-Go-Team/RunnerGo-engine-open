@@ -1,5 +1,0 @@
-package golink
-
-func DisposeSingleRequest() {
-
-}

@@ -3,6 +3,7 @@ package golink
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/constant"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/tools"
@@ -15,18 +16,19 @@ import (
 
 // DisposeScene 对场景进行处理
 func DisposeScene(wg, sceneWg *sync.WaitGroup, runType string, scene model.Scene, configuration *model.Configuration, reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestCollection *mongo.Collection, options ...int64) {
+
 	sceneBy, _ := json.Marshal(scene)
 	var tempScene model.Scene
 	json.Unmarshal(sceneBy, &tempScene)
 	nodesList := tempScene.NodesRound
-	if configuration.ParameterizedFile.VariableNames != nil && configuration.ParameterizedFile.VariableNames.VarMapList != nil {
+	if configuration.ParameterizedFile.VariableNames != nil && configuration.ParameterizedFile.VariableNames.VarMapLists != nil {
 		configuration.Mu.Lock()
 		kvList := configuration.VarToSceneKV()
 		configuration.Mu.Unlock()
 		if kvList != nil {
 			for _, v := range kvList {
 				varForm := new(model.VarForm)
-				varForm.IsChecked = model.Open
+				varForm.IsChecked = constant.Open
 				varForm.Key = v.Key
 				varForm.Value = v.Value
 				scene.Configuration.SceneVariable.Variable = append(scene.Configuration.SceneVariable.Variable, varForm)
@@ -36,7 +38,7 @@ func DisposeScene(wg, sceneWg *sync.WaitGroup, runType string, scene model.Scene
 
 	var globalVar, preNodeMap = new(sync.Map), new(sync.Map)
 	for _, par := range scene.Configuration.SceneVariable.Variable {
-		if par.IsChecked != model.Open {
+		if par.IsChecked != constant.Open {
 			continue
 		}
 		globalVar.Store(par.Key, par.Value)
@@ -69,13 +71,13 @@ func DisposeScene(wg, sceneWg *sync.WaitGroup, runType string, scene model.Scene
 			wg.Add(1)
 			sceneWg.Add(1)
 			switch runType {
-			case model.PlanType:
+			case constant.PlanType:
 				node.TeamId = reportMsg.TeamId
 				node.PlanId = reportMsg.PlanId
 				node.ReportId = reportMsg.ReportId
 				node.Debug = scene.Debug
 				go disposePlanNode(preNodeMap, tempScene, globalVar, node, wg, sceneWg, reportMsg, resultDataMsgCh, requestCollection, options...)
-			case model.SceneType:
+			case constant.SceneType:
 				node.TeamId = scene.TeamId
 				node.PlanId = scene.PlanId
 				node.CaseId = scene.CaseId
@@ -101,6 +103,7 @@ func disposePlanNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.Ma
 	var (
 		goroutineId int64 // 启动的第几个协程
 	)
+	goroutineId = disOptions[0]
 	var eventResult = model.EventResult{}
 
 	// 如果该事件上一级有事件，那么就一直查询上一级事件的状态，直到上一级所有事件全部完成
@@ -115,19 +118,19 @@ func disposePlanNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.Ma
 				}
 				preEventStatus := preCh.(model.EventResult)
 				switch preEventStatus.Status {
-				case model.End:
+				case constant.End:
 					goroutineId = disOptions[0]
 					if preEventStatus.Concurrent >= preMaxConcurrent {
 						preMaxConcurrent = preEventStatus.Concurrent
 					}
 
-					if event.Type == model.IfControllerType || event.Type == model.WaitControllerType {
+					if event.Type == constant.IfControllerType || event.Type == constant.WaitControllerType {
 						if preEventStatus.Weight >= preMaxWeight {
 							preMaxWeight = preEventStatus.Weight
 						}
 					}
-				case model.NotRun:
-					eventResult.Status = model.NotRun
+				case constant.NotRun:
+					eventResult.Status = constant.NotRun
 					eventResult.Weight = event.Weight
 					if event.NextList != nil && len(event.NextList) >= 1 {
 						//for _, _ = range event.NextList {
@@ -136,8 +139,8 @@ func disposePlanNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.Ma
 						preNodeMap.Store(event.Id, eventResult)
 					}
 					return
-				case model.NotHit:
-					eventResult.Status = model.NotRun
+				case constant.NotHit:
+					eventResult.Status = constant.NotRun
 					eventResult.Weight = event.Weight
 					if event.NextList != nil && len(event.NextList) >= 1 {
 						//for _, _ = range event.NextList {
@@ -151,7 +154,7 @@ func disposePlanNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.Ma
 
 		}
 
-		if event.Type == model.WaitControllerType || event.Type == model.IfControllerType {
+		if event.Type == constant.WaitControllerType || event.Type == constant.IfControllerType {
 			event.Weight = preMaxWeight
 		}
 		if event.Weight > 0 && event.Weight < 100 {
@@ -165,7 +168,7 @@ func disposePlanNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.Ma
 		// 如果该事件上一级有事件, 并且上一级事件中的第一个事件的权重不等于100，那么并发数就等于上一级的并发*权重
 
 	} else {
-		if event.Type == model.WaitControllerType || event.Type == model.IfControllerType {
+		if event.Type == constant.WaitControllerType || event.Type == constant.IfControllerType {
 			event.Weight = 100
 		}
 		if disOptions != nil && len(disOptions) > 1 {
@@ -180,7 +183,7 @@ func disposePlanNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.Ma
 	}
 
 	if eventResult.Concurrent == 0 {
-		eventResult.Status = model.NotRun
+		eventResult.Status = constant.NotRun
 		eventResult.Weight = event.Weight
 		if event.NextList != nil && len(event.NextList) >= 1 {
 			//for _, _ = range event.NextList {
@@ -191,8 +194,8 @@ func disposePlanNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.Ma
 		return
 	}
 
-	if goroutineId > eventResult.Concurrent && event.Type == model.RequestType {
-		eventResult.Status = model.NotRun
+	if goroutineId > eventResult.Concurrent && event.Type == constant.RequestType {
+		eventResult.Status = constant.NotRun
 		eventResult.Weight = event.Weight
 		if event.NextList != nil && len(event.NextList) >= 1 {
 			preNodeMap.Store(event.Id, eventResult)
@@ -208,12 +211,13 @@ func disposePlanNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.Ma
 		scene.Configuration.SceneVariable.SupToSub(event.Api.ApiVariable)
 		event.Api.ApiVariable.InitReplace()
 	}
+
 	switch event.Type {
-	case model.RequestType:
+	case constant.RequestType:
 		event.Api.Uuid = scene.Uuid
 		var requestResults = &model.ResultDataMsg{}
 		DisposeRequest(reportMsg, resultDataMsgCh, requestResults, globalVar, event, requestCollection, goroutineId, eventResult.Concurrent)
-		eventResult.Status = model.End
+		eventResult.Status = constant.End
 		eventResult.Weight = event.Weight
 		if event.NextList != nil && len(event.NextList) >= 1 {
 			//for _, _ = range event.NextList {
@@ -222,7 +226,7 @@ func disposePlanNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.Ma
 			preNodeMap.Store(event.Id, eventResult)
 		}
 
-	case model.IfControllerType:
+	case constant.IfControllerType:
 		keys := tools.FindAllDestStr(event.Var, "{{(.*?)}}")
 		if len(keys) > 0 {
 			for _, val := range keys {
@@ -275,7 +279,7 @@ func disposePlanNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.Ma
 				}
 			}
 		}
-		var result = model.Failed
+		var result = constant.Failed
 		var temp = false
 		globalVar.Range(func(key, value any) bool {
 			if key == event.Var {
@@ -300,28 +304,29 @@ func disposePlanNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.Ma
 		if temp == false {
 			result, _ = event.PerForm(event.Var)
 		}
-		if result == model.Failed {
-			eventResult.Status = model.NotHit
+		if result == constant.Failed {
+			eventResult.Status = constant.NotHit
 			eventResult.Weight = event.Weight
 		} else {
-			eventResult.Status = model.End
+			eventResult.Status = constant.End
 			eventResult.Weight = event.Weight
 		}
-		//for _, _ = range event.NextList {
-		//	nodeCh <- eventResult
-		//}
 		preNodeMap.Store(event.Id, eventResult)
-	case model.WaitControllerType:
+	case constant.WaitControllerType:
 		time.Sleep(time.Duration(event.WaitTime) * time.Millisecond)
-		eventResult.Status = model.End
+		eventResult.Status = constant.End
 		eventResult.Weight = event.Weight
 		if event.NextList != nil && len(event.NextList) >= 1 {
-			//for _, _ = range event.NextList {
-			//	nodeCh <- eventResult
-			//}
 			preNodeMap.Store(event.Id, eventResult)
 		}
+	case constant.SqlType:
+
+	case constant.MqttType:
+	case constant.KafkaType:
+	case constant.RedisType:
+
 	}
+
 }
 
 func disposeDebugNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.Map, event model.Event, wg, sceneWg *sync.WaitGroup, reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestCollection *mongo.Collection) {
@@ -339,8 +344,8 @@ func disposeDebugNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.M
 				}
 				preEventStatus := preCh.(model.EventResult)
 				switch preEventStatus.Status {
-				case model.NotRun:
-					eventResult.Status = model.NotRun
+				case constant.NotRun:
+					eventResult.Status = constant.NotRun
 					//for _, _ = range event.NextList {
 					//	nodeCh <- eventResult
 					//}
@@ -354,25 +359,25 @@ func disposeDebugNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.M
 					debugMsg["case_id"] = event.CaseId
 					debugMsg["uuid"] = event.Uuid.String()
 					debugMsg["event_id"] = event.Id
-					debugMsg["status"] = model.NotRun
+					debugMsg["status"] = constant.NotRun
 					debugMsg["msg"] = "未运行"
 					debugMsg["type"] = event.Type
 					switch event.Type {
-					case model.RequestType:
+					case constant.RequestType:
 						debugMsg["api_name"] = event.Api.Name
 						debugMsg["api_id"] = event.Api.TargetId
-					case model.IfControllerType:
-						debugMsg["api_name"] = model.IfControllerType
-					case model.WaitControllerType:
-						debugMsg["api_name"] = model.IfControllerType
+					case constant.IfControllerType:
+						debugMsg["api_name"] = constant.IfControllerType
+					case constant.WaitControllerType:
+						debugMsg["api_name"] = constant.IfControllerType
 					}
 					debugMsg["next_list"] = event.NextList
 					if requestCollection != nil {
 						model.Insert(requestCollection, debugMsg, middlewares.LocalIp)
 					}
 					return
-				case model.NotHit:
-					eventResult.Status = model.NotRun
+				case constant.NotHit:
+					eventResult.Status = constant.NotRun
 					//for _, _ = range event.NextList {
 					//	nodeCh <- eventResult
 					//}
@@ -386,17 +391,17 @@ func disposeDebugNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.M
 					debugMsg["case_id"] = event.CaseId
 					debugMsg["uuid"] = event.Uuid.String()
 					debugMsg["event_id"] = event.Id
-					debugMsg["status"] = model.NotRun
+					debugMsg["status"] = constant.NotRun
 					debugMsg["msg"] = "未运行"
 					debugMsg["type"] = event.Type
 					switch event.Type {
-					case model.RequestType:
+					case constant.RequestType:
 						debugMsg["api_name"] = event.Api.Name
 						debugMsg["api_id"] = event.Api.TargetId
-					case model.IfControllerType:
-						debugMsg["api_name"] = model.IfControllerType
-					case model.WaitControllerType:
-						debugMsg["api_name"] = model.IfControllerType
+					case constant.IfControllerType:
+						debugMsg["api_name"] = constant.IfControllerType
+					case constant.WaitControllerType:
+						debugMsg["api_name"] = constant.IfControllerType
 					}
 					debugMsg["next_list"] = event.NextList
 					if requestCollection != nil {
@@ -421,14 +426,13 @@ func disposeDebugNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.M
 	}
 
 	switch event.Type {
-	case model.RequestType:
+	case constant.RequestType:
 		event.Api.Uuid = scene.Uuid
 		event.CaseId = scene.CaseId
 		DisposeRequest(reportMsg, resultDataMsgCh, nil, globalVar, event, requestCollection)
-		eventResult.Status = model.End
-
+		eventResult.Status = constant.End
 		preNodeMap.Store(event.Id, eventResult)
-	case model.IfControllerType:
+	case constant.IfControllerType:
 		keys := tools.FindAllDestStr(event.Var, "{{(.*?)}}")
 		if len(keys) > 0 {
 			for _, val := range keys {
@@ -482,7 +486,7 @@ func disposeDebugNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.M
 				}
 			}
 		}
-		var result = model.Failed
+		var result = constant.Failed
 		var msg = ""
 
 		var temp = false
@@ -511,12 +515,12 @@ func disposeDebugNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.M
 			result, msg = event.PerForm(event.Var)
 		}
 
-		setControllerDebugMsg(preNodeMap, eventResult, scene, event, requestCollection, msg, result, model.IfControllerType)
+		setControllerDebugMsg(preNodeMap, eventResult, scene, event, requestCollection, msg, result, constant.IfControllerType)
 
-	case model.WaitControllerType:
+	case constant.WaitControllerType:
 		time.Sleep(time.Duration(event.WaitTime) * time.Millisecond)
 		msg := fmt.Sprintf("等待了 %d 毫秒", event.WaitTime)
-		setControllerDebugMsg(preNodeMap, eventResult, scene, event, requestCollection, msg, model.Success, model.WaitControllerType)
+		setControllerDebugMsg(preNodeMap, eventResult, scene, event, requestCollection, msg, constant.Success, constant.WaitControllerType)
 	}
 }
 
@@ -549,15 +553,7 @@ func DisposeRequest(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.
 		requestResults.Name = api.Name
 		requestResults.MachineNum = reportMsg.MachineNum
 	}
-	api.Request.PreUrl = strings.TrimSpace(api.Request.PreUrl)
-	api.Request.URL = api.Request.PreUrl + api.Request.URL
 
-	if api.ApiVariable != nil {
-		api.GlobalToRequest()
-	}
-
-	// 请求中所有的变量替换成真正的值
-	api.ReplaceQueryParameterizes(globalVar)
 	var (
 		isSucceed          = false
 		errCode            = int64(0)
@@ -567,13 +563,46 @@ func DisposeRequest(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.
 		errMsg             = ""
 		startTime, endTime = time.Time{}, time.Time{}
 	)
+	//if event.Prepositions != nil && len(event.Prepositions) > 0 {
+	//	for _, preposition := range event.Prepositions {
+	//		preposition.Exec()
+	//	}
+	//}
+	var debugMsg = make(map[string]interface{})
+	debugMsg["team_id"] = event.TeamId
+	debugMsg["plan_id"] = event.PlanId
+	debugMsg["report_id"] = event.ReportId
+	debugMsg["scene_id"] = event.SceneId
+	debugMsg["parent_id"] = event.ParentId
+	debugMsg["case_id"] = event.CaseId
+	debugMsg["uuid"] = api.Uuid.String()
+	debugMsg["event_id"] = event.Id
+	debugMsg["api_id"] = api.TargetId
+	debugMsg["api_name"] = api.Name
+	debugMsg["next_list"] = event.NextList
+	debugMsg["request_type"] = api.TargetType
 	switch api.TargetType {
-	case model.FormTypeHTTP:
-		isSucceed, errCode, requestTime, sendBytes, receivedBytes, errMsg, startTime, endTime = HttpSend(event, api, globalVar, mongoCollection)
-	case model.FormTypeWebSocket:
-		isSucceed, errCode, requestTime, sendBytes, receivedBytes = webSocketSend(api)
-	case model.FormTypeGRPC:
-		//isSucceed, errCode, requestTime, sendBytes, contentLength := rpcSend(request)
+	case constant.FormTypeHTTP:
+		api.Request.PreUrl = strings.TrimSpace(api.Request.PreUrl)
+		api.Request.URL = api.Request.PreUrl + api.Request.URL
+
+		if api.ApiVariable != nil {
+			api.GlobalToRequest()
+		}
+		// 请求中所有的变量替换成真正的值
+		api.Request.ReplaceQueryParameterizes(globalVar)
+
+		isSucceed, errCode, requestTime, sendBytes, receivedBytes, errMsg, startTime, endTime = api.Request.Send(api.Debug, debugMsg, mongoCollection, globalVar)
+
+	case constant.FormTypeWebSocket:
+		isSucceed, errCode, requestTime, sendBytes, receivedBytes = api.Ws.Send(api.Debug, debugMsg, mongoCollection, globalVar)
+	case constant.FormTypeDubbo:
+		//isSucceed, errCode, requestTime, sendBytes, contentLength := api.DubboDetail.Send(api.Debug, debugMsg, mongoCollection, globalVar)
+		api.DubboDetail.Send(api.Debug, debugMsg, mongoCollection, globalVar)
+	case constant.FormTypeTcp:
+		api.TCP.Send(api.Debug, debugMsg, mongoCollection)
+	case constant.FormTypeSql:
+		isSucceed, requestTime, startTime, endTime = api.SQL.Send(event.Api.Debug, debugMsg, mongoCollection, globalVar)
 	default:
 		return
 	}
@@ -593,6 +622,134 @@ func DisposeRequest(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.
 	}
 
 }
+
+// DisposeSql 开始对请求进行处理
+//func DisposeSql(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestResults *model.ResultDataMsg, globalVar *sync.Map,
+//	event model.Event, mongoCollection *mongo.Collection, options ...int64) {
+//	sql := event.Api.SQL
+//
+//	if requestResults != nil {
+//		requestResults.PlanId = reportMsg.PlanId
+//		requestResults.PlanName = reportMsg.PlanName
+//		requestResults.EventId = event.Id
+//		requestResults.PercentAge = event.PercentAge
+//		requestResults.ResponseThreshold = event.ResponseThreshold
+//		requestResults.TeamId = event.TeamId
+//		requestResults.SceneId = reportMsg.SceneId
+//		requestResults.MachineIp = reportMsg.MachineIp
+//		requestResults.Concurrency = options[1]
+//		requestResults.SceneName = reportMsg.SceneName
+//		requestResults.ReportId = reportMsg.ReportId
+//		requestResults.ReportName = reportMsg.ReportName
+//		requestResults.PercentAge = event.PercentAge
+//		requestResults.RequestThreshold = event.RequestThreshold
+//		requestResults.ResponseThreshold = event.ResponseThreshold
+//		requestResults.ErrorThreshold = event.ErrorThreshold
+//		requestResults.TargetId = event.Api.TargetId
+//		requestResults.Name = event.Api.Name
+//		requestResults.MachineNum = reportMsg.MachineNum
+//	}
+//
+//	var (
+//		isSucceed          = false
+//		errCode            = int64(0)
+//		requestTime        = uint64(0)
+//		sendBytes          = float64(0)
+//		receivedBytes      = float64(0)
+//		errMsg             = ""
+//		startTime, endTime = time.Time{}, time.Time{}
+//	)
+//	if event.Prepositions != nil && len(event.Prepositions) > 0 {
+//		for _, preposition := range event.Prepositions {
+//			preposition.Exec()
+//		}
+//	}
+//	debugMsg := make(map[string]interface{})
+//	debugMsg["team_id"] = event.Api.TeamId
+//	debugMsg["sql_name"] = event.Api.Name
+//	debugMsg["target_id"] = event.Api.TargetId
+//	debugMsg["uuid"] = event.Api.Uuid.String()
+//	//isSucceed, requestTime, startTime, endTime = SqlSend(sql, sqlInfo, mongoCollection, globalVar)
+//	isSucceed, requestTime, startTime, endTime = sql.Send(event.Api.Debug, debugMsg, mongoCollection, globalVar)
+//	if resultDataMsgCh != nil {
+//		requestResults.Name = event.Api.Name
+//		requestResults.RequestTime = requestTime
+//		requestResults.ErrorType = errCode
+//		requestResults.IsSucceed = isSucceed
+//		requestResults.SendBytes = sendBytes
+//		requestResults.ReceivedBytes = receivedBytes
+//		requestResults.ErrorMsg = errMsg
+//		requestResults.Timestamp = time.Now().UnixMilli()
+//		requestResults.StartTime = startTime.UnixMilli()
+//		requestResults.EndTime = endTime.UnixMilli()
+//		resultDataMsgCh <- requestResults
+//	}
+//
+//}
+
+// DisposeTcp 开始对请求进行处理
+//func DisposeTcp(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestResults *model.ResultDataMsg, globalVar *sync.Map,
+//	event model.Event, mongoCollection *mongo.Collection, options ...int64) {
+//	tcp := event.Api.TCP
+//	tcp.TeamId = event.TeamId
+//
+//	tcp.Debug = event.Debug
+//
+//	if requestResults != nil {
+//		requestResults.PlanId = reportMsg.PlanId
+//		requestResults.PlanName = reportMsg.PlanName
+//		requestResults.EventId = event.Id
+//		requestResults.PercentAge = event.PercentAge
+//		requestResults.ResponseThreshold = event.ResponseThreshold
+//		requestResults.TeamId = event.TeamId
+//		requestResults.SceneId = reportMsg.SceneId
+//		requestResults.MachineIp = reportMsg.MachineIp
+//		requestResults.Concurrency = options[1]
+//		requestResults.SceneName = reportMsg.SceneName
+//		requestResults.ReportId = reportMsg.ReportId
+//		requestResults.ReportName = reportMsg.ReportName
+//		requestResults.PercentAge = event.PercentAge
+//		requestResults.RequestThreshold = event.RequestThreshold
+//		requestResults.ResponseThreshold = event.ResponseThreshold
+//		requestResults.ErrorThreshold = event.ErrorThreshold
+//		requestResults.TargetId = tcp.TargetId
+//		requestResults.Name = tcp.Name
+//		requestResults.MachineNum = reportMsg.MachineNum
+//	}
+//
+//	var (
+//		isSucceed          = false
+//		errCode            = int64(0)
+//		requestTime        = uint64(0)
+//		sendBytes          = float64(0)
+//		receivedBytes      = float64(0)
+//		errMsg             = ""
+//		startTime, endTime = time.Time{}, time.Time{}
+//	)
+//	if event.Prepositions != nil && len(event.Prepositions) > 0 {
+//		for _, preposition := range event.Prepositions {
+//			preposition.Exec()
+//		}
+//	}
+//
+//	TcpConnection(tcp, mongoCollection)
+//	//isSucceed, requestTime, startTime, endTime = TcpConnection(tcp)
+//
+//	if resultDataMsgCh != nil {
+//		requestResults.Name = tcp.Name
+//		requestResults.RequestTime = requestTime
+//		requestResults.ErrorType = errCode
+//		requestResults.IsSucceed = isSucceed
+//		requestResults.SendBytes = sendBytes
+//		requestResults.ReceivedBytes = receivedBytes
+//		requestResults.ErrorMsg = errMsg
+//		requestResults.Timestamp = time.Now().UnixMilli()
+//		requestResults.StartTime = startTime.UnixMilli()
+//		requestResults.EndTime = endTime.UnixMilli()
+//		resultDataMsgCh <- requestResults
+//	}
+//
+//}
 
 func setControllerDebugMsg(preNodeMap *sync.Map, eventResult model.EventResult, scene model.Scene, event model.Event, collection *mongo.Collection, msg, status, controllerType string) {
 	if scene.Debug != "" {
@@ -614,13 +771,203 @@ func setControllerDebugMsg(preNodeMap *sync.Map, eventResult model.EventResult, 
 			model.Insert(collection, debugMsg, middlewares.LocalIp)
 		}
 	}
-	if status == model.Failed {
-		eventResult.Status = model.NotHit
+	if status == constant.Failed {
+		eventResult.Status = constant.NotHit
 	} else {
-		eventResult.Status = model.End
+		eventResult.Status = constant.End
 	}
 	preNodeMap.Store(event.Id, eventResult)
 	//for _, _ = range event.NextList {
 	//	nodeCh <- eventResult
 	//}
 }
+
+// DisposeWs 开始对请求进行处理
+//func DisposeWs(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestResults *model.ResultDataMsg, globalVar *sync.Map,
+//	event model.Event, mongoCollection *mongo.Collection, options ...int64) {
+//	ws := event.Api.Ws
+//	ws.TeamId = event.TeamId
+//
+//	ws.Debug = event.Debug
+//
+//	if requestResults != nil {
+//		requestResults.PlanId = reportMsg.PlanId
+//		requestResults.PlanName = reportMsg.PlanName
+//		requestResults.EventId = event.Id
+//		requestResults.PercentAge = event.PercentAge
+//		requestResults.ResponseThreshold = event.ResponseThreshold
+//		requestResults.TeamId = event.TeamId
+//		requestResults.SceneId = reportMsg.SceneId
+//		requestResults.MachineIp = reportMsg.MachineIp
+//		requestResults.Concurrency = options[1]
+//		requestResults.SceneName = reportMsg.SceneName
+//		requestResults.ReportId = reportMsg.ReportId
+//		requestResults.ReportName = reportMsg.ReportName
+//		requestResults.PercentAge = event.PercentAge
+//		requestResults.RequestThreshold = event.RequestThreshold
+//		requestResults.ResponseThreshold = event.ResponseThreshold
+//		requestResults.ErrorThreshold = event.ErrorThreshold
+//		requestResults.TargetId = ws.TargetId
+//		requestResults.Name = ws.Name
+//		requestResults.MachineNum = reportMsg.MachineNum
+//	}
+//
+//	var (
+//		isSucceed          = false
+//		errCode            = int64(0)
+//		requestTime        = uint64(0)
+//		sendBytes          = float64(0)
+//		receivedBytes      = float64(0)
+//		errMsg             = ""
+//		startTime, endTime = time.Time{}, time.Time{}
+//	)
+//	if event.Prepositions != nil && len(event.Prepositions) > 0 {
+//		for _, preposition := range event.Prepositions {
+//			preposition.Exec()
+//		}
+//	}
+//
+//	webSocketSend(ws, mongoCollection)
+//	//isSucceed, requestTime, startTime, endTime = TcpConnection(tcp)
+//
+//	if resultDataMsgCh != nil {
+//		requestResults.Name = ws.Name
+//		requestResults.RequestTime = requestTime
+//		requestResults.ErrorType = errCode
+//		requestResults.IsSucceed = isSucceed
+//		requestResults.SendBytes = sendBytes
+//		requestResults.ReceivedBytes = receivedBytes
+//		requestResults.ErrorMsg = errMsg
+//		requestResults.Timestamp = time.Now().UnixMilli()
+//		requestResults.StartTime = startTime.UnixMilli()
+//		requestResults.EndTime = endTime.UnixMilli()
+//		resultDataMsgCh <- requestResults
+//	}
+//
+//}
+
+// DisposeDubbo 开始对请求进行处理
+//func DisposeDubbo(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestResults *model.ResultDataMsg, globalVar *sync.Map,
+//	event model.Event, mongoCollection *mongo.Collection, options ...int64) {
+//	dubbo := event.Api.DubboDetail
+//	dubbo.TeamId = event.TeamId
+//	dubbo.Debug = event.Debug
+//	if requestResults != nil {
+//		requestResults.PlanId = reportMsg.PlanId
+//		requestResults.PlanName = reportMsg.PlanName
+//		requestResults.EventId = event.Id
+//		requestResults.PercentAge = event.PercentAge
+//		requestResults.ResponseThreshold = event.ResponseThreshold
+//		requestResults.TeamId = event.TeamId
+//		requestResults.SceneId = reportMsg.SceneId
+//		requestResults.MachineIp = reportMsg.MachineIp
+//		requestResults.Concurrency = options[1]
+//		requestResults.SceneName = reportMsg.SceneName
+//		requestResults.ReportId = reportMsg.ReportId
+//		requestResults.ReportName = reportMsg.ReportName
+//		requestResults.PercentAge = event.PercentAge
+//		requestResults.RequestThreshold = event.RequestThreshold
+//		requestResults.ResponseThreshold = event.ResponseThreshold
+//		requestResults.ErrorThreshold = event.ErrorThreshold
+//		requestResults.TargetId = dubbo.TargetId
+//		requestResults.Name = dubbo.Name
+//		requestResults.MachineNum = reportMsg.MachineNum
+//	}
+//
+//	var (
+//		isSucceed          = false
+//		errCode            = int64(0)
+//		requestTime        = uint64(0)
+//		sendBytes          = float64(0)
+//		receivedBytes      = float64(0)
+//		errMsg             = ""
+//		startTime, endTime = time.Time{}, time.Time{}
+//	)
+//	if event.Prepositions != nil && len(event.Prepositions) > 0 {
+//		for _, preposition := range event.Prepositions {
+//			preposition.Exec()
+//		}
+//	}
+//
+//	SendDubbo(dubbo, mongoCollection)
+//	//isSucceed, requestTime, startTime, endTime = TcpConnection(tcp)
+//
+//	if resultDataMsgCh != nil {
+//		requestResults.Name = dubbo.Name
+//		requestResults.RequestTime = requestTime
+//		requestResults.ErrorType = errCode
+//		requestResults.IsSucceed = isSucceed
+//		requestResults.SendBytes = sendBytes
+//		requestResults.ReceivedBytes = receivedBytes
+//		requestResults.ErrorMsg = errMsg
+//		requestResults.Timestamp = time.Now().UnixMilli()
+//		requestResults.StartTime = startTime.UnixMilli()
+//		requestResults.EndTime = endTime.UnixMilli()
+//		resultDataMsgCh <- requestResults
+//	}
+//
+//}
+
+// DisposeMqtt 开始对请求进行处理
+//func DisposeMqtt(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestResults *model.ResultDataMsg, globalVar *sync.Map,
+//	event model.Event, mongoCollection *mongo.Collection, options ...int64) {
+//	mqtt := event.MQTT
+//	mqtt.TeamId = event.TeamId
+//
+//	mqtt.Debug = event.Debug
+//
+//	if requestResults != nil {
+//		requestResults.PlanId = reportMsg.PlanId
+//		requestResults.PlanName = reportMsg.PlanName
+//		requestResults.EventId = event.Id
+//		requestResults.PercentAge = event.PercentAge
+//		requestResults.ResponseThreshold = event.ResponseThreshold
+//		requestResults.TeamId = event.TeamId
+//		requestResults.SceneId = reportMsg.SceneId
+//		requestResults.MachineIp = reportMsg.MachineIp
+//		requestResults.Concurrency = options[1]
+//		requestResults.SceneName = reportMsg.SceneName
+//		requestResults.ReportId = reportMsg.ReportId
+//		requestResults.ReportName = reportMsg.ReportName
+//		requestResults.PercentAge = event.PercentAge
+//		requestResults.RequestThreshold = event.RequestThreshold
+//		requestResults.ResponseThreshold = event.ResponseThreshold
+//		requestResults.ErrorThreshold = event.ErrorThreshold
+//		requestResults.TargetId = mqtt.TargetId
+//		requestResults.Name = mqtt.Name
+//		requestResults.MachineNum = reportMsg.MachineNum
+//	}
+//
+//	var (
+//		isSucceed          = false
+//		errCode            = int64(0)
+//		requestTime        = uint64(0)
+//		sendBytes          = float64(0)
+//		receivedBytes      = float64(0)
+//		errMsg             = ""
+//		startTime, endTime = time.Time{}, time.Time{}
+//	)
+//	if event.Prepositions != nil && len(event.Prepositions) > 0 {
+//		for _, preposition := range event.Prepositions {
+//			preposition.Exec(globalVar, mqtt.GlobalVariable)
+//		}
+//	}
+//
+//	SendMqtt(mqtt, mongoCollection)
+//	//isSucceed, requestTime, startTime, endTime = TcpConnection(tcp)
+//
+//	if resultDataMsgCh != nil {
+//		requestResults.Name = mqtt.Name
+//		requestResults.RequestTime = requestTime
+//		requestResults.ErrorType = errCode
+//		requestResults.IsSucceed = isSucceed
+//		requestResults.SendBytes = sendBytes
+//		requestResults.ReceivedBytes = receivedBytes
+//		requestResults.ErrorMsg = errMsg
+//		requestResults.Timestamp = time.Now().UnixMilli()
+//		requestResults.StartTime = startTime.UnixMilli()
+//		requestResults.EndTime = endTime.UnixMilli()
+//		resultDataMsgCh <- requestResults
+//	}
+//
+//}

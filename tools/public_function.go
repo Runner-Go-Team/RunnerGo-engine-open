@@ -116,6 +116,37 @@ func ToTimeStamp(option string) string {
 	}
 }
 
+// ToStandardTime 标准时间
+func ToStandardTime(options int) string {
+	now := time.Now()
+	switch options {
+	case 0:
+		return fmt.Sprintf("%v", now)
+	case 1:
+		return now.Format("2006-01-02 15:04:05")
+	case 2:
+		return now.Format("2006-01-02 15:04")
+	case 3:
+		return now.Format("2006-01-02 15")
+	case 4:
+		return now.Format("2006-01-02")
+	case 5:
+		return now.Format("2006/01/02 15:04:01")
+	case 6:
+		return now.Format("2006/01/02 15:04")
+	case 7:
+		return now.Format("2006/01/02 15")
+	case 8:
+		return now.Format("2006/01/02")
+	case 9:
+		return now.Format("2006")
+	case 10:
+		return now.Format("15:03:04")
+	default:
+		return fmt.Sprintf("%v", now)
+	}
+}
+
 func InitPublicFunc() {
 	ControllerMapsType["RandomFloat0"] = RandomFloat0
 	ControllerMapsType["RandomString"] = RandomString
@@ -132,10 +163,10 @@ func InitPublicFunc() {
 	ControllerMapsType["ToStringLU"] = ToStringLU
 	ControllerMapsType["ToTimeStamp"] = ToTimeStamp
 	ControllerMapsType["GetUUid"] = GetUUid
+	ControllerMapsType["ToStandardTime"] = ToStandardTime
 }
 
 func CallPublicFunc(funcName string, parameters []string) []reflect.Value {
-
 	if function, ok := ControllerMapsType[funcName]; ok {
 		f := reflect.ValueOf(function)
 		if len(parameters) != f.Type().NumIn() {
@@ -171,6 +202,7 @@ func ParsFunc(source string) (value string) {
 	}
 	var parameters []string
 	key := strings.Split(source, "__")[1]
+	// 去掉key的最前面和最后的字符
 	list := strings.Split(key, "(")
 	funcName := list[0]
 	if len(list) <= 1 {
@@ -183,6 +215,15 @@ func ParsFunc(source string) (value string) {
 		if strings.Contains(parameters[0], ",") {
 			parameters = strings.Split(parameters[0], ",")
 		}
+	}
+	// 如果公共函数只有一个参数
+	switch funcName {
+	case "MD5", "SHA256", "SHA512", "SHA1", "SHA224", "SHA384", "ToTimeStamp", "ToStandardTime", "RandomString":
+		var v string
+		for _, i := range parameters {
+			v += i
+		}
+		parameters = []string{v}
 	}
 	reflectValue := CallPublicFunc(funcName, parameters)
 	if reflectValue == nil {

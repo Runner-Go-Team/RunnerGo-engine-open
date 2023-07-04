@@ -3,6 +3,7 @@ package execution
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/constant"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
@@ -35,7 +36,7 @@ func LadderModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Con
 	concurrentMap := new(sync.Map)
 	// 只要开始时间+持续时长大于当前时间就继续循环
 	switch scene.ConfigTask.ControlMode {
-	case model.CentralizedMode:
+	case constant.CentralizedMode:
 		for startTime+stepRunTime > endTime {
 
 			select {
@@ -48,13 +49,13 @@ func LadderModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Con
 				}
 				log.Logger.Debug(fmt.Sprintf("%s报告，手动修改为：  %s", scene.ReportId, c.Payload))
 				switch subscriptionStressPlanStatusChange.Type {
-				case model.StopPlan:
+				case constant.StopPlan:
 					if subscriptionStressPlanStatusChange.StopPlan == "stop" {
 						return fmt.Sprintf("最大并发数：%d， 总运行时长%ds, 任务手动结束！", concurrent, endTime-targetTime)
 					}
-				case model.DebugStatus:
+				case constant.DebugStatus:
 					debug = subscriptionStressPlanStatusChange.Debug
-				case model.ReportChange:
+				case constant.ReportChange:
 					MachineModeConf := subscriptionStressPlanStatusChange.MachineModeConf
 					if MachineModeConf.Machine != middlewares.LocalIp {
 						continue
@@ -102,7 +103,7 @@ func LadderModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Con
 					currentWg.Add(1)
 					go func(concurrentId, concurrent int64, wg *sync.WaitGroup, useConfiguration *model.Configuration) {
 						var sceneWg = &sync.WaitGroup{}
-						golink.DisposeScene(wg, sceneWg, model.PlanType, scene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
+						golink.DisposeScene(wg, sceneWg, constant.PlanType, scene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
 						sceneWg.Wait()
 						wg.Done()
 						currentWg.Done()
@@ -140,7 +141,7 @@ func LadderModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Con
 			}
 
 		}
-	case model.AloneMode:
+	case constant.AloneMode:
 		for startTime+stepRunTime > endTime {
 			select {
 			case c := <-statusCh:
@@ -152,7 +153,7 @@ func LadderModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Con
 				}
 				log.Logger.Debug(fmt.Sprintf("%s报告，手动修改为：  %s", scene.ReportId, c.Payload))
 				switch subscriptionStressPlanStatusChange.Type {
-				case model.StopPlan:
+				case constant.StopPlan:
 					if subscriptionStressPlanStatusChange.StopPlan == "stop" {
 						concurrentMap.Range(func(key, value any) bool {
 							concurrentMap.Delete(key)
@@ -160,9 +161,9 @@ func LadderModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Con
 						})
 						return fmt.Sprintf("最大并发数：%d， 总运行时长%ds, 任务手动结束！", concurrent, endTime-targetTime)
 					}
-				case model.DebugStatus:
+				case constant.DebugStatus:
 					debug = subscriptionStressPlanStatusChange.Debug
-				case model.ReportChange:
+				case constant.ReportChange:
 					MachineModeConf := subscriptionStressPlanStatusChange.MachineModeConf
 					if MachineModeConf.Machine != middlewares.LocalIp {
 						continue
@@ -206,7 +207,7 @@ func LadderModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Con
 								break
 							}
 							var sceneWg = &sync.WaitGroup{}
-							golink.DisposeScene(wg, sceneWg, model.PlanType, currentScene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, i, concurrent)
+							golink.DisposeScene(wg, sceneWg, constant.PlanType, currentScene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, i, concurrent)
 							sceneWg.Wait()
 
 						}
