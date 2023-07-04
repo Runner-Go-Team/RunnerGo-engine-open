@@ -48,23 +48,23 @@ func (tcp TCPDetail) Send(debug string, debugMsg map[string]interface{}, mongoCo
 
 	recvResults["type"] = "recv"
 	recvResults["uuid"] = debugMsg["uuid"]
-	recvResults["name"] = debugMsg["name"]
+	recvResults["api_name"] = debugMsg["api_name"]
 	recvResults["team_id"] = debugMsg["team_id"]
-	recvResults["target_id"] = debugMsg["target_id"]
+	recvResults["api_id"] = debugMsg["api_id"]
 	recvResults["request_type"] = debugMsg["request_type"]
 
 	writeResults["type"] = "send"
 	writeResults["uuid"] = debugMsg["uuid"]
-	writeResults["name"] = debugMsg["name"]
+	writeResults["api_name"] = debugMsg["api_name"]
 	writeResults["team_id"] = debugMsg["team_id"]
-	writeResults["target_id"] = debugMsg["target_id"]
+	writeResults["api_id"] = debugMsg["api_id"]
 	writeResults["request_type"] = debugMsg["request_type"]
 
 	connectionResults["type"] = "connection"
 	connectionResults["uuid"] = debugMsg["uuid"]
-	connectionResults["name"] = debugMsg["name"]
+	connectionResults["api_name"] = debugMsg["api_name"]
 	connectionResults["team_id"] = debugMsg["team_id"]
-	connectionResults["target_id"] = debugMsg["target_id"]
+	connectionResults["api_id"] = debugMsg["api_id"]
 	connectionResults["request_type"] = debugMsg["request_type"]
 
 	tcp.Url = strings.TrimSpace(tcp.Url)
@@ -223,7 +223,7 @@ func Write(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Con
 						results["status"] = constant.Failed
 						results["request_body"] = err.Error()
 					} else {
-						results["status"] = true
+						results["status"] = constant.Success
 					}
 					results["is_stop"] = false
 					Insert(mongoCollection, results, middlewares.LocalIp)
@@ -378,7 +378,7 @@ func Read(wg *sync.WaitGroup, timeAfter <-chan time.Time, connChan chan net.Conn
 					Insert(mongoCollection, results, middlewares.LocalIp)
 					break
 				} else {
-					results["status"] = true
+					results["status"] = constant.Success
 				}
 				var msg string
 				if n != 0 {

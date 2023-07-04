@@ -76,21 +76,21 @@ func (ws WebsocketDetail) Request(debug string, debugMsg map[string]interface{},
 	recvResults["uuid"] = debugMsg["uuid"]
 	recvResults["name"] = debugMsg["name"]
 	recvResults["team_id"] = debugMsg["team_id"]
-	recvResults["target_id"] = debugMsg["target_id"]
+	recvResults["api_id"] = debugMsg["api_id"]
 	recvResults["request_type"] = debugMsg["request_type"]
 
 	writeResults["type"] = "send"
 	writeResults["uuid"] = debugMsg["uuid"]
 	writeResults["name"] = debugMsg["name"]
 	writeResults["team_id"] = debugMsg["team_id"]
-	writeResults["target_id"] = debugMsg["target_id"]
+	writeResults["api_id"] = debugMsg["api_id"]
 	writeResults["request_type"] = debugMsg["request_type"]
 
 	connectionResults["type"] = "connection"
 	connectionResults["uuid"] = debugMsg["uuid"]
-	connectionResults["name"] = debugMsg["name"]
+	connectionResults["api_name"] = debugMsg["api_name"]
 	connectionResults["team_id"] = debugMsg["team_id"]
-	connectionResults["target_id"] = debugMsg["target_id"]
+	connectionResults["api_id"] = debugMsg["api_id"]
 	connectionResults["request_type"] = debugMsg["request_type"]
 	headers := map[string][]string{}
 	for _, header := range ws.WsHeader {
@@ -242,7 +242,7 @@ func (ws WebsocketDetail) Request(debug string, debugMsg map[string]interface{},
 					}
 					select {
 					case <-writeTimeAfter:
-						writeResults["status"] = false
+						writeResults["status"] = constant.Success
 						writeResults["is_stop"] = true
 						Insert(mongoCollection, writeResults, middlewares.LocalIp)
 						return
@@ -250,7 +250,7 @@ func (ws WebsocketDetail) Request(debug string, debugMsg map[string]interface{},
 						_ = json.Unmarshal([]byte(c.Payload), wsStatusChange)
 						switch wsStatusChange.Type {
 						case 1:
-							writeResults["status"] = false
+							writeResults["status"] = constant.Failed
 							writeResults["is_stop"] = true
 							Insert(mongoCollection, writeResults, middlewares.LocalIp)
 							return
@@ -259,11 +259,11 @@ func (ws WebsocketDetail) Request(debug string, debugMsg map[string]interface{},
 							bodyBytes := []byte(body)
 							err = conn.WriteMessage(websocket.TextMessage, bodyBytes)
 							writeResults["request_body"] = body
-							writeResults["status"] = true
+							writeResults["status"] = constant.Success
 							writeResults["is_stop"] = false
 							if err != nil {
 								writeResults["request_body"] = err.Error()
-								writeResults["status"] = false
+								writeResults["status"] = constant.Failed
 								Insert(mongoCollection, writeResults, middlewares.LocalIp)
 								continue
 							}
@@ -275,7 +275,7 @@ func (ws WebsocketDetail) Request(debug string, debugMsg map[string]interface{},
 
 			}(wg, pubSub)
 		default:
-			writeResults["status"] = false
+			writeResults["status"] = constant.Failed
 			writeResults["is_stop"] = true
 			Insert(mongoCollection, writeResults, middlewares.LocalIp)
 			return
@@ -300,7 +300,7 @@ func (ws WebsocketDetail) Request(debug string, debugMsg map[string]interface{},
 						} else {
 							recvResults["response_body"] = ""
 						}
-						recvResults["status"] = false
+						recvResults["status"] = constant.Failed
 						recvResults["is_stop"] = true
 						Insert(mongoCollection, recvResults, middlewares.LocalIp)
 						return
@@ -309,7 +309,7 @@ func (ws WebsocketDetail) Request(debug string, debugMsg map[string]interface{},
 				}
 				select {
 				case <-readTimeAfter:
-					recvResults["status"] = true
+					recvResults["status"] = constant.Success
 					recvResults["response_body"] = ""
 					recvResults["is_stop"] = true
 					Insert(mongoCollection, recvResults, middlewares.LocalIp)
@@ -317,7 +317,7 @@ func (ws WebsocketDetail) Request(debug string, debugMsg map[string]interface{},
 				case c := <-statusCh:
 					_ = json.Unmarshal([]byte(c.Payload), wsStatusChange)
 					if wsStatusChange.Type == 1 {
-						recvResults["status"] = false
+						recvResults["status"] = constant.Failed
 						recvResults["is_stop"] = true
 						Insert(mongoCollection, recvResults, middlewares.LocalIp)
 						return
@@ -327,12 +327,12 @@ func (ws WebsocketDetail) Request(debug string, debugMsg map[string]interface{},
 					m, p, connectErr := conn.ReadMessage()
 					if connectErr != nil {
 						recvResults["response_body"] = connectErr.Error()
-						recvResults["status"] = false
+						recvResults["status"] = constant.Failed
 						recvResults["is_stop"] = false
 						Insert(mongoCollection, recvResults, middlewares.LocalIp)
 						break
 					}
-					recvResults["status"] = true
+					recvResults["status"] = constant.Success
 					recvResults["response_message_type"] = m
 					recvResults["response_body"] = string(p)
 					recvResults["is_stop"] = false
@@ -352,8 +352,8 @@ func (ws WebsocketDetail) Request(debug string, debugMsg map[string]interface{},
 				recvResults["response_body"] = "连接为空"
 				writeResults["request_body"] = "连接为空"
 			}
-			recvResults["status"] = false
-			writeResults["status"] = false
+			recvResults["status"] = constant.Failed
+			writeResults["status"] = constant.Failed
 			recvResults["is_stop"] = true
 			writeResults["is_stop"] = true
 			Insert(mongoCollection, writeResults, middlewares.LocalIp)
@@ -367,8 +367,8 @@ func (ws WebsocketDetail) Request(debug string, debugMsg map[string]interface{},
 		if err != nil {
 			recvResults["response_body"] = err.Error()
 			writeResults["request_body"] = err.Error()
-			recvResults["status"] = false
-			writeResults["status"] = false
+			recvResults["status"] = constant.Failed
+			writeResults["status"] = constant.Failed
 			recvResults["is_stop"] = true
 			writeResults["is_stop"] = true
 			Insert(mongoCollection, writeResults, middlewares.LocalIp)
@@ -380,13 +380,13 @@ func (ws WebsocketDetail) Request(debug string, debugMsg map[string]interface{},
 		if err1 != nil {
 			recvResults["response_body"] = err1.Error()
 			recvResults["is_stop"] = true
-			recvResults["status"] = false
+			recvResults["status"] = constant.Failed
 			Insert(mongoCollection, writeResults, middlewares.LocalIp)
 			Insert(mongoCollection, recvResults, middlewares.LocalIp)
 			return
 		}
-		recvResults["status"] = true
-		writeResults["status"] = true
+		recvResults["status"] = constant.Success
+		writeResults["status"] = constant.Success
 		recvResults["response_message_type"] = m
 		recvResults["response_body"] = string(p)
 		recvResults["is_stop"] = true
@@ -396,8 +396,8 @@ func (ws WebsocketDetail) Request(debug string, debugMsg map[string]interface{},
 		return
 
 	default:
-		recvResults["status"] = false
-		writeResults["status"] = false
+		recvResults["status"] = constant.Failed
+		writeResults["status"] = constant.Failed
 		recvResults["is_stop"] = true
 		writeResults["is_stop"] = true
 	}
