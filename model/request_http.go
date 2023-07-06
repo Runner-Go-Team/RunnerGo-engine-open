@@ -179,10 +179,10 @@ func (r RequestHttp) Request() (resp *fasthttp.Response, req *fasthttp.Request, 
 	// set header
 	r.Header.SetHeader(req)
 	r.Cookie.SetCookie(req)
-	url := r.URL
-	urls := strings.Split(url, "//")
+
+	urls := strings.Split(r.URL, "//")
 	if !strings.EqualFold(urls[0], constant.HTTP) && !strings.EqualFold(urls[0], constant.HTTPS) {
-		url = constant.HTTP + "//" + url
+		r.URL = constant.HTTP + "//" + r.URL
 
 	}
 
@@ -193,15 +193,15 @@ func (r RequestHttp) Request() (resp *fasthttp.Response, req *fasthttp.Request, 
 			if v.IsChecked != constant.Open {
 				continue
 			}
-			if !strings.Contains(url, v.Key) {
+			if !strings.Contains(r.URL, v.Key) {
 				by := v.ValueToByte()
 				urlQuery.AddBytesV(v.Key, by)
-				url = url + fmt.Sprintf("&%s=%s", v.Key, string(v.ValueToByte()))
+				r.URL = r.URL + fmt.Sprintf("&%s=%s", v.Key, string(v.ValueToByte()))
 			}
 		}
 	}
 	// set url
-	req.SetRequestURI(url)
+	req.SetRequestURI(r.URL)
 	// set body
 	str = r.Body.SetBody(req)
 
