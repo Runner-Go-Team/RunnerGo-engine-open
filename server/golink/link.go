@@ -416,13 +416,13 @@ func disposeDebugNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.M
 	event.TeamId = scene.TeamId
 	event.Debug = scene.Debug
 	event.ReportId = scene.ReportId
-
 	if scene.Configuration != nil || scene.Configuration.SceneVariable != nil {
 		if event.Api.ApiVariable == nil {
 			event.Api.ApiVariable = new(model.GlobalVariable)
 		}
 		event.Api.ApiVariable.InitReplace()
 		scene.Configuration.SceneVariable.SupToSub(event.Api.ApiVariable)
+
 	}
 
 	switch event.Type {
@@ -563,11 +563,7 @@ func DisposeRequest(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.
 		errMsg             = ""
 		startTime, endTime = time.Time{}, time.Time{}
 	)
-	//if event.Prepositions != nil && len(event.Prepositions) > 0 {
-	//	for _, preposition := range event.Prepositions {
-	//		preposition.Exec()
-	//	}
-	//}
+
 	var debugMsg = make(map[string]interface{})
 	debugMsg["team_id"] = event.TeamId
 	debugMsg["plan_id"] = event.PlanId

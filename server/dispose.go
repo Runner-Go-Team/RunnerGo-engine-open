@@ -401,7 +401,6 @@ func DebugApi(debugApi model.Api) {
 
 		}
 	}
-
 	if debugApi.ApiVariable.Variable != nil {
 		for _, variable := range debugApi.Configuration.SceneVariable.Variable {
 			if variable.IsChecked != constant.Open {
