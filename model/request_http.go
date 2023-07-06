@@ -1558,10 +1558,11 @@ func makeDebugMsg(regex []map[string]interface{}, debugMsg map[string]interface{
 	if err != nil {
 		debugMsg["response_body"] = err.Error()
 	} else {
-		if strings.Contains(resp.Header.String(), "Content-Encoding") {
+		switch string(resp.Header.ContentEncoding()) {
+		case "br", "deflate", "gzip":
 			b, _ := resp.BodyUncompressed()
 			debugMsg["response_body"] = string(b)
-		} else {
+		default:
 			debugMsg["response_body"] = string(resp.Body())
 		}
 	}
