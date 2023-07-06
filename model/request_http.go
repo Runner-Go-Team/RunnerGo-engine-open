@@ -210,12 +210,11 @@ func (r RequestHttp) Request() (resp *fasthttp.Response, req *fasthttp.Request, 
 
 	resp = fasthttp.AcquireResponse()
 	startTime = time.Now()
-
+	req.SetTimeout(30 * time.Second)
 	// 发送请求
 	if r.HttpApiSetup.IsRedirects == 0 {
 		err = client.DoRedirects(req, resp, r.HttpApiSetup.RedirectsNum)
 	} else {
-		req.SetTimeout(1 * time.Second)
 		err = client.Do(req, resp)
 	}
 
