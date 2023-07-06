@@ -215,7 +215,6 @@ func (r RequestHttp) Request() (resp *fasthttp.Response, req *fasthttp.Request, 
 	if r.HttpApiSetup.IsRedirects == 0 {
 		err = client.DoRedirects(req, resp, r.HttpApiSetup.RedirectsNum)
 	} else {
-		req.SetTimeout(1 * time.Second)
 		err = client.Do(req, resp)
 	}
 
