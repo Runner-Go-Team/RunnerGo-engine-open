@@ -63,6 +63,7 @@ func HTTPRequest(method, url string, body *model.Body, query *model.Query, heade
 	auth.SetAuth(req)
 	resp = fasthttp.AcquireResponse()
 	startTime = time.Now()
+	req.SetTimeout(30 * time.Second)
 	// 发送请求
 	if httpApiSetup.IsRedirects == 0 {
 		err = client.DoRedirects(req, resp, httpApiSetup.RedirectsNum)
