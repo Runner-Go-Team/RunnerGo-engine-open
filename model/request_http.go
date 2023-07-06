@@ -1558,7 +1558,13 @@ func makeDebugMsg(regex []map[string]interface{}, debugMsg map[string]interface{
 	if err != nil {
 		debugMsg["response_body"] = err.Error()
 	} else {
-		debugMsg["response_body"] = string(resp.Body())
+		switch string(resp.Header.ContentEncoding()) {
+		case "br", "deflate", "gzip":
+			b, _ := resp.BodyUncompressed()
+			debugMsg["response_body"] = string(b)
+		default:
+			debugMsg["response_body"] = string(resp.Body())
+		}
 	}
 	switch isSucceed {
 	case false:
