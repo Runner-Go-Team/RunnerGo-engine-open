@@ -5,6 +5,7 @@ package tools
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/Runner-Go-Team/RunnerGo-engine-open/constant"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/log"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
 	"github.com/tidwall/gjson"
@@ -43,6 +44,21 @@ func InArrayStr(str string, arr []string) (inArray bool) {
 func ToString(args map[string]interface{}) string {
 	str, _ := json.Marshal(args)
 	return string(str)
+}
+
+func FormatMap(interfaceMap map[interface{}]interface{}) (fixedData map[string]interface{}) {
+	fixedData = make(map[string]interface{})
+	for k, v := range interfaceMap {
+		switch fmt.Sprintf("%T", v) {
+		case constant.InterfaceMap:
+			var innerMap = FormatMap(v.(map[interface{}]interface{}))
+			fixedData[fmt.Sprintf("%v", k)] = innerMap
+		default:
+			fixedData[fmt.Sprintf("%v", k)] = v
+		}
+
+	}
+	return
 }
 
 var SymbolList = []string{"`", "?", "~", "\\", "&", "*", "^", "%", "$", "￥", "#", "@", "!", "=", "+", "-", "_", "(", ")", "<", ">", ",", "."}

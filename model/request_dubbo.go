@@ -78,9 +78,19 @@ type DubboParam struct {
 var RpcServerMap = new(sync.Map)
 
 func (d DubboDetail) Send(debug string, debugMsg map[string]interface{}, mongoCollection *mongo.Collection, globalVariable *sync.Map) {
-	parameterTypes, parameterValues := []string{}, []hessian.Object{}
-	var err error
-	var rpcServer common.RPCService
+
+	var (
+		err              error
+		regex            []map[string]interface{}
+		success          string
+		response         string
+		rpcServer        common.RPCService
+		assertNum        int
+		parameterTypes   []string
+		assertFailedNum  int
+		assertionMsgList []AssertionMsg
+		parameterValues  []hessian.Object
+	)
 	d.DubboConfig.RegistrationCenterName = strings.TrimSpace(d.DubboConfig.RegistrationCenterName)
 	d.DubboConfig.RegistrationCenterAddress = strings.TrimSpace(d.DubboConfig.RegistrationCenterAddress)
 	d.ApiName = strings.TrimSpace(d.ApiName)
@@ -91,134 +101,56 @@ func (d DubboDetail) Send(debug string, debugMsg map[string]interface{}, mongoCo
 	} else {
 		rpcServer = s
 	}
-	//rpcServer, err := d.init()
-	for _, parame := range d.DubboParam {
-		if parame.IsChecked != constant.Open {
-			break
-		}
-		var val interface{}
-		switch parame.ParamType {
-		case constant.JavaInteger:
-			val, err = strconv.Atoi(parame.Val)
-			if err != nil {
-				val = parame
-				continue
-			}
-		case constant.JavaString:
-			val = parame.Val
-		case constant.JavaBoolean:
-			switch parame.Val {
-			case "true":
-				val = true
-			case "false":
-				val = false
-			default:
-				val = parame.Val
-			}
-		case constant.JavaByte:
+	parameterTypes, parameterValues = d.paramInit()
 
-		case constant.JavaCharacter:
-		case constant.JavaDouble:
-			val, err = strconv.ParseFloat(parame.Val, 64)
-			if err != nil {
-				val = parame.Val
-				continue
-			}
-		case constant.JavaFloat:
-			val, err = strconv.ParseFloat(parame.Val, 64)
-			if err != nil {
-				val = parame.Val
-				continue
-			}
-			val = float32(val.(float64))
-		case constant.JavaLong:
-			val, err = strconv.ParseInt(parame.Val, 10, 64)
-			if err != nil {
-				val = parame.Val
-				continue
-			}
-		case constant.JavaMap:
-		case constant.JavaList:
-		default:
-			val = parame.Val
-		}
-		parameterTypes = append(parameterTypes, parame.ParamType)
-		parameterValues = append(parameterValues, val)
+	// 发起反射调用
+	success, response = d.invoke(err, rpcServer.(*generic.GenericService), parameterTypes, parameterValues)
+	// 关联提取
+	regex = d.disExtract(response, globalVariable)
 
-	}
-	var resp interface{}
-	var response []byte
-	requestType, _ := json.Marshal(parameterTypes)
-	debugMsg["request_parameter_type"] = string(requestType)
-	requestBody, _ := json.Marshal(parameterValues)
-	debugMsg["request_body"] = string(requestBody)
-	if err != nil {
-		debugMsg["status"] = constant.Failed
-		debugMsg["response_body"] = err.Error()
-	} else {
-		resp, err = rpcServer.(*generic.GenericService).Invoke(
-			context.TODO(),
-			d.FunctionName,
-			parameterTypes,
-			parameterValues, // 实参
-		)
-		if err != nil {
-			debugMsg["status"] = constant.Failed
-			debugMsg["response_body"] = err.Error()
-		}
-		if resp != nil {
-			response, _ = json.Marshal(resp)
-			debugMsg["status"] = constant.Success
-			debugMsg["response_body"] = string(response)
-
-		}
-
-	}
-	var regex []map[string]interface{}
-	if d.DubboRegex != nil {
-		for _, regular := range d.DubboRegex {
-			if regular.IsChecked != constant.Open {
-				continue
-			}
-			reg := make(map[string]interface{})
-			value := regular.Extract(string(response), globalVariable)
-			if value == nil {
-				continue
-			}
-			reg[regular.Var] = value
-			regex = append(regex, reg)
-		}
-	}
-	debugMsg["regex"] = regex
-
-	var assertionMsgList []AssertionMsg
 	// 断言验证
+	assertNum, assertFailedNum, assertionMsgList = d.disVerify(response)
 
-	if d.DubboAssert != nil {
-		var (
-			assertNum = 0
-		)
-		var assertionMsg = AssertionMsg{}
-		var (
-			code    = int64(10000)
-			succeed = true
-			msg     = ""
-		)
-		for _, v := range d.DubboAssert {
-			if v.IsChecked != constant.Open {
-				continue
-			}
-			code, succeed, msg = v.VerifyAssertionText(string(response))
-			assertionMsg.Code = code
-			assertionMsg.IsSucceed = succeed
-			assertionMsg.Msg = msg
-			assertionMsgList = append(assertionMsgList, assertionMsg)
-			assertNum++
-		}
+	requestType, _ := json.Marshal(parameterTypes)
+	requestBody, _ := json.Marshal(parameterValues)
+
+	if debug == constant.All {
+		debugMsg["regex"] = regex
+		debugMsg["assert"] = assertionMsgList
+		debugMsg["status"] = success
+		debugMsg["assert_num"] = assertNum
+		debugMsg["request_type"] = d.DubboProtocol
+		debugMsg["request_body"] = string(requestBody)
+		debugMsg["response_body"] = string(response)
+		debugMsg["assert_failed_num"] = assertFailedNum
+		debugMsg["request_parameter_type"] = string(requestType)
+		Insert(mongoCollection, debugMsg, middlewares.LocalIp)
 	}
-	debugMsg["assert"] = assertionMsgList
-	debugMsg["request_type"] = d.DubboProtocol
-	Insert(mongoCollection, debugMsg, middlewares.LocalIp)
+	if debug == constant.OnlySuccess && success == constant.Success {
+		debugMsg["regex"] = regex
+		debugMsg["assert"] = assertionMsgList
+		debugMsg["status"] = success
+		debugMsg["assert_num"] = assertNum
+		debugMsg["request_type"] = d.DubboProtocol
+		debugMsg["request_body"] = string(requestBody)
+		debugMsg["response_body"] = string(response)
+		debugMsg["assert_failed_num"] = assertFailedNum
+		debugMsg["request_parameter_type"] = string(requestType)
+		Insert(mongoCollection, debugMsg, middlewares.LocalIp)
+	}
+	if debug == constant.OnlyError && success == constant.Failed {
+		debugMsg["regex"] = regex
+		debugMsg["assert"] = assertionMsgList
+		debugMsg["status"] = success
+		debugMsg["assert_num"] = assertNum
+		debugMsg["request_type"] = d.DubboProtocol
+		debugMsg["request_body"] = string(requestBody)
+		debugMsg["response_body"] = string(response)
+		debugMsg["assert_failed_num"] = assertFailedNum
+		debugMsg["request_parameter_type"] = string(requestType)
+		Insert(mongoCollection, debugMsg, middlewares.LocalIp)
+	}
+
 }
 
 func (d DubboDetail) init(soleKey string) (rpcServer common.RPCService, err error) {
@@ -227,7 +159,6 @@ func (d DubboDetail) init(soleKey string) (rpcServer common.RPCService, err erro
 		Protocol: d.DubboConfig.RegistrationCenterName,
 		Address:  d.DubboConfig.RegistrationCenterAddress,
 	}
-
 	var zk string
 	if d.DubboConfig.RegistrationCenterName == "zookeeper" {
 		zk = "zk"
@@ -252,10 +183,6 @@ func (d DubboDetail) init(soleKey string) (rpcServer common.RPCService, err erro
 		return
 	}
 
-	//if err = rootConfig.Init(); err != nil {
-	//	return
-	//}
-
 	// Reference 配置初始化，因为需要使用注册中心进行服务发现，需要传入经过配置的 rootConfig
 	if err = refConf.Init(rootConfig); err != nil {
 		return
@@ -269,6 +196,152 @@ func (d DubboDetail) init(soleKey string) (rpcServer common.RPCService, err erro
 		RpcServerMap.Store(soleKey, rpcServer)
 	} else {
 		rpcServer = s
+	}
+	return
+}
+
+// 发起反射调用
+func (d DubboDetail) invoke(err error, rpcServer *generic.GenericService, parameterTypes []string, parameterValues []hessian.Object) (success, response string) {
+	var resp interface{}
+	if err != nil {
+		success = constant.Failed
+		response = err.Error()
+		return
+	} else {
+		resp, err = rpcServer.Invoke(
+			context.TODO(),
+			d.FunctionName,  // 调用的方法
+			parameterTypes,  // 参数类型
+			parameterValues, // 实参
+		)
+		if resp != nil {
+			switch fmt.Sprintf("%T", resp) {
+			case constant.InterfaceMap:
+				var fixedData map[string]interface{}
+				fixedData = tools.FormatMap(resp.(map[interface{}]interface{}))
+				by, _ := json.Marshal(fixedData)
+				response = string(by)
+			default:
+				response = fmt.Sprint(resp)
+			}
+			success = constant.Success
+		}
+		if err != nil {
+			success = constant.Failed
+			response = err.Error()
+		}
+
+	}
+	return
+}
+
+// 初始化参数
+func (d DubboDetail) paramInit() (parameterTypes []string, parameterValues []hessian.Object) {
+	if d.DubboParam == nil {
+		return
+	}
+	var err error
+	for _, param := range d.DubboParam {
+		if param.IsChecked != constant.Open {
+			break
+		}
+		var val interface{}
+		switch param.ParamType {
+		case constant.JavaInteger:
+			val, err = strconv.Atoi(param.Val)
+			if err != nil {
+				val = param
+				continue
+			}
+		case constant.JavaString:
+			val = param.Val
+		case constant.JavaBoolean:
+			switch param.Val {
+			case "true":
+				val = true
+			case "false":
+				val = false
+			default:
+				val = param.Val
+			}
+		case constant.JavaByte:
+
+		case constant.JavaCharacter:
+		case constant.JavaDouble:
+			val, err = strconv.ParseFloat(param.Val, 64)
+			if err != nil {
+				val = param.Val
+				continue
+			}
+		case constant.JavaFloat:
+			val, err = strconv.ParseFloat(param.Val, 64)
+			if err != nil {
+				val = param.Val
+				continue
+			}
+			val = float32(val.(float64))
+		case constant.JavaLong:
+			val, err = strconv.ParseInt(param.Val, 10, 64)
+			if err != nil {
+				val = param.Val
+				continue
+			}
+		case constant.JavaMap:
+		case constant.JavaList:
+		default:
+			val = param.Val
+		}
+		parameterTypes = append(parameterTypes, param.ParamType)
+		parameterValues = append(parameterValues, val)
+
+	}
+	return
+}
+
+// 处理关联提取
+func (d DubboDetail) disExtract(response string, globalVariable *sync.Map) (regex []map[string]interface{}) {
+	if d.DubboRegex == nil {
+		return
+	}
+	for _, regular := range d.DubboRegex {
+		if regular.IsChecked != constant.Open {
+			continue
+		}
+		reg := make(map[string]interface{})
+		value := regular.Extract(response, globalVariable)
+		if value == nil {
+			continue
+		}
+		reg[regular.Var] = value
+		regex = append(regex, reg)
+	}
+	return
+}
+
+// 处理断言
+func (d DubboDetail) disVerify(response string) (assertNum, assertFailedNum int, assertionMsgList []AssertionMsg) {
+	if d.DubboAssert == nil {
+		return
+	}
+	var assertionMsg = AssertionMsg{}
+	var (
+		code    = int64(10000)
+		succeed = true
+		msg     string
+	)
+	for _, v := range d.DubboAssert {
+		if v.IsChecked != constant.Open {
+			continue
+		}
+		code, succeed, msg = v.VerifyAssertionText(response)
+		assertionMsg.Code = code
+		assertionMsg.IsSucceed = succeed
+		assertionMsg.Msg = msg
+		assertionMsgList = append(assertionMsgList, assertionMsg)
+		assertNum++
+		if !succeed {
+			assertFailedNum++
+		}
 	}
 	return
 }

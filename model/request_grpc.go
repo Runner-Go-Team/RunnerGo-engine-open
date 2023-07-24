@@ -6,10 +6,13 @@
 // -------------------------------------------
 package model
 
+import uuid "github.com/satori/go.uuid"
+
 type RequestGrpc struct {
-	FilePath     string               `json:"file_path"`
-	ServiceName  string               `json:"service"`
-	Method       string               `json:"method"` // 方法 GET/POST/PUT
+	TargetId     string               `json:"target_id"`
+	Uuid         uuid.UUID            `json:"uuid"`
+	Name         string               `json:"name"`
+	TeamId       string               `json:"team_id"`
 	Debug        string               `json:"debug"`
 	Parameter    []*VarForm           `json:"parameter"`
 	Header       *Header              `json:"header"` // Headers
@@ -20,10 +23,4 @@ type RequestGrpc struct {
 	HttpApiSetup *HttpApiSetup        `json:"http_api_setup"`
 	Assert       []*AssertionText     `json:"assert"` // 验证的方法(断言)
 	Regex        []*RegularExpression `json:"regex"`  // 正则表达式
-}
-
-func initGrpc() {
-	//var parser protoparse.Parser
-	//
-	//fileDescriptors, _ := parser.ParseFiles("./")
 }
