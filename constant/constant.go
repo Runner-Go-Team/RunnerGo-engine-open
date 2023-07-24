@@ -94,8 +94,10 @@ const (
 	DateTimeType  = "DateTime"
 	TimeStampType = "TimeStampType"
 	BooleanType   = "boolean"
+	InterfaceMap  = "map[interface {}]interface {}"
 )
 
+// body 格式
 const (
 	NoneMode      = "none"
 	FormMode      = "form-data"
