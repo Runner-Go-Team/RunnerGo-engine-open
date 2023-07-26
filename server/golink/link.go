@@ -203,6 +203,15 @@ func disposePlanNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.Ma
 		return
 	}
 
+	// 如果该event是禁用的
+	if event.IsDisabled == 1 {
+		eventResult.Status = constant.End
+		eventResult.Weight = event.Weight
+		if event.NextList != nil && len(event.NextList) >= 1 {
+			preNodeMap.Store(event.Id, eventResult)
+		}
+	}
+
 	event.TeamId = scene.TeamId
 	event.Debug = scene.Debug
 	event.ReportId = scene.ReportId
@@ -413,6 +422,16 @@ func disposeDebugNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.M
 			}
 		}
 	}
+
+	// 如果该event是禁用的
+	if event.IsDisabled == 1 {
+		eventResult.Status = constant.End
+		eventResult.Weight = event.Weight
+		if event.NextList != nil && len(event.NextList) >= 1 {
+			preNodeMap.Store(event.Id, eventResult)
+		}
+	}
+
 	event.TeamId = scene.TeamId
 	event.Debug = scene.Debug
 	event.ReportId = scene.ReportId

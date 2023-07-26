@@ -12,6 +12,7 @@ type Event struct {
 	ParentId          string         `json:"parentId"`
 	ReportId          string         `json:"report_id"`
 	TeamId            string         `json:"team_id"`
+	IsDisabled        int            `json:"is_disabled"` // 0: 不禁用， 1: 禁用
 	IsCheck           bool           `json:"is_check"`
 	Uuid              uuid.UUID      `json:"uuid"`
 	Type              string         `json:"type"` //   事件类型 "request" "controller"
