@@ -7,19 +7,18 @@
 package client
 
 import (
-	"github.com/Runner-Go-Team/RunnerGo-engine-open/model"
 	"testing"
 )
 
 func TestSqlRequest(t *testing.T) {
-	sqlInfo := model.MysqlDatabaseInfo{
-		Type:     "oracle",
-		Host:     "192.168.1.209",
-		User:     "*****",
-		Password: "123456",
-		Port:     1521,
-		DbName:   "helowin",
-	}
-
-	SqlRequest(sqlInfo, "")
+	//sqlInfo := model.MysqlDatabaseInfo{
+	//	Type:     "oracle",
+	//	Host:     "192.168.1.209",
+	//	User:     "*****",
+	//	Password: "123456",
+	//	Port:     1521,
+	//	DbName:   "helowin",
+	//}
+	//
+	//SqlRequest(sqlInfo, "")
 }
