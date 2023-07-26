@@ -7,13 +7,14 @@ import (
 )
 
 type Preposition struct {
-	Type      string `json:"type"`
-	ValueType string `json:"value_type"`
-	Key       string `json:"key"`
-	Scope     int32  `json:"scope"`
-	JsScript  string `json:"js_script"`
-	Event     Event  `json:"event"`
-	TempMap   sync.Map
+	Type       string `json:"type"`
+	ValueType  string `json:"value_type"`
+	Key        string `json:"key"`
+	Scope      int32  `json:"scope"`
+	IsDisabled int    `json:"is_disabled"`
+	JsScript   string `json:"js_script"`
+	Event      Event  `json:"event"`
+	TempMap    sync.Map
 }
 
 func (p *Preposition) Exec(scene Scene, mongoCollection *mongo.Collection, variable *sync.Map) {
