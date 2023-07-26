@@ -210,6 +210,7 @@ func disposePlanNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.Ma
 		if event.NextList != nil && len(event.NextList) >= 1 {
 			preNodeMap.Store(event.Id, eventResult)
 		}
+		return
 	}
 
 	event.TeamId = scene.TeamId
@@ -430,6 +431,22 @@ func disposeDebugNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.M
 		if event.NextList != nil && len(event.NextList) >= 1 {
 			preNodeMap.Store(event.Id, eventResult)
 		}
+		debugMsg := make(map[string]interface{})
+		debugMsg["team_id"] = event.TeamId
+		debugMsg["plan_id"] = event.PlanId
+		debugMsg["report_id"] = event.ReportId
+		debugMsg["scene_id"] = event.SceneId
+		debugMsg["parent_id"] = event.ParentId
+		debugMsg["case_id"] = event.CaseId
+		debugMsg["uuid"] = event.Uuid.String()
+		debugMsg["event_id"] = event.Id
+		debugMsg["status"] = constant.NotRun
+		debugMsg["msg"] = "未运行"
+		debugMsg["type"] = event.Type
+		if requestCollection != nil {
+			model.Insert(requestCollection, debugMsg, middlewares.LocalIp)
+		}
+		return
 	}
 
 	event.TeamId = scene.TeamId
