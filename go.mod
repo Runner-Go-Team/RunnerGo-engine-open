@@ -18,7 +18,7 @@ require (
 	github.com/gorilla/websocket v1.5.0
 	github.com/guanguans/id-validator v1.2.8
 	github.com/hiyosi/hawk v1.0.1
-	github.com/lib/pq v1.10.8
+	github.com/lib/pq v1.10.9
 	github.com/lixiangyun/go-ntlm v1.0.0
 	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/samuel/go-zookeeper v0.0.0-20201211165307-7117e9ea2414
