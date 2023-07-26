@@ -195,7 +195,7 @@ func TaskDecomposition(plan *model.Plan, wg *sync.WaitGroup, resultDataMsgCh cha
 	var sqlMap = new(sync.Map)
 	if scene.Prepositions != nil && len(scene.Prepositions) > 0 {
 		for _, preposition := range scene.Prepositions {
-			if preposition.Event.IsDisabled == 1 {
+			if preposition.IsDisabled == 1 {
 				continue
 			}
 			preposition.Exec(scene, mongoCollection, sqlMap)
@@ -351,7 +351,7 @@ func DebugScene(scene model.Scene) {
 	var sqlMap = new(sync.Map)
 	if scene.Prepositions != nil && len(scene.Prepositions) > 0 {
 		for _, preposition := range scene.Prepositions {
-			if preposition.Event.IsDisabled == 1 {
+			if preposition.IsDisabled == 1 {
 				continue
 			}
 			preposition.Exec(scene, mongoCollection, sqlMap)
