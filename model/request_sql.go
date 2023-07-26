@@ -6,7 +6,10 @@ import (
 	"fmt"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/constant"
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/middlewares"
+	_ "github.com/go-sql-driver/mysql" //mysql驱动
+	_ "github.com/lib/pq"              //postgres驱动
 	"go.mongodb.org/mongo-driver/mongo"
+	//_ "github.com/mattn/go-oci8"       //oracle驱动
 	"strings"
 	"sync"
 	"time"
@@ -194,7 +197,8 @@ func (sql *SQLDetail) init() (db *sql_client.DB, err error) {
 	case "mysql":
 		dsn = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?%s", sqlInfo.User, sqlInfo.Password, sqlInfo.Host, sqlInfo.Port, sqlInfo.DbName, sqlInfo.Charset)
 	case "postgresql":
-		dsn = fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=verify-full", sqlInfo.User, sqlInfo.Password, sqlInfo.Host, sqlInfo.Port, sqlInfo.DbName)
+		sqlInfo.Type = "postgres"
+		dsn = fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", sqlInfo.Host, sqlInfo.Port, sqlInfo.User, sqlInfo.Password, sqlInfo.DbName)
 	}
 
 	db, err = sql_client.Open(sqlInfo.Type, dsn)
