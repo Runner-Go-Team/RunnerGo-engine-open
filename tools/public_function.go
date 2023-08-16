@@ -167,6 +167,7 @@ func InitPublicFunc() {
 }
 
 func CallPublicFunc(funcName string, parameters []string) []reflect.Value {
+	defer DeferPanic("公共函数使用错误")
 	if function, ok := ControllerMapsType[funcName]; ok {
 		f := reflect.ValueOf(function)
 		if len(parameters) != f.Type().NumIn() {
@@ -196,6 +197,7 @@ const (
 )
 
 func ParsFunc(source string) (value string) {
+	defer DeferPanic("解析公共函数错误")
 	if !strings.HasSuffix(source, "__") || !strings.HasPrefix(source, "__") || !strings.Contains(source, "(") || !strings.Contains(source, ")") || strings.IndexAny(source, "(") > strings.IndexAny(source, ")") {
 		value = source
 		return
