@@ -11,15 +11,15 @@ import (
 var Conf Config
 
 type Config struct {
-	Http        Http        `yaml:"http"`
-	Kafka       Kafka       `yaml:"kafka"`
-	ReportRedis ReportRedis `yaml:"reportRedis"`
-	Redis       Redis       `yaml:"redis"`
-	Mongo       Mongo       `yaml:"mongo"`
-	Heartbeat   Heartbeat   `yaml:"heartbeat"`
-	Machine     Machine     `yaml:"machine"`
-	Management  Management  `yaml:"management"`
-	Log         Log         `yaml:"log"`
+	Http  Http  `yaml:"http"`
+	Kafka Kafka `yaml:"kafka"`
+	//ReportRedis ReportRedis `yaml:"reportRedis"`
+	Redis      Redis      `yaml:"redis"`
+	Mongo      Mongo      `yaml:"mongo"`
+	Heartbeat  Heartbeat  `yaml:"heartbeat"`
+	Machine    Machine    `yaml:"machine"`
+	Management Management `yaml:"management"`
+	Log        Log        `yaml:"log"`
 }
 
 type Log struct {
@@ -52,15 +52,17 @@ type Kafka struct {
 	TopIc   string `yaml:"topIc"`
 }
 
-type ReportRedis struct {
-	Address  string `yaml:"address"`
-	Password string `yaml:"password"`
-	DB       int64  `yaml:"DB"`
-}
+//type ReportRedis struct {
+//	Address        string `yaml:"address"`
+//	ClusterAddress string `yaml:"clusterAddress"`
+//	Password       string `yaml:"password"`
+//	DB             int64  `yaml:"DB"`
+//}
+
 type Redis struct {
-	Address  string `yaml:"address"`
-	Password string `yaml:"password"`
-	DB       int64  `yaml:"DB"`
+	ClusterAddress string `yaml:"clusterAddress"`
+	Password       string `yaml:"password"`
+	DB             int64  `yaml:"DB"`
 }
 
 type Mongo struct {
@@ -260,25 +262,11 @@ func initMongo() {
 }
 
 func initRedis() {
-	var runnerGoRedis Redis
-	var reportRedis ReportRedis
-	address := os.Getenv("RG_REDIS_ADDRESS")
-	if address == "" {
-		address = RedisAddress
+	Conf.Redis.ClusterAddress = os.Getenv("RG_REDIS_ADDRESS")
+	if Conf.Redis.ClusterAddress == "" {
+		Conf.Redis.ClusterAddress = "127.0.0.0:6379"
 	}
-	reportRedis.Address = address
-	runnerGoRedis.Address = reportRedis.Address
-	runnerGoRedis.Password = os.Getenv("RG_REDIS_PASSWORD")
-	reportRedis.Password = runnerGoRedis.Password
-	db, err := strconv.ParseInt(os.Getenv("RG_REDIS_DB"), 10, 64)
-	if err != nil {
-		db = 0
-	}
-	reportRedis.DB = db
-	runnerGoRedis.DB = reportRedis.DB
-
-	Conf.Redis = runnerGoRedis
-	Conf.ReportRedis = reportRedis
+	Conf.Redis.Password = os.Getenv("RG_REDIS_PASSWORD")
 
 }
 

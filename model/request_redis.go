@@ -2,36 +2,24 @@ package model
 
 import (
 	"github.com/go-redis/redis"
+	"strings"
 	"time"
 )
 
 var (
-	ReportRdb    *redis.Client
-	RDB          *redis.Client
+	RDB          *redis.ClusterClient
 	timeDuration = 3 * time.Second
 )
 
 type RedisClient struct {
-	Client *redis.Client
+	Client *redis.ClusterClient
 }
 
-func InitRedisClient(reportAddr, reportPassword string, reportDb int64, addr, password string, db int64) (err error) {
-	ReportRdb = redis.NewClient(
-		&redis.Options{
-			Addr:     reportAddr,
-			Password: reportPassword,
-			DB:       int(reportDb),
-		})
-	_, err = ReportRdb.Ping().Result()
-	if err != nil {
-		return err
-	}
-
-	RDB = redis.NewClient(
-		&redis.Options{
-			Addr:     addr,
+func InitRedisClient(clusterAddr, password string) (err error) {
+	RDB = redis.NewClusterClient(
+		&redis.ClusterOptions{
+			Addrs:    strings.Split(clusterAddr, ";"),
 			Password: password,
-			DB:       int(db),
 		})
 	_, err = RDB.Ping().Result()
 	return err
@@ -59,7 +47,7 @@ func QuerySceneStatus(key string) (err error, value string) {
 }
 
 func QueryReportData(key string) (value string) {
-	values := ReportRdb.LRange(key, 0, -1).Val()
+	values := RDB.LRange(key, 0, -1).Val()
 	if len(values) <= 0 {
 		return
 	}
