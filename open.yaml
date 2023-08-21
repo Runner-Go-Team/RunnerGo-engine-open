@@ -12,14 +12,15 @@ http:
   port: 8002                                               #本服务端口
 
 redis:
-  address: ""
+  # 集群地址 使用;分割 exp 127.0.0.1:7000;127.0.0.1:7001;127.0.0.1:7002;127.0.0.1:7003;127.0.0.1:7004;127.0.0.1:7005
+  clusterAddress : ""
   password: ""
-  db: 1
 
-reportRedis:
-  address: ""
-  password: ""
-  db: 1
+#reportRedis:
+#  address: ""
+#  clusterAddress: ""
+#  password: ""
+#  db: 0
 
 kafka:
   address: ""

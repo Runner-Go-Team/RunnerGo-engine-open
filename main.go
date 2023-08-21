@@ -48,12 +48,8 @@ func initService() {
 	// 初始化redis客户端
 	log.Logger.Info(fmt.Sprintf("机器ip:%s,初始化redis客户端", middlewares.LocalIp))
 	if err := model.InitRedisClient(
-		config.Conf.ReportRedis.Address,
-		config.Conf.ReportRedis.Password,
-		config.Conf.ReportRedis.DB,
-		config.Conf.Redis.Address,
+		config.Conf.Redis.ClusterAddress,
 		config.Conf.Redis.Password,
-		config.Conf.Redis.DB,
 	); err != nil {
 		log.Logger.Error(fmt.Sprintf("机器ip:%s, redis连接失败:", middlewares.LocalIp), err)
 		panic("redis 连接失败")
