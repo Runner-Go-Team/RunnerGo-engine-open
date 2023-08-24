@@ -14,7 +14,7 @@ import (
 )
 
 // ConcurrentModel 并发模式
-func ConcurrentModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Configuration, reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestCollection *mongo.Collection) string {
+func ConcurrentModel(scene model.Scene, configuration *model.Configuration, reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestCollection *mongo.Collection) string {
 
 	concurrent := scene.ConfigTask.ModeConf.Concurrency
 	// 订阅redis中消息  任务状态：包括：报告停止；debug日志状态；任务配置变更
@@ -88,17 +88,12 @@ func ConcurrentModel(wg *sync.WaitGroup, scene model.Scene, configuration *model
 						continue
 					}
 					concurrentMap.Store(i, true)
-					wg.Add(1)
 					currentWg.Add(1)
 					scene.Debug = debug
 					go func(concurrentId, concurrent int64, useConfiguration *model.Configuration, currentScene model.Scene) {
-						var sceneWg = &sync.WaitGroup{}
-						golink.DisposeScene(wg, sceneWg, constant.PlanType, currentScene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
-						sceneWg.Wait()
-						concurrentMap.Delete(concurrentId)
-						currentWg.Done()
-						wg.Done()
-
+						defer currentWg.Done()
+						defer concurrentMap.Delete(concurrentId)
+						golink.DisposeScene(constant.PlanType, currentScene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
 					}(i, concurrent, configuration, scene)
 				}
 				currentWg.Wait()
@@ -162,20 +157,17 @@ func ConcurrentModel(wg *sync.WaitGroup, scene model.Scene, configuration *model
 					concurrentMap.Store(i, true)
 					currentWg.Add(1)
 					go func(concurrentId int64, useConfiguration *model.Configuration, currentScene model.Scene) {
+						defer currentWg.Done()
+						defer concurrentMap.Delete(concurrentId)
 						for startTime+duration >= time.Now().Unix() {
-
 							// 如果当前并发的id不在map中，那么就停止该goroutine
 							if _, isOk := concurrentMap.Load(concurrentId); !isOk {
 								break
 							}
 							// 查询是否开启debug
 							currentScene.Debug = debug
-							var sceneWg = &sync.WaitGroup{}
-							golink.DisposeScene(wg, sceneWg, constant.PlanType, currentScene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
-							sceneWg.Wait()
+							golink.DisposeScene(constant.PlanType, currentScene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
 						}
-						concurrentMap.Delete(concurrentId)
-						currentWg.Done()
 					}(i, configuration, scene)
 
 					//if reheatTime > 0 && index == 0 && i != 0 {

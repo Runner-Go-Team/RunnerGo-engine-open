@@ -14,7 +14,7 @@ import (
 )
 
 // LadderModel 阶梯模式
-func LadderModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Configuration, reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestCollection *mongo.Collection) string {
+func LadderModel(scene model.Scene, configuration *model.Configuration, reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestCollection *mongo.Collection) string {
 	startConcurrent := scene.ConfigTask.ModeConf.StartConcurrency
 	step := scene.ConfigTask.ModeConf.Step
 	maxConcurrent := scene.ConfigTask.ModeConf.MaxConcurrency
@@ -99,16 +99,12 @@ func LadderModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Con
 						continue
 					}
 					concurrentMap.Store(i, true)
-					wg.Add(1)
 					currentWg.Add(1)
-					go func(concurrentId, concurrent int64, wg *sync.WaitGroup, useConfiguration *model.Configuration) {
-						var sceneWg = &sync.WaitGroup{}
-						golink.DisposeScene(wg, sceneWg, constant.PlanType, scene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
-						sceneWg.Wait()
-						wg.Done()
-						currentWg.Done()
-						concurrentMap.Delete(concurrentId)
-					}(i, concurrent, wg, configuration)
+					go func(concurrentId, concurrent int64, useConfiguration *model.Configuration) {
+						defer currentWg.Done()
+						defer concurrentMap.Delete(concurrentId)
+						golink.DisposeScene(constant.PlanType, scene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
+					}(i, concurrent, configuration)
 				}
 				currentWg.Wait()
 
@@ -198,24 +194,19 @@ func LadderModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Con
 						continue
 					}
 					concurrentMap.Store(i, true)
-					wg.Add(1)
 					currentWg.Add(1)
-					go func(concurrentId int64, wg *sync.WaitGroup, useConfiguration *model.Configuration, currentScene model.Scene) {
-
+					go func(concurrentId int64, useConfiguration *model.Configuration, currentScene model.Scene) {
+						defer currentWg.Done()
+						defer concurrentMap.Delete(concurrentId)
 						for startTime+stepRunTime > endTime {
 							if _, ok := concurrentMap.Load(concurrentId); !ok {
 								break
 							}
-							var sceneWg = &sync.WaitGroup{}
-							golink.DisposeScene(wg, sceneWg, constant.PlanType, currentScene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, i, concurrent)
-							sceneWg.Wait()
+							golink.DisposeScene(constant.PlanType, currentScene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, i, concurrent)
 
 						}
-						concurrentMap.Delete(concurrentId)
-						currentWg.Done()
-						wg.Done()
 
-					}(i, wg, configuration, scene)
+					}(i, configuration, scene)
 				}
 			}
 			endTime = time.Now().Unix()

@@ -77,25 +77,26 @@ type DubboParam struct {
 
 var RpcServerMap = new(sync.Map)
 
-func (d DubboDetail) Send(debug string, debugMsg map[string]interface{}, mongoCollection *mongo.Collection, globalVariable *sync.Map) {
+func (d DubboDetail) Send(debug string, debugMsg *DebugMsg, mongoCollection *mongo.Collection, globalVariable *sync.Map) {
 
 	var (
-		err              error
-		regex            []map[string]interface{}
-		success          string
-		response         string
-		rpcServer        common.RPCService
-		assertNum        int
-		parameterTypes   []string
-		assertFailedNum  int
-		assertionMsgList []AssertionMsg
-		parameterValues  []hessian.Object
+		err             error
+		regex           *Regex
+		success         string
+		response        string
+		rpcServer       common.RPCService
+		assertNum       int
+		parameterTypes  []string
+		assertFailedNum int
+		assert          = new(Assert)
+		parameterValues []hessian.Object
 	)
 	d.DubboConfig.RegistrationCenterName = strings.TrimSpace(d.DubboConfig.RegistrationCenterName)
 	d.DubboConfig.RegistrationCenterAddress = strings.TrimSpace(d.DubboConfig.RegistrationCenterAddress)
 	d.ApiName = strings.TrimSpace(d.ApiName)
 	d.DubboConfig.Version = strings.TrimSpace(d.DubboConfig.Version)
 	soleKey := fmt.Sprintf("%s://%s/%s", d.DubboProtocol, d.DubboConfig.RegistrationCenterAddress, d.ApiName)
+
 	if s, ok := RpcServerMap.Load(soleKey); !ok {
 		rpcServer, err = d.init(soleKey)
 	} else {
@@ -104,50 +105,66 @@ func (d DubboDetail) Send(debug string, debugMsg map[string]interface{}, mongoCo
 	parameterTypes, parameterValues = d.paramInit()
 
 	// 发起反射调用
-	success, response = d.invoke(err, rpcServer.(*generic.GenericService), parameterTypes, parameterValues)
+	if rpcServer != nil {
+		success, response = d.invoke(err, rpcServer.(*generic.GenericService), parameterTypes, parameterValues)
+	} else {
+		success = constant.Failed
+		if err != nil {
+			response = err.Error()
+		}
+
+	}
+
 	// 关联提取
 	regex = d.disExtract(response, globalVariable)
 
 	// 断言验证
-	assertNum, assertFailedNum, assertionMsgList = d.disVerify(response)
+	assertNum, assertFailedNum = d.disVerify(response, assert)
 
 	requestType, _ := json.Marshal(parameterTypes)
 	requestBody, _ := json.Marshal(parameterValues)
 
 	if debug == constant.All {
-		debugMsg["regex"] = regex
-		debugMsg["assert"] = assertionMsgList
-		debugMsg["status"] = success
-		debugMsg["assert_num"] = assertNum
-		debugMsg["request_type"] = d.DubboProtocol
-		debugMsg["request_body"] = string(requestBody)
-		debugMsg["response_body"] = string(response)
-		debugMsg["assert_failed_num"] = assertFailedNum
-		debugMsg["request_parameter_type"] = string(requestType)
+
+		debugMsg.Regex = regex
+		debugMsg.Assert = assert
+		debugMsg.Status = success
+		debugMsg.AssertNum = assertNum
+		debugMsg.RequestUrl = d.ApiName
+		debugMsg.Method = d.FunctionName
+		debugMsg.RequestType = d.DubboProtocol
+		debugMsg.RequestBody = string(requestBody)
+		debugMsg.ResponseBody = response
+		debugMsg.AssertFailedNum = assertFailedNum
+		debugMsg.RequestParameterType = string(requestType)
 		Insert(mongoCollection, debugMsg, middlewares.LocalIp)
 	}
 	if debug == constant.OnlySuccess && success == constant.Success {
-		debugMsg["regex"] = regex
-		debugMsg["assert"] = assertionMsgList
-		debugMsg["status"] = success
-		debugMsg["assert_num"] = assertNum
-		debugMsg["request_type"] = d.DubboProtocol
-		debugMsg["request_body"] = string(requestBody)
-		debugMsg["response_body"] = string(response)
-		debugMsg["assert_failed_num"] = assertFailedNum
-		debugMsg["request_parameter_type"] = string(requestType)
+		debugMsg.Regex = regex
+		debugMsg.Assert = assert
+		debugMsg.Status = success
+		debugMsg.AssertNum = assertNum
+		debugMsg.RequestUrl = d.ApiName
+		debugMsg.Method = d.FunctionName
+		debugMsg.RequestType = d.DubboProtocol
+		debugMsg.RequestBody = string(requestBody)
+		debugMsg.ResponseBody = response
+		debugMsg.AssertFailedNum = assertFailedNum
+		debugMsg.RequestParameterType = string(requestType)
 		Insert(mongoCollection, debugMsg, middlewares.LocalIp)
 	}
 	if debug == constant.OnlyError && success == constant.Failed {
-		debugMsg["regex"] = regex
-		debugMsg["assert"] = assertionMsgList
-		debugMsg["status"] = success
-		debugMsg["assert_num"] = assertNum
-		debugMsg["request_type"] = d.DubboProtocol
-		debugMsg["request_body"] = string(requestBody)
-		debugMsg["response_body"] = string(response)
-		debugMsg["assert_failed_num"] = assertFailedNum
-		debugMsg["request_parameter_type"] = string(requestType)
+		debugMsg.Regex = regex
+		debugMsg.Assert = assert
+		debugMsg.Status = success
+		debugMsg.AssertNum = assertNum
+		debugMsg.RequestUrl = d.ApiName
+		debugMsg.Method = d.FunctionName
+		debugMsg.RequestType = d.DubboProtocol
+		debugMsg.RequestBody = string(requestBody)
+		debugMsg.ResponseBody = response
+		debugMsg.AssertFailedNum = assertFailedNum
+		debugMsg.RequestParameterType = string(requestType)
 		Insert(mongoCollection, debugMsg, middlewares.LocalIp)
 	}
 
@@ -299,7 +316,7 @@ func (d DubboDetail) paramInit() (parameterTypes []string, parameterValues []hes
 }
 
 // 处理关联提取
-func (d DubboDetail) disExtract(response string, globalVariable *sync.Map) (regex []map[string]interface{}) {
+func (d DubboDetail) disExtract(response string, globalVariable *sync.Map) (regex *Regex) {
 	if d.DubboRegex == nil {
 		return
 	}
@@ -307,19 +324,20 @@ func (d DubboDetail) disExtract(response string, globalVariable *sync.Map) (rege
 		if regular.IsChecked != constant.Open {
 			continue
 		}
-		reg := make(map[string]interface{})
+		reg := new(Reg)
 		value := regular.Extract(response, globalVariable)
 		if value == nil {
 			continue
 		}
-		reg[regular.Var] = value
-		regex = append(regex, reg)
+		reg.Key = regular.Var
+		reg.Value = value
+		regex.Regs = append(regex.Regs, reg)
 	}
 	return
 }
 
 // 处理断言
-func (d DubboDetail) disVerify(response string) (assertNum, assertFailedNum int, assertionMsgList []AssertionMsg) {
+func (d DubboDetail) disVerify(response string, assert *Assert) (assertNum, assertFailedNum int) {
 	if d.DubboAssert == nil {
 		return
 	}
@@ -337,7 +355,7 @@ func (d DubboDetail) disVerify(response string) (assertNum, assertFailedNum int,
 		assertionMsg.Code = code
 		assertionMsg.IsSucceed = succeed
 		assertionMsg.Msg = msg
-		assertionMsgList = append(assertionMsgList, assertionMsg)
+		assert.AssertionMsgs = append(assert.AssertionMsgs, assertionMsg)
 		assertNum++
 		if !succeed {
 			assertFailedNum++

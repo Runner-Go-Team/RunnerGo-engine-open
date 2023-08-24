@@ -49,7 +49,7 @@ type SqlRegex struct {
 	Index     int    `json:"index"` // 正则时提取第几个值
 }
 
-func (sql *SQLDetail) Send(debug string, debugMsg map[string]interface{}, mongoCollection *mongo.Collection, globalVar *sync.Map) (isSucceed bool, requestTime uint64, startTime, endTime time.Time) {
+func (sql *SQLDetail) Send(debug string, debugMsg *DebugMsg, mongoCollection *mongo.Collection, globalVar *sync.Map) (isSucceed bool, requestTime uint64, startTime, endTime time.Time) {
 	isSucceed = true
 	sql.SqlString = strings.ToLower(strings.TrimSpace(strings.NewReplacer("\r", " ", "\n", " ").Replace(sql.SqlString)))
 	db, result, err, startTime, endTime, requestTime := sql.Request()
@@ -63,65 +63,52 @@ func (sql *SQLDetail) Send(debug string, debugMsg map[string]interface{}, mongoC
 		isSucceed = false
 	}
 
-	assertionList := sql.Asser(result)
-	for _, assert := range assertionList {
-		if assert.IsSucceed == false {
+	var errMsg string
+	asserts := &Assert{}
+	sql.Asser(result, asserts)
+	for _, assert := range asserts.AssertionMsgs {
+		if !assert.IsSucceed {
 			isSucceed = false
+			errMsg = assert.Msg
 		}
 	}
 	regex := sql.RegexSql(result, globalVar)
+
+	debugMsg.Regex = regex
+	debugMsg.RequestTime = requestTime / uint64(time.Millisecond)
+	debugMsg.Assert = asserts
+	debugMsg.RequestBody = sql.SqlString
+	debugMsg.ResponseTime = responseTime
+
+	if err != nil {
+		debugMsg.Status = constant.Failed
+		debugMsg.ResponseBody = err.Error()
+	} else {
+		b, _ := json.Marshal(result)
+		debugMsg.ResponseBody = string(b)
+		debugMsg.Status = constant.Success
+	}
+	if errMsg != "" {
+		debugMsg.ResponseBody = errMsg
+		debugMsg.Status = constant.Failed
+	}
+	by, _ := json.Marshal(sql.SqlDatabaseInfo)
+	if by != nil {
+		debugMsg.RequestUrl = string(by)
+	}
+
 	switch debug {
 	case constant.All:
-		if err != nil {
-			debugMsg["response_body"] = err.Error()
-		} else {
-			debugMsg["response_body"] = result
-		}
-		debugMsg["request_time"] = requestTime / uint64(time.Millisecond)
-
-		debugMsg["assert"] = assertionList
-		debugMsg["status"] = constant.Success
-		by, _ := json.Marshal(sql.SqlDatabaseInfo)
-		if by != nil {
-			debugMsg["request_url"] = string(by)
-		}
-		debugMsg["request_body"] = sql.SqlString
-		debugMsg["regex"] = regex
-		debugMsg["response_time"] = responseTime
 		Insert(mongoCollection, debugMsg, middlewares.LocalIp)
 	case constant.OnlyError:
-		if isSucceed {
+		if debugMsg.Status != constant.Failed {
 			return
 		}
-		debugMsg["response_body"] = err.Error()
-		debugMsg["request_time"] = requestTime / uint64(time.Millisecond)
-
-		debugMsg["assert"] = assertionList
-		debugMsg["status"] = constant.Success
-		by, _ := json.Marshal(sql.SqlDatabaseInfo)
-		if by != nil {
-			debugMsg["request_url"] = string(by)
-		}
-		debugMsg["request_body"] = sql.SqlString
-		debugMsg["regex"] = regex
-		debugMsg["response_time"] = responseTime
 		Insert(mongoCollection, debugMsg, middlewares.LocalIp)
 	case constant.OnlySuccess:
-		if !isSucceed {
+		if debugMsg.Status != constant.Failed {
 			return
 		}
-		debugMsg["response_body"] = result
-		debugMsg["request_time"] = requestTime / uint64(time.Millisecond)
-
-		debugMsg["assert"] = assertionList
-		debugMsg["status"] = constant.Success
-		by, _ := json.Marshal(sql.SqlDatabaseInfo)
-		if by != nil {
-			debugMsg["request_url"] = string(by)
-		}
-		debugMsg["request_body"] = sql.SqlString
-		debugMsg["regex"] = regex
-		debugMsg["response_time"] = responseTime
 		Insert(mongoCollection, debugMsg, middlewares.LocalIp)
 	}
 	return
@@ -217,7 +204,7 @@ func (sql *SQLDetail) TestConnection() (db *sql_client.DB, err error) {
 	return
 }
 
-func (sql *SQLDetail) Asser(results map[string]interface{}) (assertionList []AssertionMsg) {
+func (sql *SQLDetail) Asser(results map[string]interface{}, asserts *Assert) {
 	if sql.Assert == nil || len(sql.Assert) < 1 {
 		return
 	}
@@ -230,7 +217,7 @@ func (sql *SQLDetail) Asser(results map[string]interface{}) (assertionList []Ass
 			assertionMsg.Code = 10001
 			assertionMsg.IsSucceed = false
 			assertionMsg.Msg = fmt.Sprintf("%s不存在，断言失败", assert.Field)
-			assertionList = append(assertionList, assertionMsg)
+			asserts.AssertionMsgs = append(asserts.AssertionMsgs, assertionMsg)
 			continue
 		}
 		switch assert.Compare {
@@ -240,7 +227,7 @@ func (sql *SQLDetail) Asser(results map[string]interface{}) (assertionList []Ass
 				assertionMsg.Code = 10001
 				assertionMsg.IsSucceed = false
 				assertionMsg.Msg = fmt.Sprintf("%s不存在，断言失败", assert.Field)
-				assertionList = append(assertionList, assertionMsg)
+				asserts.AssertionMsgs = append(asserts.AssertionMsgs, assertionMsg)
 				continue
 			} else {
 				switch fmt.Sprintf("%T", value) {
@@ -250,13 +237,13 @@ func (sql *SQLDetail) Asser(results map[string]interface{}) (assertionList []Ass
 							assertionMsg.Code = 10000
 							assertionMsg.IsSucceed = true
 							assertionMsg.Msg = fmt.Sprintf("%s 的值等于%s, 断言成功！", assert.Field, assert.Val)
-							assertionList = append(assertionList, assertionMsg)
+							asserts.AssertionMsgs = append(asserts.AssertionMsgs, assertionMsg)
 							continue
 						} else {
 							assertionMsg.Code = 10001
 							assertionMsg.IsSucceed = false
 							assertionMsg.Msg = fmt.Sprintf("%s 的值不等于%s, 断言失败！", assert.Field, assert.Val)
-							assertionList = append(assertionList, assertionMsg)
+							asserts.AssertionMsgs = append(asserts.AssertionMsgs, assertionMsg)
 							continue
 						}
 					} else if len(value.([]string)) > assert.Index {
@@ -264,20 +251,20 @@ func (sql *SQLDetail) Asser(results map[string]interface{}) (assertionList []Ass
 							assertionMsg.Code = 10000
 							assertionMsg.IsSucceed = true
 							assertionMsg.Msg = fmt.Sprintf("%s 下标为%d的值等于%s, 断言成功！", assert.Field, assert.Index, assert.Val)
-							assertionList = append(assertionList, assertionMsg)
+							asserts.AssertionMsgs = append(asserts.AssertionMsgs, assertionMsg)
 							continue
 						} else {
 							assertionMsg.Code = 10001
 							assertionMsg.IsSucceed = false
 							assertionMsg.Msg = fmt.Sprintf("%s 下标为%d的值不等于%s, 断言失败！", assert.Field, assert.Index, assert.Val)
-							assertionList = append(assertionList, assertionMsg)
+							asserts.AssertionMsgs = append(asserts.AssertionMsgs, assertionMsg)
 							continue
 						}
 					} else {
 						assertionMsg.Code = 10001
 						assertionMsg.IsSucceed = false
 						assertionMsg.Msg = fmt.Sprintf("%s 下标为%d的值不存在, 断言失败！", assert.Field, assert.Index)
-						assertionList = append(assertionList, assertionMsg)
+						asserts.AssertionMsgs = append(asserts.AssertionMsgs, assertionMsg)
 						continue
 					}
 				case "[]int":
@@ -286,13 +273,13 @@ func (sql *SQLDetail) Asser(results map[string]interface{}) (assertionList []Ass
 							assertionMsg.Code = 10000
 							assertionMsg.IsSucceed = true
 							assertionMsg.Msg = fmt.Sprintf("%s 的值等于%s, 断言成功！", assert.Field, assert.Val)
-							assertionList = append(assertionList, assertionMsg)
+							asserts.AssertionMsgs = append(asserts.AssertionMsgs, assertionMsg)
 							continue
 						} else {
 							assertionMsg.Code = 10001
 							assertionMsg.IsSucceed = false
 							assertionMsg.Msg = fmt.Sprintf("%s 的值不等于%s, 断言失败！", assert.Field, assert.Val)
-							assertionList = append(assertionList, assertionMsg)
+							asserts.AssertionMsgs = append(asserts.AssertionMsgs, assertionMsg)
 							continue
 						}
 					} else if len(value.([]int)) > assert.Index {
@@ -300,20 +287,20 @@ func (sql *SQLDetail) Asser(results map[string]interface{}) (assertionList []Ass
 							assertionMsg.Code = 10000
 							assertionMsg.IsSucceed = true
 							assertionMsg.Msg = fmt.Sprintf("%s 下标为%d的值等于%s, 断言成功！", assert.Field, assert.Index, assert.Val)
-							assertionList = append(assertionList, assertionMsg)
+							asserts.AssertionMsgs = append(asserts.AssertionMsgs, assertionMsg)
 							continue
 						} else {
 							assertionMsg.Code = 10001
 							assertionMsg.IsSucceed = false
 							assertionMsg.Msg = fmt.Sprintf("%s 下标为%d的值不等于%s, 断言失败！", assert.Field, assert.Index, assert.Val)
-							assertionList = append(assertionList, assertionMsg)
+							asserts.AssertionMsgs = append(asserts.AssertionMsgs, assertionMsg)
 							continue
 						}
 					} else {
 						assertionMsg.Code = 10001
 						assertionMsg.IsSucceed = false
 						assertionMsg.Msg = fmt.Sprintf("%s 下标为%d的值不存在, 断言失败！", assert.Field, assert.Index)
-						assertionList = append(assertionList, assertionMsg)
+						asserts.AssertionMsgs = append(asserts.AssertionMsgs, assertionMsg)
 						continue
 					}
 				case "[]float64":
@@ -322,13 +309,13 @@ func (sql *SQLDetail) Asser(results map[string]interface{}) (assertionList []Ass
 							assertionMsg.Code = 10000
 							assertionMsg.IsSucceed = true
 							assertionMsg.Msg = fmt.Sprintf("%s 的值等于%s, 断言成功！", assert.Field, assert.Val)
-							assertionList = append(assertionList, assertionMsg)
+							asserts.AssertionMsgs = append(asserts.AssertionMsgs, assertionMsg)
 							continue
 						} else {
 							assertionMsg.Code = 10001
 							assertionMsg.IsSucceed = false
 							assertionMsg.Msg = fmt.Sprintf("%s 的值不等于%s, 断言失败！", assert.Field, assert.Val)
-							assertionList = append(assertionList, assertionMsg)
+							asserts.AssertionMsgs = append(asserts.AssertionMsgs, assertionMsg)
 							continue
 						}
 					} else if len(value.([]float64)) > assert.Index {
@@ -336,20 +323,20 @@ func (sql *SQLDetail) Asser(results map[string]interface{}) (assertionList []Ass
 							assertionMsg.Code = 10000
 							assertionMsg.IsSucceed = true
 							assertionMsg.Msg = fmt.Sprintf("%s 下标为%d的值等于%s, 断言成功！", assert.Field, assert.Index, assert.Val)
-							assertionList = append(assertionList, assertionMsg)
+							asserts.AssertionMsgs = append(asserts.AssertionMsgs, assertionMsg)
 							continue
 						} else {
 							assertionMsg.Code = 10001
 							assertionMsg.IsSucceed = false
 							assertionMsg.Msg = fmt.Sprintf("%s 下标为%d的值不等于%s, 断言失败！", assert.Field, assert.Index, assert.Val)
-							assertionList = append(assertionList, assertionMsg)
+							asserts.AssertionMsgs = append(asserts.AssertionMsgs, assertionMsg)
 							continue
 						}
 					} else {
 						assertionMsg.Code = 10001
 						assertionMsg.IsSucceed = false
 						assertionMsg.Msg = fmt.Sprintf("%s 下标为%d的值不存在, 断言失败！", assert.Field, assert.Index)
-						assertionList = append(assertionList, assertionMsg)
+						asserts.AssertionMsgs = append(asserts.AssertionMsgs, assertionMsg)
 						continue
 					}
 				case "[]bool":
@@ -358,13 +345,13 @@ func (sql *SQLDetail) Asser(results map[string]interface{}) (assertionList []Ass
 							assertionMsg.Code = 10000
 							assertionMsg.IsSucceed = true
 							assertionMsg.Msg = fmt.Sprintf("%s 的值等于%s, 断言成功！", assert.Field, assert.Val)
-							assertionList = append(assertionList, assertionMsg)
+							asserts.AssertionMsgs = append(asserts.AssertionMsgs, assertionMsg)
 							continue
 						} else {
 							assertionMsg.Code = 10001
 							assertionMsg.IsSucceed = false
 							assertionMsg.Msg = fmt.Sprintf("%s 的值不等于%s, 断言失败！", assert.Field, assert.Val)
-							assertionList = append(assertionList, assertionMsg)
+							asserts.AssertionMsgs = append(asserts.AssertionMsgs, assertionMsg)
 							continue
 						}
 					} else if len(value.([]bool)) > assert.Index {
@@ -372,20 +359,20 @@ func (sql *SQLDetail) Asser(results map[string]interface{}) (assertionList []Ass
 							assertionMsg.Code = 10000
 							assertionMsg.IsSucceed = true
 							assertionMsg.Msg = fmt.Sprintf("%s 下标为%d的值等于%s, 断言成功！", assert.Field, assert.Index, assert.Val)
-							assertionList = append(assertionList, assertionMsg)
+							asserts.AssertionMsgs = append(asserts.AssertionMsgs, assertionMsg)
 							continue
 						} else {
 							assertionMsg.Code = 10001
 							assertionMsg.IsSucceed = false
 							assertionMsg.Msg = fmt.Sprintf("%s 下标为%d的值不等于%s, 断言失败！", assert.Field, assert.Index, assert.Val)
-							assertionList = append(assertionList, assertionMsg)
+							asserts.AssertionMsgs = append(asserts.AssertionMsgs, assertionMsg)
 							continue
 						}
 					} else {
 						assertionMsg.Code = 10001
 						assertionMsg.IsSucceed = false
 						assertionMsg.Msg = fmt.Sprintf("%s 下标为%d的值不存在, 断言失败！", assert.Field, assert.Index)
-						assertionList = append(assertionList, assertionMsg)
+						asserts.AssertionMsgs = append(asserts.AssertionMsgs, assertionMsg)
 						continue
 					}
 
@@ -395,7 +382,7 @@ func (sql *SQLDetail) Asser(results map[string]interface{}) (assertionList []Ass
 			assertionMsg.Code = 10001
 			assertionMsg.IsSucceed = false
 			assertionMsg.Msg = fmt.Sprintf("条件表达式%s 不存在，断言失败", assert.Compare)
-			assertionList = append(assertionList, assertionMsg)
+			asserts.AssertionMsgs = append(asserts.AssertionMsgs, assertionMsg)
 			continue
 
 		}
@@ -404,7 +391,7 @@ func (sql *SQLDetail) Asser(results map[string]interface{}) (assertionList []Ass
 	return
 }
 
-func (sql *SQLDetail) RegexSql(results map[string]interface{}, globalVar *sync.Map) (regexs []map[string]interface{}) {
+func (sql *SQLDetail) RegexSql(results map[string]interface{}, globalVar *sync.Map) (regexs *Regex) {
 	if sql.Regex == nil || len(sql.Regex) <= 0 || results == nil {
 		return
 	}
@@ -412,45 +399,52 @@ func (sql *SQLDetail) RegexSql(results map[string]interface{}, globalVar *sync.M
 		if regex.IsChecked != constant.Open {
 			continue
 		}
-		reg := make(map[string]interface{})
+		reg := &Reg{}
 		if value, ok := results[regex.Field]; ok {
 			switch regex.Index {
 			case -1:
 				globalVar.Store(regex.Var, value)
-				reg[regex.Var] = value
+				reg.Key = regex.Var
+				reg.Value = value
 			default:
 				switch fmt.Sprintf("%T", value) {
 				case "[]string":
 					if len(value.([]string)) > regex.Index {
 						globalVar.Store(regex.Var, value.([]string)[regex.Index])
-						reg[regex.Var] = value.([]string)[regex.Index]
+						reg.Key = regex.Var
+						reg.Value = value.([]string)[regex.Index]
 					} else {
 						globalVar.Store(regex.Var, nil)
-						reg[regex.Var] = nil
-					}
-				case "[]int":
-					if len(value.([]int)) > regex.Index {
-						globalVar.Store(regex.Var, value.([]int)[regex.Index])
-						reg[regex.Var] = value.([]int)[regex.Index]
-					} else {
-						globalVar.Store(regex.Var, nil)
-						reg[regex.Var] = nil
+						reg.Key = regex.Var
+						reg.Value = ""
 					}
 				case "[]float64":
-					if len(value.([]float64)) > regex.Index {
-						globalVar.Store(regex.Var, value.([]float64)[regex.Index])
-						reg[regex.Var] = value.([]float64)[regex.Index]
+					if len(value.([]int)) > regex.Index {
+						globalVar.Store(regex.Var, value.([]int)[regex.Index])
+						reg.Key = regex.Var
+						reg.Value = value.([]float64)[regex.Index]
 					} else {
 						globalVar.Store(regex.Var, nil)
-						reg[regex.Var] = nil
+						reg.Key = regex.Var
+						reg.Value = ""
+					}
+				case "[]int":
+					if len(value.([]float64)) > regex.Index {
+						globalVar.Store(regex.Var, value.([]float64)[regex.Index])
+						reg.Key = regex.Var
+						reg.Value = value.([]int)[regex.Index]
+					} else {
+						globalVar.Store(regex.Var, nil)
+						reg.Key = regex.Var
+						reg.Value = ""
 					}
 				case "[]bool":
 					if len(value.([]bool)) > regex.Index {
-						globalVar.Store(regex.Var, value.([]bool)[regex.Index])
-						reg[regex.Var] = value.([]bool)[regex.Index]
+						reg.Key = regex.Var
+						reg.Value = value.([]bool)[regex.Index]
 					} else {
-						globalVar.Store(regex.Var, nil)
-						reg[regex.Var] = nil
+						reg.Key = regex.Var
+						reg.Value = ""
 					}
 
 				}
@@ -458,9 +452,12 @@ func (sql *SQLDetail) RegexSql(results map[string]interface{}, globalVar *sync.M
 			}
 		} else {
 			globalVar.Store(regex.Var, nil)
-			reg[regex.Var] = nil
+			reg.Key = regex.Var
+			reg.Value = ""
+
 		}
-		regexs = append(regexs, reg)
+		regexs = &Regex{}
+		regexs.Regs = append(regexs.Regs, reg)
 	}
 	return
 }

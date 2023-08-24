@@ -212,10 +212,3 @@ func (assertionText *AssertionText) VerifyAssertionText(response *fasthttp.Respo
 	}
 	return constant.AssertError, false, "未选择被断言体！"
 }
-
-type AssertionMsg struct {
-	Type      string `json:"type"`
-	Code      int64  `json:"code" bson:"code"`
-	IsSucceed bool   `json:"is_succeed" bson:"is_succeed"`
-	Msg       string `json:"msg" bson:"msg"`
-}

@@ -94,8 +94,6 @@ func ExecutionPlan(plan *model.Plan, kafkaProducer sarama.SyncProducer, mongoCli
 	// 设置接收数据缓存
 	resultDataMsgCh := make(chan *model.ResultDataMsg, 500000)
 
-	var wg = &sync.WaitGroup{}
-
 	// 向kafka发送消息
 
 	topic := config.Conf.Kafka.TopIc
@@ -161,11 +159,11 @@ func ExecutionPlan(plan *model.Plan, kafkaProducer sarama.SyncProducer, mongoCli
 	}
 
 	// 分解任务
-	TaskDecomposition(plan, wg, resultDataMsgCh, mongoClient, requestCollection)
+	TaskDecomposition(plan, resultDataMsgCh, mongoClient, requestCollection)
 }
 
 // TaskDecomposition 分解任务
-func TaskDecomposition(plan *model.Plan, wg *sync.WaitGroup, resultDataMsgCh chan *model.ResultDataMsg, mongoClient *mongo.Client, mongoCollection *mongo.Collection) {
+func TaskDecomposition(plan *model.Plan, resultDataMsgCh chan *model.ResultDataMsg, mongoClient *mongo.Client, mongoCollection *mongo.Collection) {
 	defer close(resultDataMsgCh)
 	defer mongoClient.Disconnect(context.TODO())
 	scene := plan.Scene
@@ -245,20 +243,39 @@ func TaskDecomposition(plan *model.Plan, wg *sync.WaitGroup, resultDataMsgCh cha
 	startMsg.Timestamp = time.Now().UnixMilli()
 	startMsg.Start = true
 	resultDataMsgCh <- startMsg
+
+	defer func() {
+		if err := recover(); err != nil {
+			// 发送结束消息时间戳
+			startMsg.Start = false
+			startMsg.End = true
+			startMsg.Timestamp = time.Now().UnixMilli()
+			resultDataMsgCh <- startMsg
+
+			debugMsg := &model.DebugMsg{}
+			debugMsg.TeamId = plan.TeamId
+			debugMsg.PlanId = plan.PlanId
+			debugMsg.ReportId = plan.ReportId
+			debugMsg.End = true
+			model.Insert(mongoCollection, debugMsg, middlewares.LocalIp)
+			log.Logger.Info(fmt.Sprintf("机器ip:%s, 团队: %s, 计划：%s， 报告： %s, %v", middlewares.LocalIp, plan.TeamId, plan.PlanId, plan.ReportId, err))
+		}
+	}()
+
 	var msg string
 	switch scene.ConfigTask.Mode {
 	case model.ConcurrentModel:
-		msg = execution.ConcurrentModel(wg, scene, configuration, reportMsg, resultDataMsgCh, mongoCollection)
+		msg = execution.ConcurrentModel(scene, configuration, reportMsg, resultDataMsgCh, mongoCollection)
 	case model.ErrorRateModel:
-		msg = execution.ErrorRateModel(wg, scene, configuration, reportMsg, resultDataMsgCh, mongoCollection)
+		msg = execution.ErrorRateModel(scene, configuration, reportMsg, resultDataMsgCh, mongoCollection)
 	case model.LadderModel:
-		msg = execution.LadderModel(wg, scene, configuration, reportMsg, resultDataMsgCh, mongoCollection)
+		msg = execution.LadderModel(scene, configuration, reportMsg, resultDataMsgCh, mongoCollection)
 	case model.RTModel:
-		msg = execution.RTModel(wg, scene, configuration, reportMsg, resultDataMsgCh, mongoCollection)
+		msg = execution.RTModel(scene, configuration, reportMsg, resultDataMsgCh, mongoCollection)
 	case model.RpsModel:
-		msg = execution.RPSModel(wg, scene, configuration, reportMsg, resultDataMsgCh, mongoCollection)
+		msg = execution.RPSModel(scene, configuration, reportMsg, resultDataMsgCh, mongoCollection)
 	case model.RoundModel:
-		msg = execution.RoundModel(wg, scene, configuration, reportMsg, resultDataMsgCh, mongoCollection)
+		msg = execution.RoundModel(scene, configuration, reportMsg, resultDataMsgCh, mongoCollection)
 	default:
 		var machines []string
 		msg = "任务类型不存在"
@@ -266,24 +283,23 @@ func TaskDecomposition(plan *model.Plan, wg *sync.WaitGroup, resultDataMsgCh cha
 		machines = append(machines, machine)
 		tools.SendStopStressReport(machines, plan.TeamId, plan.PlanId, plan.ReportId)
 	}
-	wg.Wait()
 	// 发送结束消息时间戳
 	startMsg.Start = false
 	startMsg.End = true
 	startMsg.Timestamp = time.Now().UnixMilli()
 	resultDataMsgCh <- startMsg
-	debugMsg := make(map[string]interface{})
-	debugMsg["team_id"] = plan.TeamId
-	debugMsg["plan_id"] = plan.PlanId
-	debugMsg["report_id"] = plan.ReportId
-	debugMsg["end"] = true
+
+	debugMsg := new(model.DebugMsg)
+	debugMsg.TeamId = plan.TeamId
+	debugMsg.PlanId = plan.PlanId
+	debugMsg.ReportId = plan.ReportId
+	debugMsg.End = true
 	model.Insert(mongoCollection, debugMsg, middlewares.LocalIp)
 	log.Logger.Info(fmt.Sprintf("机器ip:%s, 团队: %s, 计划：%s， 报告： %s, %s", middlewares.LocalIp, plan.TeamId, plan.PlanId, plan.ReportId, msg))
 }
 
 // DebugScene 场景调试
 func DebugScene(scene model.Scene) {
-	wg := &sync.WaitGroup{}
 	mongoClient, err := model.NewMongoClient(
 		config.Conf.Mongo.DSN,
 		middlewares.LocalIp)
@@ -375,9 +391,7 @@ func DebugScene(scene model.Scene) {
 		return true
 	})
 
-	var sceneWg = &sync.WaitGroup{}
-	golink.DisposeScene(wg, sceneWg, constant.SceneType, scene, configuration, nil, nil, mongoCollection)
-	wg.Wait()
+	golink.DisposeScene(constant.SceneType, scene, configuration, nil, nil, mongoCollection)
 	log.Logger.Info(fmt.Sprintf("机器ip:%s, 团队: %s, 场景：%s, 调试结束！", middlewares.LocalIp, scene.TeamId, scene.SceneName))
 
 }

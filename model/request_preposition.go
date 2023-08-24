@@ -21,6 +21,17 @@ func (p *Preposition) Exec(scene Scene, mongoCollection *mongo.Collection, varia
 	if p == nil {
 		return
 	}
+	debugMsg := new(DebugMsg)
+	debugMsg.EventId = p.Event.Id
+	debugMsg.CaseId = p.Event.CaseId
+	debugMsg.ParentId = p.Event.ParentId
+	debugMsg.PlanId = p.Event.PlanId
+	debugMsg.ReportId = p.Event.ReportId
+	debugMsg.NextList = p.Event.NextList
+	debugMsg.SceneId = scene.SceneId
+	debugMsg.UUID = scene.Uuid.String()
+	debugMsg.RequestType = p.Type
+
 	//var val interface{}
 	switch p.Type {
 	//case JSMode:
@@ -52,21 +63,11 @@ func (p *Preposition) Exec(scene Scene, mongoCollection *mongo.Collection, varia
 	//	}
 	case constant.MysqlMode:
 		a := p.Event.Api
-		debugMsg := make(map[string]interface{})
+
 		a.Debug = constant.All
-		debugMsg["api_id"] = a.TargetId
-		debugMsg["event_id"] = p.Event.Id
-		debugMsg["case_id"] = p.Event.CaseId
-		debugMsg["parent_id"] = p.Event.ParentId
-		debugMsg["plan_id"] = p.Event.PlanId
-		debugMsg["report_id"] = p.Event.ReportId
-		debugMsg["pre_list"] = p.Event.PreList
-		debugMsg["next_list"] = p.Event.NextList
-		debugMsg["api_name"] = a.Name
-		debugMsg["team_id"] = a.TeamId
-		debugMsg["scene_id"] = scene.SceneId
-		debugMsg["uuid"] = scene.Uuid.String()
-		debugMsg["request_type"] = p.Type
+		debugMsg.ApiId = a.TargetId
+		debugMsg.ApiName = a.Name
+		debugMsg.TeamId = a.TeamId
 
 		a.SQL.Send(a.Debug, debugMsg, mongoCollection, variable)
 

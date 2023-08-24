@@ -44,7 +44,7 @@ type WsQuery struct {
 	Val       string `json:"val"`
 }
 
-func (ws WebsocketDetail) Send(debug string, debugMsg map[string]interface{}, mongoCollection *mongo.Collection, globalVar *sync.Map) (bool, int64, uint64, float64, float64) {
+func (ws WebsocketDetail) Send(debug string, debugMsg *DebugMsg, mongoCollection *mongo.Collection, globalVar *sync.Map) (bool, int64, uint64, float64, float64) {
 	var (
 		// startTime = time.Now()
 		isSucceed     = true
@@ -64,34 +64,34 @@ func (ws WebsocketDetail) Send(debug string, debugMsg map[string]interface{}, mo
 	return isSucceed, errCode, requestTime, float64(sendBytes), receivedBytes
 }
 
-func (ws WebsocketDetail) Request(debug string, debugMsg map[string]interface{}, mongoCollection *mongo.Collection, globalVar *sync.Map) (resp []byte, requestTime uint64, sendBytes uint, err error) {
+func (ws WebsocketDetail) Request(debug string, debugMsg *DebugMsg, mongoCollection *mongo.Collection, globalVar *sync.Map) (resp []byte, requestTime uint64, sendBytes uint, err error) {
 	var conn *websocket.Conn
 	defer func() {
 		if conn != nil {
 			conn.Close()
 		}
 	}()
-	connectionResults, recvResults, writeResults := make(map[string]interface{}), make(map[string]interface{}), make(map[string]interface{})
-	recvResults["type"] = "recv"
-	recvResults["uuid"] = debugMsg["uuid"]
-	recvResults["name"] = debugMsg["name"]
-	recvResults["team_id"] = debugMsg["team_id"]
-	recvResults["api_id"] = debugMsg["api_id"]
-	recvResults["request_type"] = debugMsg["request_type"]
+	connectionResults, recvResults, writeResults := new(DebugMsg), new(DebugMsg), new(DebugMsg)
+	recvResults.Type = "recv"
+	recvResults.UUID = debugMsg.UUID
+	recvResults.ApiName = debugMsg.ApiName
+	recvResults.TeamId = debugMsg.TeamId
+	recvResults.ApiId = debugMsg.ApiId
+	recvResults.RequestType = debugMsg.RequestType
 
-	writeResults["type"] = "send"
-	writeResults["uuid"] = debugMsg["uuid"]
-	writeResults["name"] = debugMsg["name"]
-	writeResults["team_id"] = debugMsg["team_id"]
-	writeResults["api_id"] = debugMsg["api_id"]
-	writeResults["request_type"] = debugMsg["request_type"]
+	writeResults.Type = "send"
+	writeResults.UUID = debugMsg.UUID
+	writeResults.ApiName = debugMsg.ApiName
+	writeResults.TeamId = debugMsg.TeamId
+	writeResults.ApiId = debugMsg.ApiId
+	writeResults.RequestType = debugMsg.RequestType
 
-	connectionResults["type"] = "connection"
-	connectionResults["uuid"] = debugMsg["uuid"]
-	connectionResults["api_name"] = debugMsg["api_name"]
-	connectionResults["team_id"] = debugMsg["team_id"]
-	connectionResults["api_id"] = debugMsg["api_id"]
-	connectionResults["request_type"] = debugMsg["request_type"]
+	connectionResults.Type = "connection"
+	connectionResults.UUID = debugMsg.UUID
+	connectionResults.ApiName = debugMsg.ApiName
+	connectionResults.TeamId = debugMsg.TeamId
+	connectionResults.ApiId = debugMsg.ApiId
+	connectionResults.RequestType = debugMsg.RequestType
 	headers := map[string][]string{}
 	for _, header := range ws.WsHeader {
 		if header.IsChecked != constant.Open {
@@ -101,39 +101,36 @@ func (ws WebsocketDetail) Request(debug string, debugMsg map[string]interface{},
 	}
 	header, _ := json.Marshal(headers)
 	if header != nil {
-		writeResults["request_header"] = string(header)
-	} else {
-		writeResults["request_header"] = ""
+		writeResults.RequestHeader = string(header)
 	}
-	recvResults["type"] = "recv"
 	wsConfig := ws.WsConfig
 	ws.Url = strings.TrimSpace(ws.Url)
-	recvResults["request_url"] = ws.Url
-	writeResults["request_url"] = ws.Url
-	connectionResults["request_url"] = ws.Url
+	recvResults.RequestUrl = ws.Url
+	writeResults.RequestUrl = ws.Url
+	connectionResults.RequestUrl = ws.Url
 	for i := 0; i < wsConfig.RetryNum; i++ {
 		conn, _, err = websocket.DefaultDialer.Dial(ws.Url, headers)
 		if conn != nil {
-			connectionResults["status"] = constant.Success
-			connectionResults["is_stop"] = false
+			connectionResults.Status = constant.Success
+			connectionResults.IsStop = false
 			break
 		}
 	}
 	if err != nil || conn == nil {
 		if err != nil {
-			recvResults["response_body"] = err.Error()
-			writeResults["response_body"] = err.Error()
-			recvResults["status"] = constant.Failed
-			writeResults["status"] = constant.Failed
+			recvResults.ResponseBody = err.Error()
+			writeResults.ResponseBody = err.Error()
+			recvResults.Status = constant.Failed
+			writeResults.Status = constant.Failed
 		} else {
-			recvResults["request_body"] = "连接为空"
-			writeResults["response_body"] = "连接为空"
-			recvResults["status"] = constant.Success
-			writeResults["status"] = constant.Success
+			recvResults.RequestBody = "连接为空"
+			writeResults.ResponseBody = "连接为空"
+			recvResults.Status = constant.Success
+			writeResults.Status = constant.Success
 		}
 
-		recvResults["is_stop"] = true
-		writeResults["is_stop"] = true
+		recvResults.IsStop = true
+		writeResults.IsStop = true
 		if debug != "stop" {
 			Insert(mongoCollection, writeResults, middlewares.LocalIp)
 			Insert(mongoCollection, recvResults, middlewares.LocalIp)
@@ -149,7 +146,7 @@ func (ws WebsocketDetail) Request(debug string, debugMsg map[string]interface{},
 	// 长连接
 	case constant.LongConnection:
 		// 订阅redis中消息  任务状态：包括：报告停止；debug日志状态；任务配置变更
-		adjustKey := fmt.Sprintf("WsStatusChange:%s", debugMsg["uuid"])
+		adjustKey := fmt.Sprintf("WsStatusChange:%s", debugMsg.UUID)
 		pubSub := SubscribeMsg(adjustKey)
 		statusCh := pubSub.Channel()
 		var wsStatusChange = new(ConnectionStatusChange)
@@ -170,12 +167,12 @@ func (ws WebsocketDetail) Request(debug string, debugMsg map[string]interface{},
 						}
 						if conn == nil {
 							if err != nil {
-								writeResults["request_body"] = err.Error()
+								writeResults.RequestBody = err.Error()
 							} else {
-								writeResults["request_body"] = ""
+								writeResults.RequestBody = ""
 							}
-							writeResults["status"] = constant.Failed
-							writeResults["is_stop"] = true
+							writeResults.Status = constant.Failed
+							writeResults.IsStop = true
 							Insert(mongoCollection, writeResults, middlewares.LocalIp)
 							return
 						}
@@ -183,28 +180,28 @@ func (ws WebsocketDetail) Request(debug string, debugMsg map[string]interface{},
 					}
 					select {
 					case <-writeTimeAfter:
-						writeResults["status"] = constant.Failed
-						writeResults["is_stop"] = true
+						writeResults.Status = constant.Failed
+						writeResults.IsStop = true
 						Insert(mongoCollection, writeResults, middlewares.LocalIp)
 						return
 					case c := <-statusCh:
 
 						_ = json.Unmarshal([]byte(c.Payload), wsStatusChange)
 						if wsStatusChange.Type == 1 {
-							writeResults["status"] = constant.Failed
-							writeResults["is_stop"] = true
+							writeResults.Status = constant.Failed
+							writeResults.IsStop = true
 							Insert(mongoCollection, writeResults, middlewares.LocalIp)
 							return
 						}
 					case <-ticker.C:
 						bodyBytes := []byte(ws.SendMessage)
 						err = conn.WriteMessage(websocket.TextMessage, bodyBytes)
-						writeResults["request_body"] = ws.SendMessage
-						writeResults["status"] = constant.Success
-						writeResults["is_stop"] = false
+						writeResults.RequestBody = ws.SendMessage
+						writeResults.Status = constant.Success
+						writeResults.IsStop = false
 						if err != nil {
-							writeResults["request_body"] = err.Error()
-							writeResults["status"] = constant.Failed
+							writeResults.RequestBody = err.Error()
+							writeResults.Status = constant.Failed
 							Insert(mongoCollection, writeResults, middlewares.LocalIp)
 							continue
 						}
@@ -229,12 +226,12 @@ func (ws WebsocketDetail) Request(debug string, debugMsg map[string]interface{},
 						}
 						if conn == nil {
 							if err != nil {
-								writeResults["request_body"] = err.Error()
+								writeResults.RequestBody = err.Error()
 							} else {
-								writeResults["request_body"] = ""
+								writeResults.RequestBody = ""
 							}
-							writeResults["status"] = constant.Failed
-							writeResults["is_stop"] = true
+							writeResults.Status = constant.Failed
+							writeResults.IsStop = true
 							Insert(mongoCollection, writeResults, middlewares.LocalIp)
 							return
 						}
@@ -242,28 +239,28 @@ func (ws WebsocketDetail) Request(debug string, debugMsg map[string]interface{},
 					}
 					select {
 					case <-writeTimeAfter:
-						writeResults["status"] = constant.Success
-						writeResults["is_stop"] = true
+						writeResults.Status = constant.Success
+						writeResults.IsStop = true
 						Insert(mongoCollection, writeResults, middlewares.LocalIp)
 						return
 					case c := <-statusCh:
 						_ = json.Unmarshal([]byte(c.Payload), wsStatusChange)
 						switch wsStatusChange.Type {
 						case 1:
-							writeResults["status"] = constant.Failed
-							writeResults["is_stop"] = true
+							writeResults.Status = constant.Failed
+							writeResults.IsStop = true
 							Insert(mongoCollection, writeResults, middlewares.LocalIp)
 							return
 						case 2:
 							body := wsStatusChange.Message
 							bodyBytes := []byte(body)
 							err = conn.WriteMessage(websocket.TextMessage, bodyBytes)
-							writeResults["request_body"] = body
-							writeResults["status"] = constant.Success
-							writeResults["is_stop"] = false
+							writeResults.RequestBody = body
+							writeResults.Status = constant.Success
+							writeResults.IsStop = false
 							if err != nil {
-								writeResults["request_body"] = err.Error()
-								writeResults["status"] = constant.Failed
+								writeResults.RequestBody = err.Error()
+								writeResults.Status = constant.Failed
 								Insert(mongoCollection, writeResults, middlewares.LocalIp)
 								continue
 							}
@@ -275,8 +272,8 @@ func (ws WebsocketDetail) Request(debug string, debugMsg map[string]interface{},
 
 			}(wg, pubSub)
 		default:
-			writeResults["status"] = constant.Failed
-			writeResults["is_stop"] = true
+			writeResults.Status = constant.Failed
+			writeResults.IsStop = true
 			Insert(mongoCollection, writeResults, middlewares.LocalIp)
 			return
 		}
@@ -296,12 +293,12 @@ func (ws WebsocketDetail) Request(debug string, debugMsg map[string]interface{},
 					}
 					if conn == nil {
 						if err != nil {
-							recvResults["response_body"] = err.Error()
+							recvResults.ResponseBody = err.Error()
 						} else {
-							recvResults["response_body"] = ""
+							recvResults.ResponseBody = ""
 						}
-						recvResults["status"] = constant.Failed
-						recvResults["is_stop"] = true
+						recvResults.Status = constant.Failed
+						recvResults.IsStop = true
 						Insert(mongoCollection, recvResults, middlewares.LocalIp)
 						return
 					}
@@ -309,16 +306,16 @@ func (ws WebsocketDetail) Request(debug string, debugMsg map[string]interface{},
 				}
 				select {
 				case <-readTimeAfter:
-					recvResults["status"] = constant.Success
-					recvResults["response_body"] = ""
-					recvResults["is_stop"] = true
+					recvResults.Status = constant.Success
+					recvResults.ResponseBody = ""
+					recvResults.IsStop = true
 					Insert(mongoCollection, recvResults, middlewares.LocalIp)
 					return
 				case c := <-statusCh:
 					_ = json.Unmarshal([]byte(c.Payload), wsStatusChange)
 					if wsStatusChange.Type == 1 {
-						recvResults["status"] = constant.Failed
-						recvResults["is_stop"] = true
+						recvResults.Status = constant.Failed
+						recvResults.IsStop = true
 						Insert(mongoCollection, recvResults, middlewares.LocalIp)
 						return
 					}
@@ -326,16 +323,16 @@ func (ws WebsocketDetail) Request(debug string, debugMsg map[string]interface{},
 				default:
 					m, p, connectErr := conn.ReadMessage()
 					if connectErr != nil {
-						recvResults["response_body"] = connectErr.Error()
-						recvResults["status"] = constant.Failed
-						recvResults["is_stop"] = false
+						recvResults.ResponseBody = connectErr.Error()
+						recvResults.Status = constant.Failed
+						recvResults.IsStop = false
 						Insert(mongoCollection, recvResults, middlewares.LocalIp)
 						break
 					}
-					recvResults["status"] = constant.Success
-					recvResults["response_message_type"] = m
-					recvResults["response_body"] = string(p)
-					recvResults["is_stop"] = false
+					recvResults.Status = constant.Success
+					recvResults.ResponseMessageType = m
+					recvResults.ResponseBody = string(p)
+					recvResults.IsStop = false
 					Insert(mongoCollection, recvResults, middlewares.LocalIp)
 				}
 			}
@@ -346,16 +343,16 @@ func (ws WebsocketDetail) Request(debug string, debugMsg map[string]interface{},
 	case constant.ShortConnection:
 		if conn == nil {
 			if err != nil {
-				recvResults["response_body"] = err.Error()
-				writeResults["request_body"] = err.Error()
+				recvResults.ResponseBody = err.Error()
+				writeResults.RequestBody = err.Error()
 			} else {
-				recvResults["response_body"] = "连接为空"
-				writeResults["request_body"] = "连接为空"
+				recvResults.ResponseBody = "连接为空"
+				writeResults.RequestBody = "连接为空"
 			}
-			recvResults["status"] = constant.Failed
-			writeResults["status"] = constant.Failed
-			recvResults["is_stop"] = true
-			writeResults["is_stop"] = true
+			recvResults.Status = constant.Failed
+			writeResults.Status = constant.Failed
+			recvResults.IsStop = true
+			writeResults.IsStop = true
 			Insert(mongoCollection, writeResults, middlewares.LocalIp)
 			Insert(mongoCollection, recvResults, middlewares.LocalIp)
 			return
@@ -363,43 +360,43 @@ func (ws WebsocketDetail) Request(debug string, debugMsg map[string]interface{},
 
 		bodyBytes := []byte(ws.SendMessage)
 		err = conn.WriteMessage(websocket.TextMessage, bodyBytes)
-		writeResults["request_body"] = ws.SendMessage
+		writeResults.RequestBody = ws.SendMessage
 		if err != nil {
-			recvResults["response_body"] = err.Error()
-			writeResults["request_body"] = err.Error()
-			recvResults["status"] = constant.Failed
-			writeResults["status"] = constant.Failed
-			recvResults["is_stop"] = true
-			writeResults["is_stop"] = true
+			recvResults.ResponseBody = err.Error()
+			writeResults.ResponseBody = err.Error()
+			recvResults.Status = constant.Failed
+			writeResults.Status = constant.Failed
+			recvResults.IsStop = true
+			writeResults.IsStop = true
 			Insert(mongoCollection, writeResults, middlewares.LocalIp)
 			Insert(mongoCollection, recvResults, middlewares.LocalIp)
 			return
 		}
-		recvResults["is_stop"] = true
+		recvResults.IsStop = true
 		m, p, err1 := conn.ReadMessage()
 		if err1 != nil {
-			recvResults["response_body"] = err1.Error()
-			recvResults["is_stop"] = true
-			recvResults["status"] = constant.Failed
+			recvResults.ResponseBody = err1.Error()
+			recvResults.IsStop = true
+			recvResults.Status = constant.Failed
 			Insert(mongoCollection, writeResults, middlewares.LocalIp)
 			Insert(mongoCollection, recvResults, middlewares.LocalIp)
 			return
 		}
-		recvResults["status"] = constant.Success
-		writeResults["status"] = constant.Success
-		recvResults["response_message_type"] = m
-		recvResults["response_body"] = string(p)
-		recvResults["is_stop"] = true
-		writeResults["is_stop"] = true
+		recvResults.Status = constant.Success
+		writeResults.Status = constant.Success
+		recvResults.ResponseMessageType = m
+		recvResults.ResponseBody = string(p)
+		recvResults.IsStop = true
+		writeResults.IsStop = true
 		Insert(mongoCollection, writeResults, middlewares.LocalIp)
 		Insert(mongoCollection, recvResults, middlewares.LocalIp)
 		return
 
 	default:
-		recvResults["status"] = constant.Failed
-		writeResults["status"] = constant.Failed
-		recvResults["is_stop"] = true
-		writeResults["is_stop"] = true
+		recvResults.Status = constant.Failed
+		writeResults.Status = constant.Failed
+		recvResults.IsStop = true
+		writeResults.IsStop = true
 	}
 	return
 }

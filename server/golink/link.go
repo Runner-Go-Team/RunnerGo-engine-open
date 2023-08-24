@@ -15,7 +15,7 @@ import (
 )
 
 // DisposeScene 对场景进行处理
-func DisposeScene(wg, sceneWg *sync.WaitGroup, runType string, scene model.Scene, configuration *model.Configuration, reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestCollection *mongo.Collection, options ...int64) {
+func DisposeScene(runType string, scene model.Scene, configuration *model.Configuration, reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestCollection *mongo.Collection, options ...int64) {
 
 	sceneBy, _ := json.Marshal(scene)
 	var tempScene model.Scene
@@ -65,10 +65,10 @@ func DisposeScene(wg, sceneWg *sync.WaitGroup, runType string, scene model.Scene
 		}
 		return true
 	})
+	sceneWg := &sync.WaitGroup{}
 	for _, nodes := range nodesList {
 		for _, node := range nodes {
 			node.Uuid = scene.Uuid
-			wg.Add(1)
 			sceneWg.Add(1)
 			switch runType {
 			case constant.PlanType:
@@ -76,7 +76,7 @@ func DisposeScene(wg, sceneWg *sync.WaitGroup, runType string, scene model.Scene
 				node.PlanId = reportMsg.PlanId
 				node.ReportId = reportMsg.ReportId
 				node.Debug = scene.Debug
-				go disposePlanNode(preNodeMap, tempScene, globalVar, node, wg, sceneWg, reportMsg, resultDataMsgCh, requestCollection, options...)
+				go disposePlanNode(preNodeMap, tempScene, globalVar, node, sceneWg, reportMsg, resultDataMsgCh, requestCollection, options...)
 			case constant.SceneType:
 				node.TeamId = scene.TeamId
 				node.PlanId = scene.PlanId
@@ -84,9 +84,8 @@ func DisposeScene(wg, sceneWg *sync.WaitGroup, runType string, scene model.Scene
 				node.SceneId = scene.SceneId
 				node.ReportId = scene.ReportId
 				node.ParentId = scene.ParentId
-				go disposeDebugNode(preNodeMap, tempScene, globalVar, node, wg, sceneWg, reportMsg, resultDataMsgCh, requestCollection)
+				go disposeDebugNode(preNodeMap, tempScene, globalVar, node, sceneWg, reportMsg, resultDataMsgCh, requestCollection)
 			default:
-				wg.Done()
 				sceneWg.Done()
 			}
 		}
@@ -96,8 +95,7 @@ func DisposeScene(wg, sceneWg *sync.WaitGroup, runType string, scene model.Scene
 }
 
 // disposePlanNode 处理node节点
-func disposePlanNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.Map, event model.Event, wg, sceneWg *sync.WaitGroup, reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestCollection *mongo.Collection, disOptions ...int64) {
-	defer wg.Done()
+func disposePlanNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.Map, event model.Event, sceneWg *sync.WaitGroup, reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestCollection *mongo.Collection, disOptions ...int64) {
 	defer sceneWg.Done()
 
 	var (
@@ -339,8 +337,7 @@ func disposePlanNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.Ma
 
 }
 
-func disposeDebugNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.Map, event model.Event, wg, sceneWg *sync.WaitGroup, reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestCollection *mongo.Collection) {
-	defer wg.Done()
+func disposeDebugNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.Map, event model.Event, sceneWg *sync.WaitGroup, reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestCollection *mongo.Collection) {
 	defer sceneWg.Done()
 	//defer close(nodeCh)
 	var eventResult = model.EventResult{}
@@ -600,19 +597,21 @@ func DisposeRequest(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.
 		startTime, endTime = time.Time{}, time.Time{}
 	)
 
-	var debugMsg = make(map[string]interface{})
-	debugMsg["team_id"] = event.TeamId
-	debugMsg["plan_id"] = event.PlanId
-	debugMsg["report_id"] = event.ReportId
-	debugMsg["scene_id"] = event.SceneId
-	debugMsg["parent_id"] = event.ParentId
-	debugMsg["case_id"] = event.CaseId
-	debugMsg["uuid"] = api.Uuid.String()
-	debugMsg["event_id"] = event.Id
-	debugMsg["api_id"] = api.TargetId
-	debugMsg["api_name"] = api.Name
-	debugMsg["next_list"] = event.NextList
-	debugMsg["request_type"] = api.TargetType
+	var debugMsg = new(model.DebugMsg)
+
+	debugMsg.UUID = api.Uuid.String()
+	debugMsg.ApiId = api.TargetId
+	debugMsg.TeamId = event.TeamId
+	debugMsg.PlanId = event.PlanId
+	debugMsg.CaseId = event.CaseId
+	debugMsg.EventId = event.Id
+	debugMsg.ApiName = api.Name
+	debugMsg.SceneId = event.SceneId
+	debugMsg.ReportId = event.ReportId
+	debugMsg.ParentId = event.ParentId
+	debugMsg.NextList = event.NextList
+	debugMsg.RequestType = api.TargetType
+
 	switch api.TargetType {
 	case constant.FormTypeHTTP:
 		api.Request.PreUrl = strings.TrimSpace(api.Request.PreUrl)

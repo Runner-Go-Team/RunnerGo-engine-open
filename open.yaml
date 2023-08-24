@@ -12,22 +12,22 @@ http:
   port: 8002                                               #本服务端口
 
 redis:
-  address: ""
-  password: ""
-  db: 1
+  address: "172.17.101.191:6398"
+  password: "apipost"
+  db: 15
 
 reportRedis:
-  address: ""
-  password: ""
-  db: 1
+  address: "172.17.101.191:6398"
+  password: "apipost"
+  db: 15
 
 kafka:
-  address: ""
+  address: "172.17.101.188:9092"
   topIc: "runnergo"
 
 
 mongo:
-  dsn: "mongodb://username:password@ip:27017/tablename"
+  dsn: "mongodb://runnergo_open:czYNsm6LmfZ0XU3E@172.17.18.255:27017/runnergo_open"
   database: "runnergo_open"
   stressDebugTable: "stress_debug"
   sceneDebugTable: "scene_debug"
@@ -54,5 +54,5 @@ log:
 
 
 management:
-  notifyStopStress: "https://managername/management/api/v1/plan/notify_stop_stress"                          #management服务停止性能任务接口
-  notifyRunFinish: "https://managername/management/api/v1/auto_plan/notify_run_finish"                           #management服务任务完成接口
+  notifyStopStress: "https://manager.runnergo.cc/management/api/v1/plan/notify_stop_stress"                          #management服务停止性能任务接口
+  notifyRunFinish: "https://manager.runnergo.cc/management/api/v1/auto_plan/notify_run_finish"                           #management服务任务完成接口

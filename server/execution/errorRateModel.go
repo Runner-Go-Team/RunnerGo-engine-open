@@ -26,7 +26,7 @@ type Apis struct {
 }
 
 // ErrorRateModel 错误率模式
-func ErrorRateModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.Configuration, reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestCollection *mongo.Collection) string {
+func ErrorRateModel(scene model.Scene, configuration *model.Configuration, reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.ResultDataMsg, requestCollection *mongo.Collection) string {
 	startConcurrent := scene.ConfigTask.ModeConf.StartConcurrency
 	step := scene.ConfigTask.ModeConf.Step
 	maxConcurrent := scene.ConfigTask.ModeConf.MaxConcurrency
@@ -120,15 +120,11 @@ func ErrorRateModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.
 						continue
 					}
 					concurrentMap.Store(i, true)
-					wg.Add(1)
 					currentWg.Add(1)
 					go func(concurrentId, concurrent int64, useConfiguration *model.Configuration, currentScene model.Scene) {
-						var sceneWg = &sync.WaitGroup{}
-						golink.DisposeScene(wg, sceneWg, constant.PlanType, currentScene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
-						sceneWg.Wait()
-						concurrentMap.Delete(concurrentId)
-						currentWg.Done()
-						wg.Done()
+						defer currentWg.Done()
+						defer concurrentMap.Delete(concurrentId)
+						golink.DisposeScene(constant.PlanType, currentScene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
 
 					}(i, concurrent, configuration, scene)
 				}
@@ -250,21 +246,19 @@ func ErrorRateModel(wg *sync.WaitGroup, scene model.Scene, configuration *model.
 						continue
 					}
 					concurrentMap.Store(i, true)
-					wg.Add(1)
 					currentWg.Add(1)
 					go func(concurrentId int64, useConfiguration *model.Configuration, currentScene model.Scene) {
+						defer currentWg.Done()
+						defer concurrentMap.Delete(concurrentId)
 						for startTime+stepRunTime > endTime {
 							if _, isOk := concurrentMap.Load(concurrentId); !isOk {
 								break
 							}
 							currentScene.Debug = debug
 							var sceneWg = &sync.WaitGroup{}
-							golink.DisposeScene(wg, sceneWg, constant.PlanType, currentScene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
+							golink.DisposeScene(constant.PlanType, currentScene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
 							sceneWg.Wait()
 						}
-						concurrentMap.Delete(concurrentId)
-						wg.Done()
-						currentWg.Done()
 
 					}(i, configuration, scene)
 				}

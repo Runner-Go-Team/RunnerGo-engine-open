@@ -206,9 +206,7 @@ func disposeCase(scene model.Scene, sceneRunMode, caseMode int64, wg *sync.WaitG
 		}
 		switch caseMode {
 		case constant.AuToOrderMode:
-			var sceneWg = &sync.WaitGroup{}
-			golink.DisposeScene(wg, sceneWg, constant.SceneType, c, configuration, reportMsg, resultDataMsgCh, collection)
-			sceneWg.Wait()
+			golink.DisposeScene(constant.SceneType, c, configuration, reportMsg, resultDataMsgCh, collection)
 		}
 	}
 }

@@ -72,7 +72,7 @@ type Body struct {
 	Parameter []*VarForm `json:"parameter"`
 }
 
-func (r RequestHttp) Send(debug string, debugMsg map[string]interface{}, requestCollection *mongo.Collection, globalVar *sync.Map) (bool, int64, uint64, float64, float64, string, time.Time, time.Time) {
+func (r RequestHttp) Send(debug string, debugMsg *DebugMsg, requestCollection *mongo.Collection, globalVar *sync.Map) (bool, int64, uint64, float64, float64, string, time.Time, time.Time) {
 	var (
 		isSucceed       = true
 		errCode         = constant.NoError
@@ -90,53 +90,19 @@ func (r RequestHttp) Send(debug string, debugMsg map[string]interface{}, request
 
 	defer fasthttp.ReleaseResponse(resp) // 用完需要释放资源
 	defer fasthttp.ReleaseRequest(req)
-	var regex []map[string]interface{}
-	if r.Regex != nil {
-		for _, regular := range r.Regex {
-			if regular.IsChecked != constant.Open {
-				continue
-			}
-			reg := make(map[string]interface{})
-			value := regular.Extract(resp, globalVar)
-			if value == nil {
-				continue
-			}
-			reg[regular.Var] = value
-			regex = append(regex, reg)
-		}
-	}
+
+	var regex = &Regex{}
+	r.Withdraw(regex, globalVar, resp)
 	if err != nil {
 		isSucceed = false
 		errMsg = err.Error()
 	}
-	var assertionMsgList []AssertionMsg
+	var assert = new(Assert)
 	// 断言验证
+	errCode, isSucceed, errMsg, num, failedNum := r.Assertion(assert, resp)
+	assertNum = assertNum + num
+	assertFailedNum = assertFailedNum + failedNum
 
-	if r.Assert != nil {
-		var assertionMsg = AssertionMsg{}
-		var (
-			code    = int64(10000)
-			succeed = true
-			msg     = ""
-		)
-		for _, v := range r.Assert {
-			if v.IsChecked != constant.Open {
-				continue
-			}
-			code, succeed, msg = v.VerifyAssertionText(resp)
-			if succeed != true {
-				errCode = code
-				isSucceed = succeed
-				errMsg = msg
-				assertFailedNum++
-			}
-			assertionMsg.Code = code
-			assertionMsg.IsSucceed = succeed
-			assertionMsg.Msg = msg
-			assertionMsgList = append(assertionMsgList, assertionMsg)
-			assertNum++
-		}
-	}
 	// 接收到的字节长度
 	//contentLength = uint(resp.Header.ContentLength())
 
@@ -147,10 +113,8 @@ func (r RequestHttp) Send(debug string, debugMsg map[string]interface{}, request
 	// 开启debug模式后，将请求响应信息写入到mongodb中
 	if debug == constant.All || debug == constant.OnlySuccess || debug == constant.OnlyError {
 		responseTime := endTime.Format("2006-01-02 15:04:05")
-		insertDebugMsg(regex, debugMsg, resp, req, requestTime, responseTime, receivedBytes, errMsg, debug, str, err, isSucceed, assertionMsgList, assertNum, assertFailedNum)
-		if requestCollection != nil {
-			Insert(requestCollection, debugMsg, middlewares.LocalIp)
-		}
+		insertDebugMsg(regex, debugMsg, resp, req, requestTime, responseTime, receivedBytes, debug, str, err, isSucceed, assert, assertNum, assertFailedNum, requestCollection)
+
 	}
 
 	return isSucceed, errCode, requestTime, sendBytes, receivedBytes, errMsg, startTime, endTime
@@ -226,6 +190,53 @@ func (r RequestHttp) Request() (resp *fasthttp.Response, req *fasthttp.Request, 
 		sendBytes = float64(len(req.Body())) / 1024
 	}
 
+	return
+}
+
+func (r RequestHttp) Withdraw(regex *Regex, globalVar *sync.Map, resp *fasthttp.Response) {
+	if r.Regex == nil {
+		return
+	}
+	for _, regular := range r.Regex {
+		if regular.IsChecked != constant.Open {
+			continue
+		}
+		reg := new(Reg)
+		value := regular.Extract(resp, globalVar)
+		if value == nil {
+			continue
+		}
+		reg.Key = regular.Var
+		reg.Value = value
+		regex.Regs = append(regex.Regs, reg)
+	}
+
+}
+
+func (r RequestHttp) Assertion(assert *Assert, resp *fasthttp.Response) (code int64, isSucceed bool, errMsg string, assertNum int, assertFailedNum int) {
+	isSucceed = true
+	code = int64(10000)
+	if r.Assert == nil {
+		return
+	}
+	var assertionMsg = AssertionMsg{}
+	for _, v := range r.Assert {
+		if v.IsChecked != constant.Open {
+			continue
+		}
+		errcode, succeed, msg := v.VerifyAssertionText(resp)
+		if !succeed {
+			code = errcode
+			isSucceed = succeed
+			errMsg = msg
+			assertFailedNum++
+		}
+		assertionMsg.Code = errcode
+		assertionMsg.IsSucceed = succeed
+		assertionMsg.Msg = msg
+		assert.AssertionMsgs = append(assert.AssertionMsgs, assertionMsg)
+		assertNum++
+	}
 	return
 }
 
@@ -1508,74 +1519,72 @@ func (v *VarForm) Conversion() {
 	}
 }
 
-func insertDebugMsg(regex []map[string]interface{}, debugMsg map[string]interface{}, resp *fasthttp.Response, req *fasthttp.Request, requestTime uint64, responseTime string, receivedBytes float64, errMsg, debug, str string, err error, isSucceed bool, assertionMsgList []AssertionMsg, assertNum, assertFailedNum int) {
+func insertDebugMsg(regex *Regex, debugMsg *DebugMsg, resp *fasthttp.Response, req *fasthttp.Request, requestTime uint64, responseTime string, receivedBytes float64, debug, str string, err error, isSucceed bool, assert *Assert, assertNum, assertFailedNum int, requestCollection *mongo.Collection) {
 	switch debug {
 	case constant.All:
-		makeDebugMsg(regex, debugMsg, resp, req, requestTime, responseTime, receivedBytes, errMsg, str, err, isSucceed, assertionMsgList, assertNum, assertFailedNum)
+		makeDebugMsg(regex, debugMsg, resp, req, requestTime, responseTime, receivedBytes, str, err, isSucceed, assert, assertNum, assertFailedNum)
+		Insert(requestCollection, debugMsg, middlewares.LocalIp)
 	case constant.OnlySuccess:
 		if isSucceed == true {
-			makeDebugMsg(regex, debugMsg, resp, req, requestTime, responseTime, receivedBytes, errMsg, str, err, isSucceed, assertionMsgList, assertNum, assertFailedNum)
+			makeDebugMsg(regex, debugMsg, resp, req, requestTime, responseTime, receivedBytes, str, err, isSucceed, assert, assertNum, assertFailedNum)
+			Insert(requestCollection, debugMsg, middlewares.LocalIp)
 		}
 
 	case constant.OnlyError:
 		if isSucceed == false {
-			makeDebugMsg(regex, debugMsg, resp, req, requestTime, responseTime, receivedBytes, errMsg, str, err, isSucceed, assertionMsgList, assertNum, assertFailedNum)
+			makeDebugMsg(regex, debugMsg, resp, req, requestTime, responseTime, receivedBytes, str, err, isSucceed, assert, assertNum, assertFailedNum)
+			Insert(requestCollection, debugMsg, middlewares.LocalIp)
 		}
 	}
 }
 
-func makeDebugMsg(regex []map[string]interface{}, debugMsg map[string]interface{}, resp *fasthttp.Response, req *fasthttp.Request,
-	requestTime uint64, responseTime string, receivedBytes float64, errMsg, str string, err error, isSucceed bool, assertionMsgList []AssertionMsg, assertNum, assertFailedNum int) {
+func makeDebugMsg(regex *Regex, debugMsg *DebugMsg, resp *fasthttp.Response, req *fasthttp.Request,
+	requestTime uint64, responseTime string, receivedBytes float64, str string, err error, isSucceed bool, assert *Assert, assertNum, assertFailedNum int) {
 
 	if req.Header.Method() != nil {
-		debugMsg["method"] = string(req.Header.Method())
+		debugMsg.Method = string(req.Header.Method())
 	}
-	debugMsg["type"] = constant.RequestType
-	debugMsg["request_time"] = requestTime / uint64(time.Millisecond)
-	debugMsg["request_code"] = resp.StatusCode()
-	debugMsg["request_header"] = req.Header.String()
-	debugMsg["response_time"] = responseTime
-	debugMsg["request_url"] = req.URI().String()
-	if debugMsg["uuid"] == "00000000-0000-0000-0000-000000000000" {
-		debugMsg["uuid"] = uuid.NewV4().String()
+	if debugMsg.UUID == "00000000-0000-0000-0000-000000000000" {
+		debugMsg.UUID = uuid.NewV4().String()
 	}
 	if string(req.Body()) != "" {
 		var errBody error
-		debugMsg["request_body"], errBody = url.QueryUnescape(string(req.Body()))
+		debugMsg.RequestBody, errBody = url.QueryUnescape(string(req.Body()))
 		if errBody != nil {
-			debugMsg["request_body"] = string(req.Body())
+			debugMsg.RequestBody = string(req.Body())
 		}
 	} else {
-		debugMsg["request_body"] = str
+		debugMsg.RequestBody = str
 	}
-	if string(resp.Body()) == "" && errMsg != "" {
-		debugMsg["response_body"] = errMsg
-	}
-
-	debugMsg["response_header"] = resp.Header.String()
-
-	debugMsg["response_bytes"], _ = strconv.ParseFloat(fmt.Sprintf("%0.2f", receivedBytes), 64)
 	if err != nil {
-		debugMsg["response_body"] = err.Error()
+		debugMsg.ResponseBody = err.Error()
 	} else {
 		switch string(resp.Header.ContentEncoding()) {
 		case "br", "deflate", "gzip":
 			b, _ := resp.BodyUncompressed()
-			debugMsg["response_body"] = string(b)
+			debugMsg.ResponseBody = string(b)
 		default:
-			debugMsg["response_body"] = string(resp.Body())
+			debugMsg.ResponseBody = string(resp.Body())
 		}
 	}
 	switch isSucceed {
 	case false:
-		debugMsg["status"] = constant.Failed
+		debugMsg.Status = constant.Failed
 	case true:
-		debugMsg["status"] = constant.Success
+		debugMsg.Status = constant.Success
 	}
-	debugMsg["assert"] = assertionMsgList
-	debugMsg["assert_num"] = assertNum
-	debugMsg["assert_failed_num"] = assertFailedNum
-	debugMsg["regex"] = regex
+	debugMsg.Regex = regex
+	debugMsg.Assert = assert
+	debugMsg.AssertNum = assertNum
+	debugMsg.RequestUrl = req.URI().String()
+	debugMsg.RequestTime = requestTime / uint64(time.Millisecond)
+	debugMsg.RequestCode = resp.StatusCode()
+	debugMsg.ResponseTime = responseTime
+	debugMsg.RequestHeader = req.Header.String()
+	debugMsg.ResponseHeader = resp.Header.String()
+	debugMsg.ResponseBytes, _ = strconv.ParseFloat(fmt.Sprintf("%0.2f", receivedBytes), 64)
+	debugMsg.AssertFailedNum = assertFailedNum
+
 }
 
 // 获取fasthttp客户端
