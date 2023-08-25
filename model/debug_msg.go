@@ -53,5 +53,5 @@ type Regex struct {
 }
 
 type Assert struct {
-	AssertionMsgs []AssertionMsg `json:"assertion_msgs"`
+	AssertionMsgs []AssertionMsg `json:"assertion_msgs" bson:"assertion_msgs"`
 }
