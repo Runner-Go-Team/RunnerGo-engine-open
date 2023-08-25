@@ -161,8 +161,8 @@ func RPSModel(scene model.Scene, configuration *model.Configuration, reportMsg *
 						concurrent = maxConcurrent
 					}
 
-					if startTime+stepRunTime <= endTime && concurrent < maxConcurrent {
-						startTime = endTime + stepRunTime
+					if concurrent < maxConcurrent {
+						startTime = endTime
 
 					}
 				}
@@ -171,7 +171,7 @@ func RPSModel(scene model.Scene, configuration *model.Configuration, reportMsg *
 			if concurrent == maxConcurrent {
 				if target == 0 {
 					stepRunTime = stableDuration
-					startTime = endTime + stepRunTime
+					startTime = endTime
 				}
 				target++
 			}
@@ -299,8 +299,8 @@ func RPSModel(scene model.Scene, configuration *model.Configuration, reportMsg *
 						concurrent = maxConcurrent
 					}
 
-					if startTime+stepRunTime <= endTime && concurrent < maxConcurrent {
-						startTime = endTime + stepRunTime
+					if concurrent < maxConcurrent {
+						startTime = endTime
 
 					}
 				}
@@ -309,7 +309,7 @@ func RPSModel(scene model.Scene, configuration *model.Configuration, reportMsg *
 			if concurrent == maxConcurrent {
 				if target == 0 {
 					stepRunTime = stableDuration
-					startTime = endTime + stepRunTime
+					startTime = endTime
 				}
 				target++
 			}

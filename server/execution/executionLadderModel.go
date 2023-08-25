@@ -122,8 +122,8 @@ func LadderModel(scene model.Scene, configuration *model.Configuration, reportMs
 					if concurrent > maxConcurrent {
 						concurrent = maxConcurrent
 					}
-					if startTime+stepRunTime <= endTime && concurrent < maxConcurrent {
-						startTime = endTime + stepRunTime
+					if concurrent < maxConcurrent {
+						startTime = endTime
 					}
 				}
 			}
@@ -131,7 +131,7 @@ func LadderModel(scene model.Scene, configuration *model.Configuration, reportMs
 				if target == 0 {
 					target++
 					stepRunTime = stableDuration
-					startTime = endTime + stepRunTime
+					startTime = endTime
 				}
 
 			}
@@ -202,7 +202,7 @@ func LadderModel(scene model.Scene, configuration *model.Configuration, reportMs
 							if _, ok := concurrentMap.Load(concurrentId); !ok {
 								break
 							}
-							golink.DisposeScene(constant.PlanType, currentScene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, i, concurrent)
+							golink.DisposeScene(constant.PlanType, currentScene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
 
 						}
 
@@ -222,8 +222,8 @@ func LadderModel(scene model.Scene, configuration *model.Configuration, reportMs
 					if concurrent > maxConcurrent {
 						concurrent = maxConcurrent
 					}
-					if startTime+stepRunTime <= endTime && concurrent < maxConcurrent {
-						startTime = endTime + stepRunTime
+					if concurrent < maxConcurrent {
+						startTime = endTime
 					}
 				}
 			}
@@ -231,7 +231,7 @@ func LadderModel(scene model.Scene, configuration *model.Configuration, reportMs
 				if target == 0 {
 					target++
 					stepRunTime = stableDuration
-					startTime = endTime + stepRunTime
+					startTime = endTime
 				}
 
 			}

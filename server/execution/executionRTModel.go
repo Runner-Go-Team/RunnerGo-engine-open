@@ -174,8 +174,8 @@ func RTModel(scene model.Scene, configuration *model.Configuration, reportMsg *m
 						concurrent = maxConcurrent
 					}
 
-					if startTime+stepRunTime <= endTime && concurrent < maxConcurrent {
-						startTime = endTime + stepRunTime
+					if concurrent < maxConcurrent {
+						startTime = endTime
 
 					}
 				}
@@ -185,7 +185,7 @@ func RTModel(scene model.Scene, configuration *model.Configuration, reportMsg *m
 				if target == 0 {
 					target++
 					stepRunTime = stableDuration
-					startTime = endTime + stepRunTime
+					startTime = endTime
 				}
 
 			}
@@ -338,8 +338,8 @@ func RTModel(scene model.Scene, configuration *model.Configuration, reportMsg *m
 						concurrent = maxConcurrent
 					}
 
-					if startTime+stepRunTime <= endTime && concurrent < maxConcurrent {
-						startTime = endTime + stepRunTime
+					if concurrent < maxConcurrent {
+						startTime = endTime
 
 					}
 				}
@@ -349,7 +349,7 @@ func RTModel(scene model.Scene, configuration *model.Configuration, reportMsg *m
 				if target == 0 {
 					target++
 					stepRunTime = stableDuration
-					startTime = endTime + stepRunTime
+					startTime = endTime
 				}
 			}
 		}
