@@ -81,14 +81,14 @@ func (d DubboDetail) Send(debug string, debugMsg *DebugMsg, mongoCollection *mon
 
 	var (
 		err             error
-		regex           *Regex
+		regex           = &Regex{}
 		success         string
 		response        string
 		rpcServer       common.RPCService
 		assertNum       int
 		parameterTypes  []string
 		assertFailedNum int
-		assert          = new(Assert)
+		assert          = &Assert{}
 		parameterValues []hessian.Object
 	)
 	d.DubboConfig.RegistrationCenterName = strings.TrimSpace(d.DubboConfig.RegistrationCenterName)
@@ -116,7 +116,7 @@ func (d DubboDetail) Send(debug string, debugMsg *DebugMsg, mongoCollection *mon
 	}
 
 	// 关联提取
-	regex = d.disExtract(response, globalVariable)
+	d.disExtract(response, globalVariable, regex)
 
 	// 断言验证
 	assertNum, assertFailedNum = d.disVerify(response, assert)
@@ -316,7 +316,7 @@ func (d DubboDetail) paramInit() (parameterTypes []string, parameterValues []hes
 }
 
 // 处理关联提取
-func (d DubboDetail) disExtract(response string, globalVariable *sync.Map) (regex *Regex) {
+func (d DubboDetail) disExtract(response string, globalVariable *sync.Map, regex *Regex) {
 	if d.DubboRegex == nil {
 		return
 	}
@@ -406,6 +406,7 @@ func (re DubboRegex) Extract(resp string, globalVar *sync.Map) (value interface{
 		}
 		globalVar.Store(name, value)
 	case constant.JsonExtract:
+
 		value = tools.JsonPath(resp, re.Express)
 		globalVar.Store(name, value)
 	}
