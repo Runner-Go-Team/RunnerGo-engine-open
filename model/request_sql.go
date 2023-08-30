@@ -72,7 +72,8 @@ func (sql *SQLDetail) Send(debug string, debugMsg *DebugMsg, mongoCollection *mo
 			errMsg = assert.Msg
 		}
 	}
-	regex := sql.RegexSql(result, globalVar)
+	regex := &Regex{}
+	sql.RegexSql(result, globalVar, regex)
 
 	debugMsg.Regex = regex
 	debugMsg.RequestTime = requestTime / uint64(time.Millisecond)
@@ -390,8 +391,7 @@ func (sql *SQLDetail) Asser(results map[string]interface{}, asserts *Assert) {
 	return
 }
 
-func (sql *SQLDetail) RegexSql(results map[string]interface{}, globalVar *sync.Map) (regexs *Regex) {
-	regexs = &Regex{}
+func (sql *SQLDetail) RegexSql(results map[string]interface{}, globalVar *sync.Map, regexs *Regex) {
 	if sql.Regex == nil || len(sql.Regex) <= 0 || results == nil {
 		return
 	}
@@ -456,7 +456,6 @@ func (sql *SQLDetail) RegexSql(results map[string]interface{}, globalVar *sync.M
 			reg.Value = ""
 
 		}
-		regexs = &Regex{}
 		regexs.Regs = append(regexs.Regs, reg)
 	}
 	return
