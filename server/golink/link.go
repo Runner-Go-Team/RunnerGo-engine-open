@@ -351,70 +351,36 @@ func disposeDebugNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.M
 				}
 				preEventStatus := preCh.(model.EventResult)
 				switch preEventStatus.Status {
-				case constant.NotRun:
+				case constant.NotRun, constant.NotHit:
 					eventResult.Status = constant.NotRun
 					//for _, _ = range event.NextList {
 					//	nodeCh <- eventResult
 					//}
 					preNodeMap.Store(event.Id, eventResult)
-					debugMsg := make(map[string]interface{})
-					debugMsg["team_id"] = event.TeamId
-					debugMsg["plan_id"] = event.PlanId
-					debugMsg["report_id"] = event.ReportId
-					debugMsg["scene_id"] = event.SceneId
-					debugMsg["parent_id"] = event.ParentId
-					debugMsg["case_id"] = event.CaseId
-					debugMsg["uuid"] = event.Uuid.String()
-					debugMsg["event_id"] = event.Id
-					debugMsg["status"] = constant.NotRun
-					debugMsg["msg"] = "未运行"
-					debugMsg["type"] = event.Type
+					debugMsg := new(model.DebugMsg)
+					debugMsg.TeamId = event.TeamId
+					debugMsg.ReportId = event.ReportId
+					debugMsg.SceneId = event.SceneId
+					debugMsg.ParentId = event.ParentId
+					debugMsg.CaseId = event.CaseId
+					debugMsg.UUID = event.Uuid.String()
+					debugMsg.EventId = event.Id
+					debugMsg.Status = constant.NotRun
+					debugMsg.Msg = "未运行"
+					debugMsg.RequestType = event.Type
 					switch event.Type {
 					case constant.RequestType:
-						debugMsg["api_name"] = event.Api.Name
-						debugMsg["api_id"] = event.Api.TargetId
+						debugMsg.ApiName = event.Api.Name
+						debugMsg.ApiId = event.Api.TargetId
 					case constant.IfControllerType:
-						debugMsg["api_name"] = constant.IfControllerType
+						debugMsg.ApiName = constant.IfControllerType
 					case constant.WaitControllerType:
-						debugMsg["api_name"] = constant.IfControllerType
+						debugMsg.ApiName = constant.WaitControllerType
 					}
-					debugMsg["next_list"] = event.NextList
+					debugMsg.NextList = event.NextList
 					if requestCollection != nil {
 						model.Insert(requestCollection, debugMsg, middlewares.LocalIp)
 					}
-					return
-				case constant.NotHit:
-					eventResult.Status = constant.NotRun
-					//for _, _ = range event.NextList {
-					//	nodeCh <- eventResult
-					//}
-					preNodeMap.Store(event.Id, eventResult)
-					debugMsg := make(map[string]interface{})
-					debugMsg["team_id"] = event.TeamId
-					debugMsg["plan_id"] = event.PlanId
-					debugMsg["report_id"] = event.ReportId
-					debugMsg["scene_id"] = event.SceneId
-					debugMsg["parent_id"] = event.ParentId
-					debugMsg["case_id"] = event.CaseId
-					debugMsg["uuid"] = event.Uuid.String()
-					debugMsg["event_id"] = event.Id
-					debugMsg["status"] = constant.NotRun
-					debugMsg["msg"] = "未运行"
-					debugMsg["type"] = event.Type
-					switch event.Type {
-					case constant.RequestType:
-						debugMsg["api_name"] = event.Api.Name
-						debugMsg["api_id"] = event.Api.TargetId
-					case constant.IfControllerType:
-						debugMsg["api_name"] = constant.IfControllerType
-					case constant.WaitControllerType:
-						debugMsg["api_name"] = constant.IfControllerType
-					}
-					debugMsg["next_list"] = event.NextList
-					if requestCollection != nil {
-						model.Insert(requestCollection, debugMsg, middlewares.LocalIp)
-					}
-
 					return
 				}
 			}
@@ -428,18 +394,17 @@ func disposeDebugNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.M
 		if event.NextList != nil && len(event.NextList) >= 1 {
 			preNodeMap.Store(event.Id, eventResult)
 		}
-		debugMsg := make(map[string]interface{})
-		debugMsg["team_id"] = event.TeamId
-		debugMsg["plan_id"] = event.PlanId
-		debugMsg["report_id"] = event.ReportId
-		debugMsg["scene_id"] = event.SceneId
-		debugMsg["parent_id"] = event.ParentId
-		debugMsg["case_id"] = event.CaseId
-		debugMsg["uuid"] = event.Uuid.String()
-		debugMsg["event_id"] = event.Id
-		debugMsg["status"] = constant.NotRun
-		debugMsg["msg"] = "未运行"
-		debugMsg["type"] = event.Type
+		debugMsg := new(model.DebugMsg)
+		debugMsg.TeamId = event.TeamId
+		debugMsg.SceneId = event.SceneId
+		debugMsg.ParentId = event.ParentId
+		debugMsg.CaseId = event.CaseId
+		debugMsg.ReportId = event.ReportId
+		debugMsg.UUID = event.Uuid.String()
+		debugMsg.EventId = event.Id
+		debugMsg.Status = constant.NotRun
+		debugMsg.Msg = "未运行"
+		debugMsg.RequestType = event.Type
 		if requestCollection != nil {
 			model.Insert(requestCollection, debugMsg, middlewares.LocalIp)
 		}
@@ -523,27 +488,24 @@ func disposeDebugNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.M
 		var msg = ""
 
 		var temp = false
-		globalVar.Range(func(key, value any) bool {
-			if key == event.Var {
-				temp = true
-				if value != nil {
-					str := ""
-					switch fmt.Sprintf("%T", value) {
-					case "string":
-						str = value.(string)
-					case "float64":
-						str = fmt.Sprintf("%f", value)
-					case "bool":
-						str = fmt.Sprintf("%t", value)
-					case "int":
-						str = fmt.Sprintf("%d", value)
+		if value, ok := globalVar.Load(event.Var); ok {
+			temp = true
+			if value != nil {
+				str := ""
+				switch fmt.Sprintf("%T", value) {
+				case "string":
+					str = value.(string)
+				case "float64":
+					str = fmt.Sprintf("%f", value)
+				case "bool":
+					str = fmt.Sprintf("%t", value)
+				case "int":
+					str = fmt.Sprintf("%d", value)
 
-					}
-					result, msg = event.PerForm(str)
 				}
+				result, msg = event.PerForm(str)
 			}
-			return true
-		})
+		}
 		if temp == false {
 			result, msg = event.PerForm(event.Var)
 		}
@@ -656,20 +618,20 @@ func DisposeRequest(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.
 
 func setControllerDebugMsg(preNodeMap *sync.Map, eventResult model.EventResult, scene model.Scene, event model.Event, collection *mongo.Collection, msg, status, controllerType string) {
 	if scene.Debug != "" {
-		debugMsg := make(map[string]interface{})
-		debugMsg["team_id"] = event.TeamId
-		debugMsg["plan_id"] = event.PlanId
-		debugMsg["report_id"] = event.ReportId
-		debugMsg["api_name"] = controllerType
-		debugMsg["scene_id"] = event.SceneId
-		debugMsg["parent_id"] = event.ParentId
-		debugMsg["case_id"] = event.CaseId
-		debugMsg["uuid"] = event.Uuid.String()
-		debugMsg["event_id"] = event.Id
-		debugMsg["status"] = status
-		debugMsg["type"] = controllerType
-		debugMsg["msg"] = msg
-		debugMsg["next_list"] = event.NextList
+		debugMsg := new(model.DebugMsg)
+		debugMsg.TeamId = event.TeamId
+		debugMsg.PlanId = event.PlanId
+		debugMsg.ReportId = event.ReportId
+		debugMsg.ApiName = controllerType
+		debugMsg.SceneId = event.SceneId
+		debugMsg.ParentId = event.ParentId
+		debugMsg.CaseId = event.CaseId
+		debugMsg.UUID = event.Uuid.String()
+		debugMsg.EventId = event.Id
+		debugMsg.Status = status
+		debugMsg.RequestType = controllerType
+		debugMsg.Msg = msg
+		debugMsg.NextList = event.NextList
 		if collection != nil {
 			model.Insert(collection, debugMsg, middlewares.LocalIp)
 		}
@@ -680,7 +642,4 @@ func setControllerDebugMsg(preNodeMap *sync.Map, eventResult model.EventResult, 
 		eventResult.Status = constant.End
 	}
 	preNodeMap.Store(event.Id, eventResult)
-	//for _, _ = range event.NextList {
-	//	nodeCh <- eventResult
-	//}
 }
