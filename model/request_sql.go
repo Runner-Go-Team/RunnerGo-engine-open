@@ -89,7 +89,6 @@ func (sql *SQLDetail) Send(debug string, debugMsg *DebugMsg, mongoCollection *mo
 		debugMsg.Status = constant.Success
 	}
 	if errMsg != "" {
-		debugMsg.ResponseBody = errMsg
 		debugMsg.Status = constant.Failed
 	}
 	by, _ := json.Marshal(sql.SqlDatabaseInfo)
@@ -392,6 +391,7 @@ func (sql *SQLDetail) Asser(results map[string]interface{}, asserts *Assert) {
 }
 
 func (sql *SQLDetail) RegexSql(results map[string]interface{}, globalVar *sync.Map) (regexs *Regex) {
+	regexs = &Regex{}
 	if sql.Regex == nil || len(sql.Regex) <= 0 || results == nil {
 		return
 	}
