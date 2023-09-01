@@ -24,12 +24,12 @@ func TestInsert(t *testing.T) {
 func TestQueryPlanStatus(t *testing.T) {
 	//rdb := redis.NewClient(
 	//	&redis.Options{
-	//		Addr:     "172.17.101.191:6398",
-	//		Password: "apipost",
+	//		Addr:     ":6398",
+	//		Password: "",
 	//		DB:       0,
 	//	})
 	//_, err := rdb.Ping().Result()
-	//value, err := rdb.Get("192.168.110.231:1934:90:1088:c03e1575-b5f0-450b-9c51-0c51f3c7ffd7:status").Result()
+	//value, err := rdb.Get(":90:1088:c03e1575-b5f0-450b-9c51-0c51f3c7ffd7:status").Result()
 	//fmt.Println(err, "               ", value)
 
 	ctx := context.Background()

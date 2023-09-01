@@ -6,8 +6,8 @@ import (
 )
 
 func TestSubscribeMsg(t *testing.T) {
-	//address := "172.17.101.191:6398"
-	//password := "apipost"
+	//address := ":6398"
+	//password := ""
 	//
 	//rdb := redis.NewClient(
 	//	&redis.Options{

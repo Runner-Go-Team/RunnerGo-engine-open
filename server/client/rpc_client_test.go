@@ -13,7 +13,7 @@ func TestNewRpcClient(t *testing.T) {
 	//	ApiName:       "org.apache.dubbo.samples.api.GreetingsService",
 	//	DubboConfig: model.DubboConfig{
 	//		RegistrationCenterName:    "zookeeper",
-	//		RegistrationCenterAddress: "172.17.101.188",
+	//		RegistrationCenterAddress: "",
 	//	},
 	//	FunctionName: "sayHi",
 	//	DubboParam: []model.DubboParam{
@@ -29,7 +29,7 @@ func TestNewRpcClient(t *testing.T) {
 	//rpc.Iface = "org.apache.dubbo.samples.api.GreetingsService"
 	//rpc.ParameterType = []string{"java.lang.String"}
 	//rpc.Parameter = "123"
-	//rpc.RegistryAddress = "172.17.101.188:2181"
+	//rpc.RegistryAddress = ":2181"
 	//rpc.Registry = "zookeeper"
 	//rpc.Protocol = "dubbo"
 	//rpc.Method = "sayHi"
@@ -37,7 +37,7 @@ func TestNewRpcClient(t *testing.T) {
 	//NewRpcClient(rpc)
 
 	// 测试连接zk
-	hosts := []string{"172.17.101.188:2181"}
+	hosts := []string{":2181"}
 	conn, event, err := zk.Connect(hosts, time.Second*5)
 	defer conn.Close()
 

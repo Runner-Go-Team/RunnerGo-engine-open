@@ -12,22 +12,22 @@ http:
   port: 8002                                               #本服务端口
 
 redis:
-  address: "172.17.101.191:6398"
+  address: ":6398"
   password: "apipost"
   db: 15
 
 reportRedis:
-  address: "172.17.101.191:6398"
+  address: ":6398"
   password: "apipost"
   db: 15
 
 kafka:
-  address: "172.17.101.188:9092"
+  address: ":9092"
   topIc: "runnergo"
 
 
 mongo:
-  dsn: "mongodb://runnergo_open:czYNsm6LmfZ0XU3E@172.17.18.255:27017/runnergo_open"
+  dsn: "mongodb://runnergo_open:password@*******:27017/runnergo_open"
   database: "runnergo_open"
   stressDebugTable: "stress_debug"
   sceneDebugTable: "scene_debug"
