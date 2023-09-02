@@ -83,8 +83,8 @@ func newMysqlClient(sqlInfo model.SqlDatabaseInfo) (db *sql.DB, err error) {
 		dsn = fmt.Sprintf("%s:%s@%s:%d/%s?%s", sqlInfo.User, sqlInfo.Password, sqlInfo.Host, sqlInfo.Port, sqlInfo.DbName, sqlInfo.Charset)
 	case "mysql":
 		dsn = fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?%s", sqlInfo.User, sqlInfo.Password, sqlInfo.Host, sqlInfo.Port, sqlInfo.DbName, sqlInfo.Charset)
-	case "postgres":
-		dsn = fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=verify-full", sqlInfo.User, sqlInfo.Password, sqlInfo.Host, sqlInfo.Port, sqlInfo.DbName)
+	case "postgresql":
+		dsn = fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable", sqlInfo.User, sqlInfo.Password, sqlInfo.Host, sqlInfo.Port, sqlInfo.DbName)
 	}
 
 	db, err = sql.Open(sqlInfo.Type, dsn)
