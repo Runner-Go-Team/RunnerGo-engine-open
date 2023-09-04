@@ -63,6 +63,7 @@ func DisposeScene(runType string, scene model.Scene, configuration *model.Config
 				globalVar.Store(key, value)
 			}
 		}
+
 		return true
 	})
 	sceneWg := &sync.WaitGroup{}
@@ -584,7 +585,6 @@ func DisposeRequest(reportMsg *model.ResultDataMsg, resultDataMsgCh chan *model.
 		}
 		// 请求中所有的变量替换成真正的值
 		api.Request.ReplaceQueryParameterizes(globalVar)
-
 		isSucceed, errCode, requestTime, sendBytes, receivedBytes, errMsg, startTime, endTime = api.Request.Send(api.Debug, debugMsg, mongoCollection, globalVar)
 
 	case constant.FormTypeWebSocket:
