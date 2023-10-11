@@ -202,7 +202,7 @@ func ErrorRateModel(scene model.Scene, configuration *model.Configuration, repor
 							concurrentMap.Delete(key)
 							return true
 						})
-						return fmt.Sprintf("并发数：%d, 总运行时长%ds, 任务手动结束！", concurrent, time.Now().Unix()-targetTime)
+						break
 					}
 				case constant.DebugStatus:
 					debug = subscriptionStressPlanStatusChange.Debug
