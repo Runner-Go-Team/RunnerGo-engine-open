@@ -55,7 +55,11 @@ func RoundModel(scene model.Scene, configuration *model.Configuration, reportMsg
 				switch subscriptionStressPlanStatusChange.Type {
 				case constant.StopPlan:
 					if subscriptionStressPlanStatusChange.StopPlan == "stop" {
-						return fmt.Sprintf("并发数：%d， 运行了%d轮次, 任务手动结束！", concurrent, i-1)
+						concurrentMap.Range(func(key, value any) bool {
+							concurrentMap.Delete(key)
+							return true
+						})
+						break
 					}
 				case constant.DebugStatus:
 					debug = subscriptionStressPlanStatusChange.Debug

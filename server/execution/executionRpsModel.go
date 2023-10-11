@@ -222,7 +222,7 @@ func RPSModel(scene model.Scene, configuration *model.Configuration, reportMsg *
 							concurrentMap.Delete(key)
 							return true
 						})
-						return fmt.Sprintf("最大并发数：%d， 总运行时长%ds, 任务手动结束！", concurrent, endTime-targetTime)
+						break
 					}
 				case constant.DebugStatus:
 					debug = subscriptionStressPlanStatusChange.Debug

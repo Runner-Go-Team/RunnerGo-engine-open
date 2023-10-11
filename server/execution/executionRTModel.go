@@ -104,7 +104,11 @@ func RTModel(scene model.Scene, configuration *model.Configuration, reportMsg *m
 				switch subscriptionStressPlanStatusChange.Type {
 				case constant.StopPlan:
 					if subscriptionStressPlanStatusChange.StopPlan == "stop" {
-						return fmt.Sprintf("最大并发数：%d， 总运行时长%ds, 任务手动结束！", concurrent, endTime-targetTime)
+						concurrentMap.Range(func(key, value any) bool {
+							concurrentMap.Delete(key)
+							return true
+						})
+						break
 					}
 				case constant.DebugStatus:
 					debug = subscriptionStressPlanStatusChange.Debug
