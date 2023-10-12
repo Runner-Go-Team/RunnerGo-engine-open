@@ -99,7 +99,12 @@ func (r RequestHttp) Send(debug string, debugMsg *DebugMsg, requestCollection *m
 	}
 	var assert = new(Assert)
 	// 断言验证
-	errCode, isSucceed, errMsg, num, failedNum := r.Assertion(assert, resp)
+	isAssert, code, succeed, msg, num, failedNum := r.Assertion(assert, resp)
+	if isAssert {
+		isSucceed = succeed
+		errMsg = msg
+		errCode = code
+	}
 	assertNum = assertNum + num
 	assertFailedNum = assertFailedNum + failedNum
 
@@ -212,7 +217,7 @@ func (r RequestHttp) Withdraw(regex *Regex, globalVar *sync.Map, resp *fasthttp.
 
 }
 
-func (r RequestHttp) Assertion(assert *Assert, resp *fasthttp.Response) (code int64, isSucceed bool, errMsg string, assertNum int, assertFailedNum int) {
+func (r RequestHttp) Assertion(assert *Assert, resp *fasthttp.Response) (isAssert bool, code int64, isSucceed bool, errMsg string, assertNum int, assertFailedNum int) {
 	isSucceed = true
 	code = int64(10000)
 	if r.Assert == nil {
@@ -235,6 +240,7 @@ func (r RequestHttp) Assertion(assert *Assert, resp *fasthttp.Response) (code in
 		assertionMsg.Msg = msg
 		assert.AssertionMsgs = append(assert.AssertionMsgs, assertionMsg)
 		assertNum++
+		isAssert = true
 	}
 	return
 }
