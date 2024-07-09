@@ -32,7 +32,6 @@ func RoundModel(scene model.Scene, configuration *model.Configuration, reportMsg
 	currentWg := &sync.WaitGroup{}
 	// 定义一个map，管理并发
 	concurrentMap := new(sync.Map)
-	currentTime := time.Now().UnixMilli()
 	// 按轮次压测
 	if scene.ConfigTask.ModeConf.Concurrency == 0 || scene.ConfigTask.ModeConf.RoundNum == 0 {
 		return fmt.Sprintf("轮次模式参数错误：无并发数或无运行轮次！无法运行！")
@@ -55,11 +54,7 @@ func RoundModel(scene model.Scene, configuration *model.Configuration, reportMsg
 				switch subscriptionStressPlanStatusChange.Type {
 				case constant.StopPlan:
 					if subscriptionStressPlanStatusChange.StopPlan == "stop" {
-						concurrentMap.Range(func(key, value any) bool {
-							concurrentMap.Delete(key)
-							return true
-						})
-						break
+						return fmt.Sprintf("并发数：%d， 运行了%d轮次, 任务手动结束！", concurrent, i-1)
 					}
 				case constant.DebugStatus:
 					debug = subscriptionStressPlanStatusChange.Debug
@@ -95,7 +90,7 @@ func RoundModel(scene model.Scene, configuration *model.Configuration, reportMsg
 					go func(concurrentId, concurrent int64, useConfiguration *model.Configuration, currentScene model.Scene) {
 						defer currentWg.Done()
 						defer concurrentMap.Delete(concurrentId)
-						golink.DisposeScene(constant.PlanType, currentScene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent, currentTime)
+						golink.DisposeScene(constant.PlanType, currentScene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
 
 					}(j, concurrent, configuration, scene)
 				}
@@ -154,7 +149,8 @@ func RoundModel(scene model.Scene, configuration *model.Configuration, reportMsg
 					currentWg.Add(1)
 					go func(concurrentId int64, useConfiguration *model.Configuration, currentScene model.Scene) {
 						defer currentWg.Done()
-						defer concurrentMap.Delete(concurrentId)
+						defer concurrentMap.Store(concurrentId, false)
+
 						for j := int64(0); j < rounds; j++ {
 							if status, isOk := concurrentMap.Load(concurrentId); !isOk {
 								break
@@ -164,7 +160,7 @@ func RoundModel(scene model.Scene, configuration *model.Configuration, reportMsg
 								}
 							}
 							currentScene.Debug = debug
-							golink.DisposeScene(constant.PlanType, currentScene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent, currentTime)
+							golink.DisposeScene(constant.PlanType, currentScene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
 
 						}
 					}(i, configuration, scene)

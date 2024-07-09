@@ -39,13 +39,7 @@ func (p *ParameterizedFile) UseFile() {
 	if p.Paths == nil || len(p.Paths) == 0 {
 		return
 	}
-	fc := &fasthttp.Client{}
-	req := fasthttp.AcquireRequest()
-	// set url
-	req.Header.SetMethod("GET")
-	resp := fasthttp.AcquireResponse()
-	defer req.ConnectionClose()
-	defer resp.ConnectionClose()
+
 	if p.VariableNames == nil {
 		p.VariableNames = new(VariableNames)
 	}
@@ -58,6 +52,11 @@ func (p *ParameterizedFile) UseFile() {
 		if path.IsChecked != constant.Open {
 			continue
 		}
+		fc := &fasthttp.Client{}
+		req := fasthttp.AcquireRequest()
+		// set url
+		req.Header.SetMethod("GET")
+		resp := fasthttp.AcquireResponse()
 		req.Header.SetRequestURI(path.Path)
 		if err := fc.Do(req, resp); err != nil {
 			log.Logger.Error(fmt.Sprintf("机器ip:%s, 下载参数化文件错误：", middlewares.LocalIp), err)
@@ -95,6 +94,8 @@ func (p *ParameterizedFile) UseFile() {
 			}
 			index++
 		}
+		req.ConnectionClose()
+		resp.ConnectionClose()
 	}
 }
 

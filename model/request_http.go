@@ -20,8 +20,6 @@ import (
 	"github.com/Runner-Go-Team/RunnerGo-engine-open/tools"
 	"github.com/comcast/go-edgegrid/edgegrid"
 	"github.com/hiyosi/hawk"
-	"github.com/lixiangyun/go-ntlm"
-	"github.com/lixiangyun/go-ntlm/messages"
 	uuid "github.com/satori/go.uuid"
 	"github.com/valyala/fasthttp"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -1364,22 +1362,22 @@ func (auth *Auth) SetAuth(req *fasthttp.Request) {
 		params := edgegrid.NewAuthParams(reqNew, auth.Edgegrid.AccessToken, auth.Edgegrid.ClientToken, auth.Edgegrid.ClientSecret)
 		authorization := edgegrid.Auth(params)
 		req.Header.Add("Authorization", authorization)
-	case constant.NtlmType:
-		session, err := ntlm.CreateClientSession(ntlm.Version1, ntlm.ConnectionlessMode)
-		if err != nil {
-			return
-		}
-		session.SetUserInfo(auth.Ntlm.Username, auth.Ntlm.Password, auth.Ntlm.Domain)
-		negotiate, err := session.GenerateNegotiateMessage()
-		if err != nil {
-			return
-		}
-		challenge, err := messages.ParseAuthenticateMessage(negotiate.Bytes, 2)
-		if err != nil {
-			return
-		}
-		req.Header.Add("Connection", "keep-alive")
-		req.Header.Add("Authorization", challenge.String())
+	//case constant.NtlmType:
+	//	session, err := ntlm.CreateClientSession(ntlm.Version1, ntlm.ConnectionlessMode)
+	//	if err != nil {
+	//		return
+	//	}
+	//	session.SetUserInfo(auth.Ntlm.Username, auth.Ntlm.Password, auth.Ntlm.Domain)
+	//	negotiate, err := session.GenerateNegotiateMessage()
+	//	if err != nil {
+	//		return
+	//	}
+	//	challenge, err := messages.ParseAuthenticateMessage(negotiate.Bytes, 2)
+	//	if err != nil {
+	//		return
+	//	}
+	//	req.Header.Add("Connection", "keep-alive")
+	//	req.Header.Add("Authorization", challenge.String())
 	case constant.Awsv4Type:
 		signature := ""
 		date := strconv.Itoa(int(time.Now().Month())) + strconv.Itoa(time.Now().Day())

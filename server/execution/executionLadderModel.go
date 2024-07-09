@@ -38,7 +38,6 @@ func LadderModel(scene model.Scene, configuration *model.Configuration, reportMs
 	switch scene.ConfigTask.ControlMode {
 	case constant.CentralizedMode:
 		for startTime+stepRunTime > endTime {
-
 			select {
 			case c := <-statusCh:
 				log.Logger.Debug("接收到manage消息：  ", c.String())
@@ -83,9 +82,6 @@ func LadderModel(scene model.Scene, configuration *model.Configuration, reportMs
 							}
 						}
 					}
-					if modeConf.MaxConcurrency > 0 {
-						stableDuration = modeConf.MaxConcurrency
-					}
 					if modeConf.Duration > 0 {
 						stableDuration = modeConf.Duration
 					}
@@ -104,6 +100,7 @@ func LadderModel(scene model.Scene, configuration *model.Configuration, reportMs
 						defer currentWg.Done()
 						defer concurrentMap.Delete(concurrentId)
 						golink.DisposeScene(constant.PlanType, scene, useConfiguration, reportMsg, resultDataMsgCh, requestCollection, concurrentId, concurrent)
+
 					}(i, concurrent, configuration)
 				}
 				currentWg.Wait()
@@ -155,7 +152,7 @@ func LadderModel(scene model.Scene, configuration *model.Configuration, reportMs
 							concurrentMap.Delete(key)
 							return true
 						})
-						break
+						return fmt.Sprintf("最大并发数：%d， 总运行时长%ds, 任务手动结束！", concurrent, endTime-targetTime)
 					}
 				case constant.DebugStatus:
 					debug = subscriptionStressPlanStatusChange.Debug
@@ -177,9 +174,6 @@ func LadderModel(scene model.Scene, configuration *model.Configuration, reportMs
 					}
 					if modeConf.MaxConcurrency > 0 {
 						maxConcurrent = modeConf.MaxConcurrency
-					}
-					if modeConf.MaxConcurrency > 0 {
-						stableDuration = modeConf.MaxConcurrency
 					}
 					if modeConf.Duration > 0 {
 						stableDuration = modeConf.Duration

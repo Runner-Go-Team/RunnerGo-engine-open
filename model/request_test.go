@@ -3,7 +3,6 @@ package model
 import (
 	"context"
 	"fmt"
-	"github.com/lixiangyun/go-ntlm"
 	"net/http"
 	"sync"
 	"testing"
@@ -11,13 +10,13 @@ import (
 )
 
 func TestInsert(t *testing.T) {
-	session, err := ntlm.CreateClientSession(ntlm.Version1, ntlm.ConnectionlessMode)
-	if err != nil {
-		return
-	}
-	session.SetUserInfo("auth.Ntlm.Username", "auth.Ntlm.Password", "auth.Ntlm.Domain")
-	negotiate, err := session.GenerateNegotiateMessage()
-	fmt.Println(negotiate)
+	//session, err := ntlm.CreateClientSession(ntlm.Version1, ntlm.ConnectionlessMode)
+	//if err != nil {
+	//	return
+	//}
+	//session.SetUserInfo("auth.Ntlm.Username", "auth.Ntlm.Password", "auth.Ntlm.Domain")
+	//negotiate, err := session.GenerateNegotiateMessage()
+	//fmt.Println(negotiate)
 
 }
 

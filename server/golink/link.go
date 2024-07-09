@@ -216,9 +216,16 @@ func disposePlanNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.Ma
 	event.Debug = scene.Debug
 	event.ReportId = scene.ReportId
 	if scene.Configuration.SceneVariable != nil {
-		event.Api.ApiVariable = new(model.GlobalVariable)
-		scene.Configuration.SceneVariable.SupToSub(event.Api.ApiVariable)
+		if event.Api.ApiVariable == nil {
+			event.Api.ApiVariable = new(model.GlobalVariable)
+		}
+
+		//scene.Configuration.SceneVariable.SupToSub(event.Api.ApiVariable)
 		event.Api.ApiVariable.InitReplace()
+		b, _ := json.Marshal(scene.Configuration.SceneVariable)
+		var tempSceneVariable model.GlobalVariable
+		_ = json.Unmarshal(b, &tempSceneVariable)
+		tempSceneVariable.SupToSub(event.Api.ApiVariable)
 	}
 
 	switch event.Type {
@@ -420,7 +427,11 @@ func disposeDebugNode(preNodeMap *sync.Map, scene model.Scene, globalVar *sync.M
 			event.Api.ApiVariable = new(model.GlobalVariable)
 		}
 		event.Api.ApiVariable.InitReplace()
-		scene.Configuration.SceneVariable.SupToSub(event.Api.ApiVariable)
+		//scene.Configuration.SceneVariable.SupToSub(event.Api.ApiVariable)
+		b, _ := json.Marshal(scene.Configuration.SceneVariable)
+		var tempSceneVariable model.GlobalVariable
+		_ = json.Unmarshal(b, &tempSceneVariable)
+		tempSceneVariable.SupToSub(event.Api.ApiVariable)
 
 	}
 
