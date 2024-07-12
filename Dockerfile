@@ -1,4 +1,4 @@
-FROM runnergo/debian:stable-slim
+FROM runnergo/debian:12-slim
 
 ADD  engine  /data/engine/engine
 
