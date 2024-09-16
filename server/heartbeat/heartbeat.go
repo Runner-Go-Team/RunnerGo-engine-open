@@ -130,10 +130,15 @@ func GetDiskInfo() (diskInfoList []DiskInfo) {
 	}
 	for _, v := range disks {
 		diskInfo := DiskInfo{}
-		info, err := disk.Usage(v.Device)
+		info, err := disk.Usage(v.Mountpoint)
 		if err != nil {
 			continue
 		}
+
+		if info.Total == 0 || info.Fstype == "tmpfs" {
+			continue
+		}
+
 		diskInfo.Total = info.Total
 		diskInfo.Free = info.Free
 		diskInfo.Used = info.Used
